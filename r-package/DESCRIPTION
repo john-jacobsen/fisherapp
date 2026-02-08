@@ -1,0 +1,26 @@
+Package: fisherapp
+Title: Problem Engine for BerkeleyStats Tutor
+Version: 0.1.0
+Authors@R: person("John", "Jacobsen", role = c("aut", "cre"),
+    email = "john@example.com")
+Description: Template-driven problem generation engine for adaptive algebra
+    tutoring. Generates randomized problems with worked solutions across 8
+    algebra topics at 5 difficulty levels. Part of the BerkeleyStats Tutor
+    project.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Depends: R (>= 4.2.0)
+Imports:
+    yaml,
+    uuid,
+    glue,
+    stringr,
+    jsonlite
+Suggests:
+    testthat (>= 3.0.0),
+    devtools,
+    roxygen2,
+    usethis
+Config/testthat/edition: 3
