@@ -1,0 +1,503 @@
+# =============================================================================
+# BerkeleyStats Tutor — Algebra Knowledge Graph (Version 1)
+# =============================================================================
+#
+# This file defines the algebra topic nodes, prerequisite edges, and difficulty
+# levels for the BerkeleyStats Tutor adaptive learning system.
+#
+# Each node represents a single skill/topic. Edges are encoded as prerequisite
+# lists within each node. The graph is consumed by the R package's problem
+# generation engine and adaptive sequencing logic.
+#
+# Difficulty levels (applied uniformly to every node):
+#   1 - Recognition:  Identify or recall core concepts
+#   2 - Routine:      Straightforward single-step or two-step problems
+#   3 - Multi-step:   Requires chaining several skills within the topic
+#   4 - Transfer:     Applies the skill in an unfamiliar context
+#   5 - Synthesis:    Combines this topic with other topics
+#
+# Status:
+#   active   — fully implemented with problem templates
+#   planned  — node exists in the graph but templates not yet built
+#
+# =============================================================================
+
+graph_metadata:
+  version: "1.0.0"
+  content_area: "algebra"
+  institution_id: "ucberkeley"
+  description: >
+    Algebra prerequisite skills for UC Berkeley statistics students.
+    Priority nodes selected by frequency of student bottleneck and
+    downstream prerequisite impact on Stat 20, 134, and 135.
+  last_updated: "2025-02-07"
+
+# =============================================================================
+# ACTIVE NODES — Priority 8 (build first, in dependency order)
+# =============================================================================
+
+nodes:
+
+  # ---------------------------------------------------------------------------
+  # Node 1: Fraction Arithmetic
+  # ---------------------------------------------------------------------------
+  - id: "fraction_arithmetic"
+    title: "Fraction Arithmetic"
+    status: "active"
+    prerequisites: []
+    description: >
+      Core fluency with fractions — the single biggest bottleneck for intro
+      stats students. Every probability is a fraction; every Bayesian update
+      is fraction manipulation.
+    stats_relevance: >
+      P(A) = 3/8, Bayes' theorem numerators/denominators, weighted averages,
+      relative frequencies, conditional probability computations.
+    skills:
+      - "Add and subtract fractions with like denominators"
+      - "Add and subtract fractions with unlike denominators (LCD)"
+      - "Multiply fractions"
+      - "Divide fractions (multiply by reciprocal)"
+      - "Simplify fractions to lowest terms (GCF)"
+      - "Compare fractions (common denominator or cross-multiply)"
+      - "Convert between fractions, decimals, and percentages"
+      - "Operate with mixed numbers"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Identify equivalent fractions; recognize when a fraction is simplified."
+        example: "Which of the following is equivalent to 6/8? (a) 3/4  (b) 2/3  (c) 4/6"
+      2:
+        name: "Routine"
+        description: "Single-operation problems with manageable denominators."
+        example: "Compute 2/5 + 1/3."
+      3:
+        name: "Multi-step"
+        description: "Chain two or more operations; mixed numbers; simplify final answer."
+        example: "Compute (3/4 - 1/6) * 2/5 and simplify."
+      4:
+        name: "Transfer"
+        description: "Fraction arithmetic embedded in an unfamiliar context (e.g., probability word problem)."
+        example: "A bag has 5 red and 3 blue marbles. You draw one, don't replace it, and draw another. What is the probability both are red?"
+      5:
+        name: "Synthesis"
+        description: "Combines fraction arithmetic with other topics (exponents, summation, etc.)."
+        example: "Evaluate sum_{i=1}^{3} (i/(i+1)) - (1/2)^i."
+
+  # ---------------------------------------------------------------------------
+  # Node 2: Exponent Rules
+  # ---------------------------------------------------------------------------
+  - id: "exponent_rules"
+    title: "Exponent Rules"
+    status: "active"
+    prerequisites:
+      - "fraction_arithmetic"
+    description: >
+      Integer and rational exponents, the five core exponent laws, and
+      square/nth roots as fractional exponents.
+    stats_relevance: >
+      (1-p)^(n-k) in binomial probabilities, variance formulas involving
+      squared deviations, standard deviation as a square root, exponential
+      family distributions.
+    skills:
+      - "Evaluate positive integer exponents"
+      - "Apply the zero exponent rule (a^0 = 1)"
+      - "Apply negative exponent rule (a^{-n} = 1/a^n)"
+      - "Product rule: a^m * a^n = a^{m+n}"
+      - "Quotient rule: a^m / a^n = a^{m-n}"
+      - "Power rule: (a^m)^n = a^{mn}"
+      - "Power of a product: (ab)^n = a^n * b^n"
+      - "Power of a quotient: (a/b)^n = a^n / b^n"
+      - "Fractional exponents and roots: a^{1/n} = nth root of a"
+      - "Simplify expressions combining multiple exponent rules"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Identify which exponent rule applies; evaluate simple powers."
+        example: "What is 2^0? What rule tells you that?"
+      2:
+        name: "Routine"
+        description: "Apply a single exponent rule to simplify an expression."
+        example: "Simplify x^3 * x^5."
+      3:
+        name: "Multi-step"
+        description: "Chain multiple exponent rules in one expression."
+        example: "Simplify (2x^3)^2 / (4x^{-1})."
+      4:
+        name: "Transfer"
+        description: "Apply exponent rules in an unfamiliar or applied context."
+        example: "A population doubles every 3 years. Write and simplify an expression for the population after 12 years if it starts at P_0."
+      5:
+        name: "Synthesis"
+        description: "Combine exponent rules with fractions, logarithms, or summation."
+        example: "Simplify sum_{k=0}^{n} C(n,k) p^k (1-p)^{n-k} for the case n=3, p=1/2."
+
+  # ---------------------------------------------------------------------------
+  # Node 3: Order of Operations with Nested Expressions
+  # ---------------------------------------------------------------------------
+  - id: "order_of_operations"
+    title: "Order of Operations with Nested Expressions"
+    status: "active"
+    prerequisites:
+      - "fraction_arithmetic"
+      - "exponent_rules"
+    description: >
+      Executing PEMDAS correctly on complex, nested expressions — the skill
+      that determines whether a student can evaluate a statistics formula
+      once they understand what it means.
+    stats_relevance: >
+      Evaluating SD = sqrt(sum(x_i - x_bar)^2 / (n-1)), computing
+      z-scores, plugging into the binomial PMF, evaluating any multi-step
+      statistical formula by hand.
+    skills:
+      - "Apply PEMDAS to expressions with all four operations"
+      - "Handle nested parentheses (work inside out)"
+      - "Evaluate expressions involving exponents and roots"
+      - "Substitute numerical values into multi-variable formulas"
+      - "Manage signs correctly through nested operations"
+      - "Distinguish between -(x)^2 and (-x)^2"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Identify the correct order of operations in a given expression."
+        example: "In the expression 3 + 4 * 2^2, which operation do you perform first?"
+      2:
+        name: "Routine"
+        description: "Evaluate an expression with 2-3 operations and one level of grouping."
+        example: "Evaluate (8 - 3)^2 + 4 * 2."
+      3:
+        name: "Multi-step"
+        description: "Evaluate expressions with nested parentheses, fractions, and exponents."
+        example: "Evaluate [(12 - 4)^2 - (3 + 1)^2] / (2^3)."
+      4:
+        name: "Transfer"
+        description: "Substitute values into a statistics formula and evaluate."
+        example: "Given x_bar = 5, values x = {3, 5, 7}, and n = 3, compute sqrt(sum(x_i - x_bar)^2 / (n - 1))."
+      5:
+        name: "Synthesis"
+        description: "Evaluate a complex expression combining order of operations with summation, fractions, and exponents."
+        example: "Compute the sample variance of {2, 4, 6, 8} using the formula s^2 = (1/(n-1)) * sum_{i=1}^{n}(x_i - x_bar)^2."
+
+  # ---------------------------------------------------------------------------
+  # Node 4: Summation Notation
+  # ---------------------------------------------------------------------------
+  - id: "summation_notation"
+    title: "Summation Notation"
+    status: "active"
+    prerequisites:
+      - "order_of_operations"
+    description: >
+      Reading, interpreting, and evaluating sigma notation — the syntactic
+      language of statistics. Every formula from expected value onward is
+      written in summation notation.
+    stats_relevance: >
+      E(X) = sum x*P(x), Var(X) = sum(x - mu)^2 * P(x), sample mean,
+      sample variance, likelihood functions, OLS normal equations.
+    skills:
+      - "Read and interpret sigma notation (index, bounds, expression)"
+      - "Evaluate simple finite sums by expanding and computing"
+      - "Apply linearity of summation: sum(a*x_i + b) = a*sum(x_i) + n*b"
+      - "Factor constants out of sums"
+      - "Distinguish sum(4c_i + 5) from 4*sum(c_i) + 5"
+      - "Evaluate sums involving powers (sum i^2, etc.)"
+      - "Handle double indices and nested sums (introduction only)"
+      - "Recognize closed-form formulas (sum of 1..n, sum of i^2)"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Read sigma notation; identify index variable, bounds, and summand."
+        example: "In sum_{i=1}^{5} (2i + 1), what is the index variable? What are the bounds?"
+      2:
+        name: "Routine"
+        description: "Expand and evaluate a simple finite sum."
+        example: "Evaluate sum_{i=1}^{4} i^2."
+      3:
+        name: "Multi-step"
+        description: "Apply linearity or factor constants; simplify before computing."
+        example: "Evaluate sum_{i=1}^{5} (3i - 2) by applying linearity."
+      4:
+        name: "Transfer"
+        description: "Interpret summation notation in a statistics context."
+        example: "Given P(X=1)=0.2, P(X=2)=0.5, P(X=3)=0.3, compute E(X) = sum x*P(x)."
+      5:
+        name: "Synthesis"
+        description: "Combine summation with exponents, fractions, and algebraic manipulation."
+        example: "Show that sum_{i=1}^{n}(x_i - x_bar) = 0 by expanding the sum and using the definition of x_bar."
+
+  # ---------------------------------------------------------------------------
+  # Node 5: Solving Equations (Isolating Variables)
+  # ---------------------------------------------------------------------------
+  - id: "solving_equations"
+    title: "Solving Equations (Isolating Variables)"
+    status: "active"
+    prerequisites:
+      - "fraction_arithmetic"
+      - "exponent_rules"
+    description: >
+      Algebraic manipulation to isolate a target variable — the core
+      procedural skill used every time a student solves for an unknown
+      in a formula.
+    stats_relevance: >
+      Solving P(A or B) = P(A) + P(B) - P(A and B) for the unknown,
+      inverting z = (x - mu)/sigma to find x, solving for MLE theta-hat
+      from a score equation, isolating n in sample size formulas.
+    skills:
+      - "Solve one-step equations (add, subtract, multiply, divide)"
+      - "Solve multi-step linear equations"
+      - "Clear fractions by multiplying through by LCD"
+      - "Solve equations involving exponents (both sides same base)"
+      - "Solve for a variable when it appears under a square root"
+      - "Solve literal equations (rearrange formulas for a specified variable)"
+      - "Handle equations with the variable on both sides"
+      - "Verify solutions by substitution"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Identify the operation needed to isolate a variable in a one-step equation."
+        example: "What operation isolates x in: x + 7 = 12?"
+      2:
+        name: "Routine"
+        description: "Solve a straightforward multi-step equation."
+        example: "Solve 3x - 5 = 16."
+      3:
+        name: "Multi-step"
+        description: "Solve equations requiring clearing fractions, distributing, or combining like terms."
+        example: "Solve (2x + 1)/3 - (x - 2)/4 = 1."
+      4:
+        name: "Transfer"
+        description: "Rearrange a statistics formula to isolate a specified variable."
+        example: "The z-score formula is z = (x - mu)/sigma. Solve for x."
+      5:
+        name: "Synthesis"
+        description: "Solve equations combining multiple algebraic skills in a statistics context."
+        example: "Given E(aX + b) = a*E(X) + b and Var(aX + b) = a^2*Var(X), find the values of a and b that standardize X (make mean 0, variance 1)."
+
+  # ---------------------------------------------------------------------------
+  # Node 6: Logarithms and Exponentials
+  # ---------------------------------------------------------------------------
+  - id: "logarithms_exponentials"
+    title: "Logarithms and Exponentials"
+    status: "active"
+    prerequisites:
+      - "exponent_rules"
+      - "solving_equations"
+    description: >
+      The natural logarithm, exponential function, log rules, and
+      conversions between exponential and logarithmic forms — the gateway
+      to upper-division statistics.
+    stats_relevance: >
+      Log transformations in regression, exponential distributions,
+      log-likelihood functions in MLE, the Poisson PMF, moment generating
+      functions, entropy.
+    skills:
+      - "Convert between exponential and logarithmic form"
+      - "Evaluate logarithms (base 10, base e, base 2)"
+      - "Product rule: log(ab) = log(a) + log(b)"
+      - "Quotient rule: log(a/b) = log(a) - log(b)"
+      - "Power rule: log(a^n) = n*log(a)"
+      - "Properties of e^x and ln(x) as inverses"
+      - "Solve exponential equations using logarithms"
+      - "Solve logarithmic equations"
+      - "Simplify expressions with nested logs and exponentials"
+      - "Change of base formula"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Convert between exponential and log form; evaluate simple logarithms."
+        example: "Rewrite 2^3 = 8 in logarithmic form."
+      2:
+        name: "Routine"
+        description: "Apply a single log rule to simplify an expression."
+        example: "Simplify ln(e^5)."
+      3:
+        name: "Multi-step"
+        description: "Apply multiple log rules; solve exponential or log equations."
+        example: "Solve 3^{2x-1} = 27 for x."
+      4:
+        name: "Transfer"
+        description: "Use logarithms in an applied or statistical context."
+        example: "A decay process follows N(t) = N_0 * e^{-0.03t}. How long until half the original amount remains?"
+      5:
+        name: "Synthesis"
+        description: "Combine logarithms with summation, fractions, and equation solving."
+        example: "Given a likelihood L(p) = p^3 (1-p)^7, write the log-likelihood ln L(p), take its derivative, set it to zero, and solve for p."
+
+  # ---------------------------------------------------------------------------
+  # Node 7: Combinatorics (Factorials, Permutations, Combinations)
+  # ---------------------------------------------------------------------------
+  - id: "combinatorics"
+    title: "Combinatorics (Factorials, Permutations, Combinations)"
+    status: "active"
+    prerequisites:
+      - "fraction_arithmetic"
+      - "exponent_rules"
+    description: >
+      Counting principles, factorials, permutations, and combinations —
+      the foundation of the entire probability curriculum.
+    stats_relevance: >
+      Binomial coefficients C(n,k), binomial distribution PMF, counting
+      sample spaces, hypergeometric distribution, multinomial coefficients,
+      combinatorial proofs.
+    skills:
+      - "Compute factorials"
+      - "Apply the multiplication principle"
+      - "Compute permutations P(n,k) = n!/(n-k)!"
+      - "Compute combinations C(n,k) = n!/(k!(n-k)!)"
+      - "Distinguish when to use permutations vs. combinations"
+      - "Simplify factorial expressions (cancel common factors)"
+      - "Apply combinations to probability problems"
+      - "Recognize and use binomial coefficients"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Evaluate factorials; identify whether order matters in a counting problem."
+        example: "Compute 5!. Does choosing a committee of 3 from 10 people involve permutations or combinations?"
+      2:
+        name: "Routine"
+        description: "Compute a single permutation or combination."
+        example: "Compute C(8, 3)."
+      3:
+        name: "Multi-step"
+        description: "Simplify factorial expressions; solve counting problems requiring setup."
+        example: "Simplify C(n, 2) into a formula without factorials. How many handshakes occur in a room of 12 people?"
+      4:
+        name: "Transfer"
+        description: "Apply counting to probability in an unfamiliar setting."
+        example: "A jury of 12 is selected from a pool of 20 men and 15 women. What is the probability the jury has exactly 7 women?"
+      5:
+        name: "Synthesis"
+        description: "Combine combinatorics with exponents and fractions (e.g., binomial PMF)."
+        example: "Compute P(X = 3) where X ~ Binomial(n=8, p=0.4)."
+
+  # ---------------------------------------------------------------------------
+  # Node 8: Geometric Series
+  # ---------------------------------------------------------------------------
+  - id: "geometric_series"
+    title: "Geometric Series"
+    status: "active"
+    prerequisites:
+      - "fraction_arithmetic"
+      - "exponent_rules"
+    description: >
+      Finite and infinite geometric sums — the first series skill needed
+      in probability, required for geometric distributions and convergence
+      arguments.
+    stats_relevance: >
+      Geometric distribution PMF and CDF, verifying PMFs sum to 1,
+      infinite probability sums, expected value of geometric RV,
+      convergence of series in probability arguments.
+    skills:
+      - "Identify a geometric sequence (constant ratio)"
+      - "Compute the common ratio r"
+      - "Apply the finite geometric sum formula: S_n = a(1 - r^n)/(1 - r)"
+      - "Apply the infinite geometric sum formula: S = a/(1 - r) when |r| < 1"
+      - "Determine convergence: |r| < 1"
+      - "Compute tail sums: sum_{i=k}^{inf} r^i"
+      - "Factor and manipulate geometric series algebraically"
+    difficulty_levels:
+      1:
+        name: "Recognition"
+        description: "Identify geometric sequences; find the common ratio."
+        example: "Is the sequence 3, 6, 12, 24, ... geometric? If so, what is the common ratio?"
+      2:
+        name: "Routine"
+        description: "Apply the finite or infinite sum formula directly."
+        example: "Compute sum_{i=0}^{5} 2^i."
+      3:
+        name: "Multi-step"
+        description: "Manipulate the series before applying a formula; compute tail sums."
+        example: "Compute sum_{i=3}^{inf} (1/2)^i."
+      4:
+        name: "Transfer"
+        description: "Apply geometric series in a probability or applied context."
+        example: "A player flips a fair coin until heads. What is the probability of getting heads for the first time on or after the 4th flip?"
+      5:
+        name: "Synthesis"
+        description: "Combine geometric series with combinatorics, fractions, or equation solving."
+        example: "Verify that sum_{k=1}^{inf} (1-p)^{k-1} * p = 1 for any 0 < p < 1."
+
+
+# =============================================================================
+# PLANNED NODES — Future topics (graph structure only, no templates yet)
+# =============================================================================
+# These nodes establish prerequisite edges for future development. They will
+# be activated as problem templates are written.
+
+  - id: "binomial_theorem"
+    title: "Expanding Binomials / Binomial Theorem"
+    status: "planned"
+    prerequisites:
+      - "exponent_rules"
+      - "combinatorics"
+    description: >
+      Expanding (a + b)^n using the binomial theorem; recognizing binomial
+      expansions; relating to binomial distribution.
+    stats_relevance: "Binomial expansion in probability, moment generating functions."
+    skills: []
+    difficulty_levels: {}
+
+  - id: "double_sums"
+    title: "Double Sums and Nested Summation"
+    status: "planned"
+    prerequisites:
+      - "summation_notation"
+    description: >
+      Evaluating and manipulating double sums; interchanging order of
+      summation; sums over rectangular and triangular index sets.
+    stats_relevance: "Covariance formulas, joint distributions, ANOVA decompositions."
+    skills: []
+    difficulty_levels: {}
+
+  - id: "product_notation"
+    title: "Product Notation"
+    status: "planned"
+    prerequisites:
+      - "summation_notation"
+      - "exponent_rules"
+    description: >
+      Reading and evaluating product notation (capital pi); relationship
+      between products and sums via logarithms.
+    stats_relevance: "Likelihood functions L(theta) = prod f(x_i; theta), joint PMFs of independent RVs."
+    skills: []
+    difficulty_levels: {}
+
+  - id: "taylor_series_recognition"
+    title: "Taylor Series Recognition"
+    status: "planned"
+    prerequisites:
+      - "geometric_series"
+      - "exponent_rules"
+      - "logarithms_exponentials"
+    description: >
+      Recognizing common Taylor expansions (e^x, ln(1+x), (1+x)^n);
+      using Taylor approximations in derivations.
+    stats_relevance: "Delta method, MGF expansions, asymptotic arguments in Stat 135."
+    skills: []
+    difficulty_levels: {}
+
+  - id: "variance_formula_manipulation"
+    title: "Variance Formula Manipulation"
+    status: "planned"
+    prerequisites:
+      - "summation_notation"
+      - "solving_equations"
+      - "exponent_rules"
+    description: >
+      Algebraic manipulation of variance identities: Var(X) = E(X^2) - [E(X)]^2,
+      Var(aX + b) = a^2 Var(X), propagation of variance rules.
+    stats_relevance: "Core tool in Stat 134/135 for computing variances of transformations."
+    skills: []
+    difficulty_levels: {}
+
+  - id: "delta_method"
+    title: "Delta Method Chain"
+    status: "planned"
+    prerequisites:
+      - "taylor_series_recognition"
+      - "variance_formula_manipulation"
+      - "logarithms_exponentials"
+    description: >
+      Using first-order Taylor approximation to approximate the variance
+      of a function of a random variable.
+    stats_relevance: "Stat 135 — asymptotic variance of MLEs, confidence intervals for transformations."
+    skills: []
+    difficulty_levels: {}
