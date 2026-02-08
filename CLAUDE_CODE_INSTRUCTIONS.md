@@ -2,7 +2,7 @@
 
 ## START HERE
 
-You are picking up development of this project at **Phase 2: Problem Engine (R Package)**. Phase 1 is complete. Read this document fully before beginning any work.
+You are picking up development of this project at **Phase 4: API and Database**. Phases 1-3 are complete. Read this document fully before beginning any work.
 
 ---
 
@@ -62,6 +62,52 @@ You are picking up development of this project at **Phase 2: Problem Engine (R P
 3. **Multi-step** — chains several skills
 4. **Transfer** — applies skill in unfamiliar context
 5. **Synthesis** — combines multiple topics
+
+---
+
+## What's Done (Phase 2 - COMPLETE)
+
+### Problem Engine R Package (`fisherapp`):
+- **40 problem templates** (8 topics × 5 difficulties) — all declarative, template-driven
+- Generic `generate_problem(topic_id, difficulty)` engine reads templates and produces randomized problems
+- Answer checker with equivalence detection (fractions, decimals, LaTeX)
+- Math utilities (GCD, LCM, fraction arithmetic, combinatorics)
+- LaTeX formatting utilities
+- JSON serialization for API layer
+- 266 tests passing
+
+### R Package files:
+- `R/problem_engine.R` — `generate_problem()`, `draw_params()`, `problem_to_json()`
+- `R/answer_checker.R` — `check_answer()`, `compare_answers()`, `parse_student_answer()`
+- `R/template_registry.R` — `register_template()`, `get_templates()`, `list_templates()`
+- `R/knowledge_graph.R` — `load_knowledge_graph()`, `get_topic()`, `get_prerequisites()`, `get_active_topics()`, `get_topic_order()`
+- `R/math_utils.R` — `gcd()`, `lcd()`, `simplify_fraction()`, `frac_add/sub/mul/div()`, `choose_safe()`, `perm()`
+- `R/latex_utils.R` — `latex_frac()`, `latex_exp()`, `latex_sum()`
+- `R/templates_*.R` — 8 template files (one per topic)
+
+---
+
+## What's Done (Phase 3 - COMPLETE)
+
+### Student Model & Adaptive Logic:
+- **Modified SM-2 spaced repetition** — per-topic ease factor, interval, and review scheduling
+- **Mastery criteria** — 85%+ accuracy over last 10 problems, across 2+ sessions, at difficulty 3+
+- **Adaptive difficulty** — promotes on 75%+ recent accuracy, demotes on 25%- accuracy
+- **Next-problem selection** — prioritizes: due reviews > in-progress topics > new topics with prereqs met
+- **Computer-Adaptive Placement Test** — 15-25 questions, walks knowledge graph in topological order
+- **Stuck-loop detection** — 3+ consecutive wrong triggers: reduce difficulty, route to prerequisite, or offer worked example
+- **Session management** — start/end sessions, submit answers, full orchestration pipeline
+- **Simulation** — `simulate_session()` for testing, `interactive_session()` for console use
+- 426 total tests passing (160 new Phase 3 tests)
+
+### Phase 3 R Package files:
+- `R/student_model.R` — `create_student_model()`, `get_topic_state()`, `student_progress()`
+- `R/sm2_engine.R` — `sm2_update()`, `map_quality()`, `is_due_for_review()`
+- `R/mastery.R` — `evaluate_mastery()`, `prerequisites_met()`
+- `R/adaptive_difficulty.R` — `adjust_difficulty()`
+- `R/next_problem.R` — `select_next_topic()`, `next_problem_for_student()`
+- `R/cat_placement.R` — `run_placement_test()`, `interactive_placement()`
+- `R/session.R` — `start_session()`, `get_next_problem()`, `submit_answer()`, `end_session()`, `simulate_session()`, `interactive_session()`
 
 ---
 
@@ -136,9 +182,9 @@ returns a structured problem object with:
 | Phase | Description | Status |
 |-------|------------|--------|
 | 1 | Knowledge Graph | COMPLETE |
-| 2 | Problem Engine (R Package) | **START HERE** |
-| 3 | Student Model & Adaptive Logic (R Package) | Not started |
-| 4 | API and Database | Not started |
+| 2 | Problem Engine (R Package) | COMPLETE |
+| 3 | Student Model & Adaptive Logic (R Package) | COMPLETE |
+| 4 | API and Database | **START HERE** |
 | 5 | Frontend (React) | Not started |
 | 6 | Testing and Polish | Not started |
 
