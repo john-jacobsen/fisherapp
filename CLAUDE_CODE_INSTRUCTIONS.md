@@ -185,8 +185,8 @@ returns a structured problem object with:
 | 2 | Problem Engine (R Package) | COMPLETE |
 | 3 | Student Model & Adaptive Logic (R Package) | COMPLETE |
 | 4 | API and Database | COMPLETE |
-| 5 | Frontend (React) | **START HERE** |
-| 6 | Testing and Polish | Not started |
+| 5 | Frontend (React) | COMPLETE |
+| 6 | Testing and Polish | **START HERE** |
 
 ---
 
@@ -233,6 +233,35 @@ returns a structured problem object with:
 - `r-package/DESCRIPTION` (added DBI, RPostgres, pool imports)
 - `r-package/NAMESPACE` (added 7 new exports)
 - `tests/api/helper-setup.R`, `tests/api/test-db_adapter.R`, `tests/api/test-endpoints.R`
+
+---
+
+## What's Done (Phase 5 - COMPLETE)
+
+### React Frontend (`frontend/`):
+- **Stack**: Vite + React + TypeScript + Tailwind CSS v4 + KaTeX
+- **4 pages**: LoginPage (login/register tabs), PlacementPage (adaptive CAT), PracticePage (main tutoring loop), DashboardPage (progress visualization)
+- **11 components**: MathRenderer (KaTeX wrapper for LaTeX), ProblemCard, AnswerInput, FeedbackPanel, InterventionBanner, SessionSummary, PlacementProgress, TopicProgress, MasteryGrid, Navbar
+- **API client**: Typed fetch functions for all 11 API endpoints
+- **AuthContext**: Login/register/logout with localStorage persistence
+- **Protected routes**: React Router with auth guards
+- **Docker**: Frontend Dockerfile + added to docker-compose.yml
+
+### User flow:
+1. Register/Login → stored in localStorage
+2. New users → Placement Test (15-25 adaptive questions with progress bar)
+3. Practice sessions → Problem → Answer → Feedback with worked solution → Next
+4. Dashboard → Mastery grid (8 topics), overall stats, accuracy
+
+### Phase 5 files:
+- `frontend/src/App.tsx` — Router + AuthProvider
+- `frontend/src/types/api.ts` — TypeScript interfaces for all API responses
+- `frontend/src/api/client.ts` — Typed API client
+- `frontend/src/context/AuthContext.tsx` — Auth state management
+- `frontend/src/pages/LoginPage.tsx`, `PlacementPage.tsx`, `PracticePage.tsx`, `DashboardPage.tsx`
+- `frontend/src/components/MathRenderer.tsx`, `ProblemCard.tsx`, `AnswerInput.tsx`, `FeedbackPanel.tsx`, `InterventionBanner.tsx`, `SessionSummary.tsx`, `PlacementProgress.tsx`, `TopicProgress.tsx`, `MasteryGrid.tsx`, `Navbar.tsx`
+- `frontend/Dockerfile`
+- `docker-compose.yml` (updated with frontend service)
 
 ---
 
