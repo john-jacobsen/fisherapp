@@ -186,7 +186,7 @@ returns a structured problem object with:
 | 3 | Student Model & Adaptive Logic (R Package) | COMPLETE |
 | 4 | API and Database | COMPLETE |
 | 5 | Frontend (React) | COMPLETE |
-| 6 | Testing and Polish | **START HERE** |
+| 6 | Testing and Polish | COMPLETE |
 
 ---
 
@@ -262,6 +262,43 @@ returns a structured problem object with:
 - `frontend/src/components/MathRenderer.tsx`, `ProblemCard.tsx`, `AnswerInput.tsx`, `FeedbackPanel.tsx`, `InterventionBanner.tsx`, `SessionSummary.tsx`, `PlacementProgress.tsx`, `TopicProgress.tsx`, `MasteryGrid.tsx`, `Navbar.tsx`
 - `frontend/Dockerfile`
 - `docker-compose.yml` (updated with frontend service)
+
+---
+
+## What's Done (Phase 6 - COMPLETE)
+
+### Bug Fix:
+- Fixed `templates_summation_notation.R:153` — `latex_frac()` was receiving a vector instead of scalar; wrapped with `sapply()` for element-wise application
+
+### R Package Tests (581 total):
+- Added 4 missing template test files: `test-templates_fraction_arithmetic.R`, `test-templates_exponent_rules.R`, `test-templates_order_of_operations.R`, `test-templates_summation_notation.R`
+- Each covers all 5 difficulty levels: generation, field validation, answer checking, reproducibility, randomization
+- 0 failures, 0 warnings
+
+### Frontend Tests (46 total):
+- **Stack**: Vitest + React Testing Library + jsdom
+- 7 test files covering: MathRenderer, ProblemCard, AnswerInput, FeedbackPanel, MasteryGrid, SessionSummary, API client
+- API client tests use mocked fetch for all 10 endpoint functions
+
+### Polish:
+- Expanded README.md with architecture, features, setup instructions, project structure
+- Custom favicon SVG replacing Vite default
+- Updated page title to "BerkeleyStats Tutor"
+
+### Phase 6 files:
+- `r-package/R/templates_summation_notation.R` (bug fix)
+- `r-package/tests/testthat/test-templates_fraction_arithmetic.R` (new)
+- `r-package/tests/testthat/test-templates_exponent_rules.R` (new)
+- `r-package/tests/testthat/test-templates_order_of_operations.R` (new)
+- `r-package/tests/testthat/test-templates_summation_notation.R` (new)
+- `frontend/src/setupTests.ts` (new)
+- `frontend/src/components/*.test.tsx` (6 new test files)
+- `frontend/src/api/client.test.ts` (new)
+- `frontend/vite.config.ts` (updated with test config)
+- `frontend/package.json` (added test deps and scripts)
+- `frontend/index.html` (updated favicon + title)
+- `frontend/public/favicon.svg` (new, replaced vite.svg)
+- `README.md` (expanded)
 
 ---
 

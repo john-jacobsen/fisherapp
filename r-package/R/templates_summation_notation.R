@@ -150,7 +150,7 @@ register_summation_notation_templates <- function() {
       num <- 1L * probs[1] + 2L * probs[2] + 3L * probs[3] + 4L * probs[4]
       result <- simplify_fraction(num, 10L)
 
-      terms <- paste(paste0(1:4, " \\cdot ", latex_frac(probs, 10)), collapse = " + ")
+      terms <- paste(paste0(1:4, " \\cdot ", sapply(probs, function(p) latex_frac(p, 10))), collapse = " + ")
       list(
         steps = c(
           paste0("$E(X) = ", terms, "$."),
