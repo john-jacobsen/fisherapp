@@ -184,21 +184,55 @@ returns a structured problem object with:
 | 1 | Knowledge Graph | COMPLETE |
 | 2 | Problem Engine (R Package) | COMPLETE |
 | 3 | Student Model & Adaptive Logic (R Package) | COMPLETE |
-| 4 | API and Database | **START HERE** |
-| 5 | Frontend (React) | Not started |
+| 4 | API and Database | COMPLETE |
+| 5 | Frontend (React) | **START HERE** |
 | 6 | Testing and Polish | Not started |
 
-### Phase 3 Preview (so you can design Phase 2 with it in mind):
-- Modified SM-2 spaced repetition algorithm
-- Mastery criteria: 85%+ accuracy over last N problems, across 2+ spaced sessions, at difficulty 3+
-- Next-problem selection logic
-- Computer-adaptive placement test (15-25 questions)
-- Stuck-loop detection (offer worked examples, route to prerequisites)
+---
 
-### Phase 4 Preview:
-- Plumber API wrapping R package
-- PostgreSQL tables: students, sessions, problem_attempts, mastery_states, spaced_repetition_schedules, courses, institutions
-- Endpoints: create student, start session, get problem, submit answer, get next problem, check progress
+## What's Done (Phase 4 - COMPLETE)
+
+### Plumber REST API (`api/`):
+- **11 endpoints**: health, register, login, progress, start/end session, get next problem, submit answer, placement start/answer, list topics
+- **Problem cache**: Server-side cache prevents client from seeing answers before submission
+- **Placement state machine**: REST-friendly step-by-step placement test (replaces callback-based approach)
+- **CORS, logging, error handling middleware**
+- Entry point: `api/run.R` → starts Plumber on port 8000
+
+### PostgreSQL Database (`db/`):
+- **6 tables**: institutions, courses, students, sessions, problem_attempts, mastery_states
+- Combined mastery + SM-2 spaced repetition in one table (same PK)
+- Indexes on student_id, session_id, topic_id, next_review
+- Seed data: UC Berkeley institution, STAT 20 course
+
+### Database Adapter (`r-package/R/db_adapter.R`):
+- `create_student_in_db()` — register student + initialize mastery rows
+- `load_student_model()` — reconstruct full student_model S3 object from DB
+- `save_student_model()` — persist all state changes (UPSERT mastery, update totals)
+- `save_session_start/end()` — session lifecycle persistence
+- `save_attempt()` — record each problem attempt
+- `lookup_student_by_email()` — login support
+- PostgreSQL array helpers for last_n_results
+
+### Docker (`docker-compose.yml`, `Dockerfile`):
+- PostgreSQL 16 with auto-schema init
+- Plumber API container (rocker/r-ver:4.3.0 base)
+- Health checks, environment variable configuration
+
+### Integration Tests (`tests/api/`):
+- DB adapter tests (create, load, save, session lifecycle, attempts)
+- Endpoint tests (full workflow: register → session → problem → answer → progress)
+- All 426 existing R package tests still passing
+
+### Phase 4 files:
+- `db/schema.sql`, `db/seed.sql`
+- `docker-compose.yml`, `Dockerfile`, `.env.example`
+- `api/plumber.R`, `api/run.R`
+- `api/R/db_connection.R`, `api/R/handlers.R`, `api/R/middleware.R`, `api/R/problem_cache.R`
+- `r-package/R/db_adapter.R`
+- `r-package/DESCRIPTION` (added DBI, RPostgres, pool imports)
+- `r-package/NAMESPACE` (added 7 new exports)
+- `tests/api/helper-setup.R`, `tests/api/test-db_adapter.R`, `tests/api/test-endpoints.R`
 
 ---
 

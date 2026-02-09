@@ -17,10 +17,14 @@ Imports:
     uuid,
     glue,
     stringr,
-    jsonlite
+    jsonlite,
+    DBI,
+    RPostgres,
+    pool
 Suggests:
     testthat (>= 3.0.0),
     devtools,
     roxygen2,
-    usethis
+    usethis,
+    sodium
 Config/testthat/edition: 3

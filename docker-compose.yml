@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fisherapp}
+      POSTGRES_USER: ${DB_USER:-fisherapp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme_in_production}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-fisherapp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-fisherapp}
+      DB_USER: ${DB_USER:-fisherapp}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme_in_production}
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
