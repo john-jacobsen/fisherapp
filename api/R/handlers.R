@@ -173,7 +173,7 @@ handle_end_session <- function(session_id, res, pool) {
 #' @param student_id Character UUID (from query)
 #' @param res Plumber response
 #' @param pool Database pool
-handle_get_next_problem <- function(student_id, res, pool) {
+handle_get_next_problem <- function(student_id, res, pool, topics = NULL) {
   if (is.null(student_id) || student_id == "") {
     return(bad_request(res, "student_id query parameter is required"))
   }
@@ -186,7 +186,15 @@ handle_get_next_problem <- function(student_id, res, pool) {
     return(bad_request(res, "No active session. Start a session first."))
   }
 
-  result <- fisherapp::get_next_problem(student)
+  # Parse comma-separated topic filter
+  allowed_topics <- NULL
+  if (!is.null(topics) && nchar(topics) > 0) {
+    allowed_topics <- trimws(strsplit(topics, ",")[[1]])
+    allowed_topics <- allowed_topics[nchar(allowed_topics) > 0]
+    if (length(allowed_topics) == 0) allowed_topics <- NULL
+  }
+
+  result <- fisherapp::get_next_problem(student, allowed_topics = allowed_topics)
 
   if (is.null(result$problem)) {
     return(list(
@@ -291,7 +299,9 @@ handle_placement_start <- function(req, res, pool) {
 
   graph <- fisherapp::load_knowledge_graph()
   topo_order <- fisherapp::get_topic_order(graph)
-  max_questions <- as.integer(body$max_questions %||% 25L)
+  questions_per_topic <- 3L
+  max_possible <- length(topo_order) * questions_per_topic
+  max_questions <- min(as.integer(body$max_questions %||% 25L), max_possible)
 
   # Initialize placement state
   state <- list(
@@ -413,14 +423,16 @@ handle_placement_answer <- function(req, res, pool) {
   # Check if placement is complete
   if (state$current_topic_idx > length(state$topo_order) ||
       state$total_asked >= state$max_questions) {
-    # Place any remaining topics
-    for (i in seq(state$current_topic_idx, length(state$topo_order))) {
-      tid <- state$topo_order[i]
-      if (is.null(state$topic_placements[[tid]])) {
-        state$topic_placements[[tid]] <- list(
-          status = "placed", start_difficulty = 1L,
-          estimated_accuracy = 0, questions_asked = 0L
-        )
+    # Place any remaining topics (only if there are topics left)
+    if (state$current_topic_idx <= length(state$topo_order)) {
+      for (i in seq(state$current_topic_idx, length(state$topo_order))) {
+        tid <- state$topo_order[i]
+        if (is.null(state$topic_placements[[tid]])) {
+          state$topic_placements[[tid]] <- list(
+            status = "placed", start_difficulty = 1L,
+            estimated_accuracy = 0, questions_asked = 0L
+          )
+        }
       }
     }
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { resetPlacement, getAiConfig, saveAiConfig, deleteAiConfig, testAiConnection } from "../api/client";
 
-type AiProvider = "anthropic" | "openai";
+type AiProvider = "anthropic" | "openai" | "gemini" | "deepseek";
 
 export default function SettingsPage() {
   const { studentId, setNeedsPlacement, setHasAiKey } = useAuth();
@@ -124,6 +124,8 @@ export default function SettingsPage() {
   const providerLabel = (p: string | null) => {
     if (p === "anthropic") return "Anthropic Claude";
     if (p === "openai") return "OpenAI";
+    if (p === "gemini") return "Google Gemini";
+    if (p === "deepseek") return "DeepSeek";
     return "None";
   };
 
@@ -161,6 +163,8 @@ export default function SettingsPage() {
                 >
                   <option value="anthropic">Anthropic Claude</option>
                   <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="deepseek">DeepSeek</option>
                 </select>
               </div>
 

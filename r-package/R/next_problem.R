@@ -16,9 +16,16 @@
 #' @param graph Optional knowledge graph
 #' @return List with \code{topic_id} and \code{difficulty}, or NULL if nothing available
 #' @export
-select_next_topic <- function(student, current_time = Sys.time(), graph = NULL) {
+select_next_topic <- function(student, current_time = Sys.time(), graph = NULL,
+                              allowed_topics = NULL) {
   if (is.null(graph)) graph <- load_knowledge_graph()
   topo_order <- get_topic_order(graph)
+
+  # Filter to allowed topics if specified
+  if (!is.null(allowed_topics) && length(allowed_topics) > 0) {
+    topo_order <- topo_order[topo_order %in% allowed_topics]
+    if (length(topo_order) == 0) return(NULL)
+  }
 
   # Bucket 1: Mastered topics due for review
   due_reviews <- character(0)
@@ -70,8 +77,9 @@ select_next_topic <- function(student, current_time = Sys.time(), graph = NULL) 
 #' @return A \code{fisherapp_problem} object, or NULL if no topics available
 #' @export
 next_problem_for_student <- function(student, current_time = Sys.time(),
-                                     graph = NULL) {
-  selection <- select_next_topic(student, current_time, graph)
+                                     graph = NULL, allowed_topics = NULL) {
+  selection <- select_next_topic(student, current_time, graph,
+                                 allowed_topics = allowed_topics)
   if (is.null(selection)) return(NULL)
   generate_problem(selection$topic_id, selection$difficulty)
 }

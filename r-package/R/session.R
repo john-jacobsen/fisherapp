@@ -35,13 +35,13 @@ start_session <- function(student) {
 #' @param student A \code{student_model} object (with active session)
 #' @return List with \code{problem}, \code{intervention}, and \code{student}
 #' @export
-get_next_problem <- function(student) {
+get_next_problem <- function(student, allowed_topics = NULL) {
   if (is.null(student$current_session)) {
     stop("No active session. Call start_session() first.")
   }
 
   # Determine next topic selection
-  selection <- select_next_topic(student)
+  selection <- select_next_topic(student, allowed_topics = allowed_topics)
 
   if (is.null(selection)) {
     return(list(

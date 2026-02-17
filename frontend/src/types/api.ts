@@ -103,7 +103,7 @@ export interface Topic {
 
 export interface AiConfig {
   student_id: string;
-  provider: "anthropic" | "openai" | null;
+  provider: "anthropic" | "openai" | "gemini" | "deepseek" | null;
   configured: boolean;
   key_hint?: string;
 }

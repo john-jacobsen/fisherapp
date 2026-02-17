@@ -81,7 +81,7 @@ export default function MathInput({
       // Configure the mathfield
       el.mathVirtualKeyboardPolicy = "auto";
       el.smartFence = true;
-      el.smartSuperscript = true;
+      el.smartSuperscript = false;
       if (value) el.setValue(value);
     }
   }, []);

@@ -52,9 +52,11 @@ export function latexToPlain(latex: string): string {
   s = s.replace(/\\sum_\{([^}]+)\}\^\{([^}]+)\}/g, "sum_{$1}^{$2}");
   s = s.replace(/\\sum/g, "sum");
 
-  // Remove braces around single-character exponents: x^{2} → x^2
-  // Keep braces for multi-char exponents since backend can handle both
+  // Remove braces around exponents: x^{2} → x^2, x^{15} → x^15
   s = s.replace(/\^\{([^}]+)\}/g, "^$1");
+
+  // Remove parentheses around numeric exponents: x^(15) → x^15
+  s = s.replace(/\^\((\d+)\)/g, "^$1");
 
   // Remove braces around subscripts: x_{1} → x_1
   s = s.replace(/_\{([^}]+)\}/g, "_$1");

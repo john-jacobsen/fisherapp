@@ -26,6 +26,8 @@ normalize_answer <- function(answer) {
   answer <- gsub("\\\\,", "", answer)                 # thin space
   answer <- gsub("\\\\;", "", answer)                 # medium space
   answer <- gsub("\\\\!", "", answer)                 # negative thin space
+  # Remove parentheses around exponents: ^(15) -> ^15
+  answer <- gsub("\\^\\((-?\\d+)\\)", "^\\1", answer)
   # Remove spaces around operators
   answer <- gsub("\\s+", "", answer)
   answer
@@ -171,6 +173,17 @@ parse_student_answer <- function(answer) {
   if (length(m) == 2) {
     val <- suppressWarnings(as.numeric(m[2]))
     if (!is.na(val) && val >= 0) return(list(value = sqrt(val)))
+  }
+
+  # Try simple numeric exponent expression: base^exp (e.g., "2^3" -> 8)
+  m <- regmatches(answer,
+    regexec("^(-?\\d+\\.?\\d*)\\^(-?\\d+\\.?\\d*)$", answer))[[1]]
+  if (length(m) == 3) {
+    base_val <- suppressWarnings(as.numeric(m[2]))
+    exp_val <- suppressWarnings(as.numeric(m[3]))
+    if (!is.na(base_val) && !is.na(exp_val)) {
+      return(list(value = base_val ^ exp_val))
+    }
   }
 
   # Try decimal or integer (including leading dot like ".5")

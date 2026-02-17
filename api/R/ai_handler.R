@@ -85,13 +85,15 @@ call_anthropic <- function(api_key, prompt, model = "claude-sonnet-4-5-20250929"
   parsed$content[[1]]$text
 }
 
-#' Call the OpenAI API
+#' Call an OpenAI-compatible chat completions API
 #'
 #' @param api_key Character
 #' @param prompt Character
 #' @param model Character, default "gpt-4o-mini"
+#' @param base_url Character, API base URL
 #' @return Character, the response text
-call_openai <- function(api_key, prompt, model = "gpt-4o-mini") {
+call_openai_compatible <- function(api_key, prompt, model = "gpt-4o-mini",
+                                   base_url = "https://api.openai.com/v1") {
   body <- jsonlite::toJSON(list(
     model = model,
     max_tokens = 1024L,
@@ -99,7 +101,7 @@ call_openai <- function(api_key, prompt, model = "gpt-4o-mini") {
   ), auto_unbox = TRUE)
 
   response <- httr::POST(
-    url = "https://api.openai.com/v1/chat/completions",
+    url = paste0(base_url, "/chat/completions"),
     httr::add_headers(
       "Authorization" = paste("Bearer", api_key),
       "Content-Type" = "application/json"
@@ -121,6 +123,65 @@ call_openai <- function(api_key, prompt, model = "gpt-4o-mini") {
   parsed$choices[[1]]$message$content
 }
 
+#' Call the OpenAI API
+#'
+#' @param api_key Character
+#' @param prompt Character
+#' @param model Character, default "gpt-4o-mini"
+#' @return Character, the response text
+call_openai <- function(api_key, prompt, model = "gpt-4o-mini") {
+  call_openai_compatible(api_key, prompt, model = model)
+}
+
+#' Call the Google Gemini API
+#'
+#' @param api_key Character
+#' @param prompt Character
+#' @param model Character, default "gemini-2.0-flash"
+#' @return Character, the response text
+call_gemini <- function(api_key, prompt, model = "gemini-2.0-flash") {
+  body <- jsonlite::toJSON(list(
+    contents = list(list(
+      parts = list(list(text = prompt))
+    ))
+  ), auto_unbox = TRUE)
+
+  url <- paste0(
+    "https://generativelanguage.googleapis.com/v1beta/models/",
+    model, ":generateContent?key=", api_key
+  )
+
+  response <- httr::POST(
+    url = url,
+    httr::add_headers("Content-Type" = "application/json"),
+    body = body,
+    encode = "raw",
+    httr::timeout(30)
+  )
+
+  if (httr::status_code(response) != 200) {
+    msg <- tryCatch({
+      parsed <- httr::content(response, as = "parsed", simplifyVector = TRUE)
+      parsed$error$message %||% paste("API error:", httr::status_code(response))
+    }, error = function(e) paste("API error:", httr::status_code(response)))
+    stop(msg)
+  }
+
+  parsed <- httr::content(response, as = "parsed", simplifyVector = TRUE)
+  parsed$candidates[[1]]$content$parts[[1]]$text
+}
+
+#' Call the DeepSeek API (OpenAI-compatible)
+#'
+#' @param api_key Character
+#' @param prompt Character
+#' @param model Character, default "deepseek-chat"
+#' @return Character, the response text
+call_deepseek <- function(api_key, prompt, model = "deepseek-chat") {
+  call_openai_compatible(api_key, prompt, model = model,
+                         base_url = "https://api.deepseek.com/v1")
+}
+
 #' Test an AI provider connection with a lightweight request
 #'
 #' @param provider Character, "anthropic" or "openai"
@@ -131,6 +192,10 @@ test_ai_connection <- function(provider, api_key) {
     call_anthropic(api_key, "Say 'ok'.", model = "claude-haiku-4-5-20251001")
   } else if (provider == "openai") {
     call_openai(api_key, "Say 'ok'.", model = "gpt-4o-mini")
+  } else if (provider == "gemini") {
+    call_gemini(api_key, "Say 'ok'.", model = "gemini-2.0-flash")
+  } else if (provider == "deepseek") {
+    call_deepseek(api_key, "Say 'ok'.", model = "deepseek-chat")
   } else {
     stop("Unsupported provider: ", provider)
   }
@@ -175,8 +240,8 @@ handle_save_ai_config <- function(req, res, pool) {
     return(bad_request(res, "student_id, provider, and api_key are required"))
   }
 
-  if (!(body$provider %in% c("anthropic", "openai"))) {
-    return(bad_request(res, "provider must be 'anthropic' or 'openai'"))
+  if (!(body$provider %in% c("anthropic", "openai", "gemini", "deepseek"))) {
+    return(bad_request(res, "provider must be 'anthropic', 'openai', 'gemini', or 'deepseek'"))
   }
 
   encrypted <- encrypt_api_key(body$api_key)
@@ -303,6 +368,10 @@ handle_ai_explain <- function(req, res, pool) {
   tryCatch({
     response_text <- if (config$provider == "anthropic") {
       call_anthropic(api_key, prompt)
+    } else if (config$provider == "gemini") {
+      call_gemini(api_key, prompt)
+    } else if (config$provider == "deepseek") {
+      call_deepseek(api_key, prompt)
     } else {
       call_openai(api_key, prompt)
     }

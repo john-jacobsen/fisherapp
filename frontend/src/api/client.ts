@@ -84,8 +84,12 @@ export function endSession(sessionId: string): Promise<SessionEndResponse> {
 
 // --- Problems ---
 
-export function getNextProblem(studentId: string): Promise<Problem> {
-  return request(`/problems/next?student_id=${studentId}`);
+export function getNextProblem(studentId: string, topics?: string[]): Promise<Problem> {
+  let url = `/problems/next?student_id=${studentId}`;
+  if (topics && topics.length > 0) {
+    url += `&topics=${topics.join(",")}`;
+  }
+  return request(url);
 }
 
 export function checkAnswer(
@@ -161,7 +165,7 @@ export function getAiConfig(studentId: string): Promise<AiConfig> {
 
 export function saveAiConfig(
   studentId: string,
-  provider: "anthropic" | "openai",
+  provider: "anthropic" | "openai" | "gemini" | "deepseek",
   apiKey: string
 ): Promise<AiConfigSaveResponse> {
   return request(`/students/${studentId}/ai-config`, {

@@ -130,10 +130,11 @@ function(session_id, res) {
 #* Get next problem for a student
 #* @get /problems/next
 #* @param student_id:character Student UUID
+#* @param topics:character Comma-separated topic IDs to filter (optional)
 #* @serializer unboxedJSON
-function(student_id, res) {
+function(student_id, topics = NULL, res) {
   tryCatch(
-    handle_get_next_problem(student_id, res, db_pool),
+    handle_get_next_problem(student_id, res, db_pool, topics = topics),
     error = function(e) {
       res$status <- 500
       list(status = "error", message = conditionMessage(e))

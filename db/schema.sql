@@ -39,7 +39,7 @@ CREATE TABLE students (
   total_attempts        INTEGER NOT NULL DEFAULT 0,
   total_correct         INTEGER NOT NULL DEFAULT 0,
   placement_completed_at TIMESTAMPTZ,
-  ai_provider           TEXT CHECK (ai_provider IN ('anthropic', 'openai')),
+  ai_provider           TEXT CHECK (ai_provider IN ('anthropic', 'openai', 'gemini', 'deepseek')),
   ai_api_key_encrypted  TEXT,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
