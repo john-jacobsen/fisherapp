@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { saveAiConfig } from "../api/client";
+
+type AiProvider = "anthropic" | "openai";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -9,8 +11,12 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
-  const navigate = useNavigate();
+  const { login, register, setHasAiKey } = useAuth();
+
+  // AI config during registration
+  const [showAiSection, setShowAiSection] = useState(false);
+  const [aiProvider, setAiProvider] = useState<AiProvider>("anthropic");
+  const [aiApiKey, setAiApiKey] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +25,25 @@ export default function LoginPage() {
 
     try {
       if (isRegister) {
-        await register(email, password, name);
-        navigate("/placement");
+        const result = await register(email, password, name);
+        // If user provided an AI key during registration, save it
+        if (aiApiKey.trim()) {
+          try {
+            // Get the student_id from localStorage (set by register)
+            const studentId = localStorage.getItem("studentId");
+            if (studentId) {
+              await saveAiConfig(studentId, aiProvider, aiApiKey.trim());
+              setHasAiKey(true);
+            }
+          } catch {
+            // Don't block registration if AI config fails
+          }
+        }
+        return result;
       } else {
         await login(email, password);
-        navigate("/dashboard");
       }
+      // Redirect is handled by App.tsx route (Navigate based on auth state)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -110,6 +129,48 @@ export default function LoginPage() {
                 required
               />
             </div>
+
+            {/* AI-Powered Solutions — only on registration */}
+            {isRegister && (
+              <div className="border border-slate-200 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setShowAiSection(!showAiSection)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-slate-600 hover:text-slate-800"
+                >
+                  <span>AI-Powered Solutions (optional)</span>
+                  <span className="text-slate-400">{showAiSection ? "−" : "+"}</span>
+                </button>
+                {showAiSection && (
+                  <div className="px-3 pb-3 space-y-3 border-t border-slate-100 pt-3">
+                    <p className="text-xs text-slate-400">
+                      Add your own AI API key for AI-powered explanations. You can also do this later in Settings.
+                    </p>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Provider</label>
+                      <select
+                        value={aiProvider}
+                        onChange={(e) => setAiProvider(e.target.value as AiProvider)}
+                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="anthropic">Anthropic Claude</option>
+                        <option value="openai">OpenAI</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={aiApiKey}
+                        onChange={(e) => setAiApiKey(e.target.value)}
+                        placeholder="Paste your API key"
+                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {error && (
               <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">

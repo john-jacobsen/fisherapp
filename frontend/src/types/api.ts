@@ -4,10 +4,12 @@ export interface RegisterResponse {
   student_id: string;
   email: string;
   name: string;
+  needs_placement: boolean;
 }
 
 export interface LoginResponse {
   student_id: string;
+  needs_placement: boolean;
 }
 
 export interface SessionResponse {
@@ -97,6 +99,30 @@ export interface Topic {
   title: string;
   prerequisites: string[];
   skills: string[];
+}
+
+export interface AiConfig {
+  student_id: string;
+  provider: "anthropic" | "openai" | null;
+  configured: boolean;
+  key_hint?: string;
+}
+
+export interface AiConfigSaveResponse {
+  student_id: string;
+  provider: string;
+  configured: boolean;
+}
+
+export interface AiTestResponse {
+  student_id: string;
+  provider: string;
+  success: boolean;
+}
+
+export interface AiExplainResponse {
+  explanation: string;
+  provider: string;
 }
 
 export interface ApiError {

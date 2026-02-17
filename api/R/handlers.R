@@ -34,9 +34,10 @@ handle_register_student <- function(req, res, pool) {
   )
 
   list(
-    student_id = student$student_id,
-    email      = body$email,
-    name       = body$name
+    student_id      = student$student_id,
+    email           = body$email,
+    name            = body$name,
+    needs_placement = TRUE
   )
 }
 
@@ -62,7 +63,14 @@ handle_login_student <- function(req, res, pool) {
     return(list(status = "error", message = "Invalid email or password"))
   }
 
-  list(student_id = row$student_id[1])
+  # Check placement status
+  student <- fisherapp::load_student_model(pool, row$student_id[1])
+  needs_placement <- is.null(student$placement_completed_at)
+
+  list(
+    student_id      = row$student_id[1],
+    needs_placement = needs_placement
+  )
 }
 
 #' Get student progress
@@ -489,12 +497,61 @@ finalize_placement <- function(state, student, pool) {
   }
 
   fisherapp::save_student_model(pool, student)
+  fisherapp::mark_placement_completed(pool, student$student_id)
 
   list(
     placement_active = FALSE,
     completed        = TRUE,
     questions_asked  = state$total_asked,
     placements       = state$topic_placements
+  )
+}
+
+#' Skip placement test (start at beginner level)
+#'
+#' @param req Plumber request
+#' @param res Plumber response
+#' @param pool Database pool
+handle_placement_skip <- function(req, res, pool) {
+  body <- req$body
+  if (is.null(body$student_id)) {
+    return(bad_request(res, "student_id is required"))
+  }
+
+  student <- fisherapp::load_student_model(pool, body$student_id)
+  if (is.null(student)) {
+    return(not_found(res, "Student not found"))
+  }
+
+  fisherapp::mark_placement_completed(pool, body$student_id)
+
+  list(
+    student_id = body$student_id,
+    skipped    = TRUE
+  )
+}
+
+#' Reset placement for retake
+#'
+#' @param req Plumber request
+#' @param res Plumber response
+#' @param pool Database pool
+handle_placement_reset <- function(req, res, pool) {
+  body <- req$body
+  if (is.null(body$student_id)) {
+    return(bad_request(res, "student_id is required"))
+  }
+
+  student <- fisherapp::load_student_model(pool, body$student_id)
+  if (is.null(student)) {
+    return(not_found(res, "Student not found"))
+  }
+
+  fisherapp::reset_placement(pool, body$student_id)
+
+  list(
+    student_id      = body$student_id,
+    needs_placement = TRUE
   )
 }
 

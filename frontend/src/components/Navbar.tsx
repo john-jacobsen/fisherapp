@@ -32,6 +32,12 @@ export default function Navbar() {
           >
             Practice
           </Link>
+          <Link
+            to="/settings"
+            className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
+          >
+            Settings
+          </Link>
           <button
             onClick={handleLogout}
             className="text-sm text-slate-500 hover:text-red-600 transition-colors"

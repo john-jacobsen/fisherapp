@@ -6,10 +6,11 @@ library(plumber)
 library(fisherapp)
 
 # Source helper modules
-source("api/R/db_connection.R")
-source("api/R/middleware.R")
-source("api/R/problem_cache.R")
-source("api/R/handlers.R")
+source("R/db_connection.R")
+source("R/middleware.R")
+source("R/problem_cache.R")
+source("R/handlers.R")
+source("R/ai_handler.R")
 
 # Initialize database connection pool
 db_pool <- create_db_pool()
@@ -174,6 +175,105 @@ function(req, res) {
 function(req, res) {
   tryCatch(
     handle_placement_answer(req, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Skip the placement test
+#* @post /placement/skip
+#* @serializer unboxedJSON
+function(req, res) {
+  tryCatch(
+    handle_placement_skip(req, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Reset placement for retake
+#* @post /placement/reset
+#* @serializer unboxedJSON
+function(req, res) {
+  tryCatch(
+    handle_placement_reset(req, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+# --- AI Configuration ---
+
+#* Save AI configuration for a student
+#* @post /students/<student_id>/ai-config
+#* @param student_id:character Student UUID
+#* @serializer unboxedJSON
+function(req, res, student_id) {
+  req$args$student_id <- student_id
+  tryCatch(
+    handle_save_ai_config(req, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Get AI configuration for a student
+#* @get /students/<student_id>/ai-config
+#* @param student_id:character Student UUID
+#* @serializer unboxedJSON
+function(student_id, res) {
+  tryCatch(
+    handle_get_ai_config(student_id, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Delete AI configuration for a student
+#* @delete /students/<student_id>/ai-config
+#* @param student_id:character Student UUID
+#* @serializer unboxedJSON
+function(student_id, res) {
+  tryCatch(
+    handle_delete_ai_config(student_id, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Test AI connection for a student
+#* @post /students/<student_id>/ai-config/test
+#* @param student_id:character Student UUID
+#* @serializer unboxedJSON
+function(req, res, student_id) {
+  req$args$student_id <- student_id
+  tryCatch(
+    handle_test_ai_connection(req, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
+#* Get AI-powered explanation for a problem
+#* @post /ai/explain
+#* @serializer unboxedJSON
+function(req, res) {
+  tryCatch(
+    handle_ai_explain(req, res, db_pool),
     error = function(e) {
       res$status <- 500
       list(status = "error", message = conditionMessage(e))

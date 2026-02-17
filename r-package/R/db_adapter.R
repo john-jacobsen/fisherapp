@@ -2,6 +2,23 @@
 # Database Adapter — Bridge between PostgreSQL and in-memory student_model
 # =============================================================================
 
+#' Get a raw DBI connection from a pool (or pass through a plain connection)
+#'
+#' Uses \code{pool::localCheckout()} when \code{con} is a Pool object so that
+#' \code{DBI::dbWithTransaction()} works correctly.  The checked-out connection
+#' is automatically returned to the pool when the calling function exits.
+#'
+#' @param con A Pool or DBI connection
+#' @return A DBI connection
+#' @keywords internal
+local_con <- function(con) {
+  if (inherits(con, "Pool")) {
+    pool::localCheckout(con)
+  } else {
+    con
+  }
+}
+
 #' Create a new student in the database
 #'
 #' Inserts a student row, then initializes mastery_states for all active topics.
@@ -20,21 +37,25 @@ create_student_in_db <- function(con, email, password_hash,
                                  course_id = NULL) {
   student <- create_student_model()
 
-  DBI::dbWithTransaction(con, {
-    DBI::dbExecute(con,
+  db <- local_con(con)
+
+  DBI::dbWithTransaction(db, {
+    DBI::dbExecute(db,
       "INSERT INTO students (student_id, email, password_hash, display_name,
                              institution_id, course_id, total_attempts, total_correct)
        VALUES ($1, $2, $3, $4, $5, $6, 0, 0)",
       params = list(
         student$student_id, email, password_hash,
-        display_name, institution_id, course_id
+        if (is.null(display_name)) NA_character_ else display_name,
+        if (is.null(institution_id)) NA_character_ else institution_id,
+        if (is.null(course_id)) NA_character_ else course_id
       )
     )
 
     # Initialize mastery_states for all active topics
     active <- get_active_topics()
     for (tid in active) {
-      DBI::dbExecute(con,
+      DBI::dbExecute(db,
         "INSERT INTO mastery_states (student_id, topic_id)
          VALUES ($1, $2)",
         params = list(student$student_id, tid)
@@ -56,7 +77,8 @@ create_student_in_db <- function(con, email, password_hash,
 load_student_model <- function(con, student_id) {
   # 1. Load student row
   student_row <- DBI::dbGetQuery(con,
-    "SELECT student_id, total_attempts, total_correct, created_at
+    "SELECT student_id, total_attempts, total_correct, created_at,
+            placement_completed_at
      FROM students WHERE student_id = $1",
     params = list(student_id)
   )
@@ -128,21 +150,27 @@ load_student_model <- function(con, student_id) {
         attempts         = list(),
         problems_served  = as.integer(session_row$problems_served[1]),
         problems_correct = as.integer(session_row$problems_correct[1]),
-        is_placement     = as.logical(session_row$is_placement[1])
+        is_placement     = as.logical(session_row$is_placement[1]),
+        templates_served = character(0)
       ),
       class = "tutor_session"
     )
   }
 
+  pca <- student_row$placement_completed_at[1]
+  placement_completed_at <- if (is.null(pca) || is.na(pca)) NULL else
+    as.POSIXct(pca, tz = "UTC")
+
   structure(
     list(
-      student_id      = student_id,
-      created_at      = as.POSIXct(student_row$created_at[1], tz = "UTC"),
-      topics          = topics,
-      current_session = current_session,
-      session_history = list(),
-      total_attempts  = as.integer(student_row$total_attempts[1]),
-      total_correct   = as.integer(student_row$total_correct[1])
+      student_id             = student_id,
+      created_at             = as.POSIXct(student_row$created_at[1], tz = "UTC"),
+      topics                 = topics,
+      current_session        = current_session,
+      session_history        = list(),
+      total_attempts         = as.integer(student_row$total_attempts[1]),
+      total_correct          = as.integer(student_row$total_correct[1]),
+      placement_completed_at = placement_completed_at
     ),
     class = "student_model"
   )
@@ -157,9 +185,11 @@ load_student_model <- function(con, student_id) {
 #' @param student A \code{student_model} object
 #' @export
 save_student_model <- function(con, student) {
-  DBI::dbWithTransaction(con, {
+  db <- local_con(con)
+
+  DBI::dbWithTransaction(db, {
     # 1. Update student totals
-    DBI::dbExecute(con,
+    DBI::dbExecute(db,
       "UPDATE students SET total_attempts = $1, total_correct = $2
        WHERE student_id = $3",
       params = list(student$total_attempts, student$total_correct,
@@ -176,7 +206,7 @@ save_student_model <- function(con, student) {
       }
       lnr_pg <- format_pg_int_array(ts$last_n_results)
 
-      DBI::dbExecute(con,
+      DBI::dbExecute(db,
         "INSERT INTO mastery_states
            (student_id, topic_id, mastery_state, difficulty,
             attempt_count, correct_count, session_count, consecutive_wrong,
@@ -209,7 +239,7 @@ save_student_model <- function(con, student) {
     # 3. Update session if active
     if (!is.null(student$current_session)) {
       sess <- student$current_session
-      DBI::dbExecute(con,
+      DBI::dbExecute(db,
         "UPDATE sessions SET problems_served = $1, problems_correct = $2
          WHERE session_id = $3",
         params = list(sess$problems_served, sess$problems_correct,
@@ -295,6 +325,98 @@ save_attempt <- function(con, session_id, student_id, problem,
       answer, problem$answer, result$correct,
       attempt_number
     )
+  )
+  invisible(NULL)
+}
+
+#' Mark placement as completed for a student
+#'
+#' @param con A DBI connection or pool object
+#' @param student_id Character UUID
+#' @export
+mark_placement_completed <- function(con, student_id) {
+  DBI::dbExecute(con,
+    "UPDATE students SET placement_completed_at = now()
+     WHERE student_id = $1",
+    params = list(student_id)
+  )
+  invisible(NULL)
+}
+
+#' Reset placement for a student (for retake)
+#'
+#' Clears placement_completed_at and resets all topic states to defaults.
+#'
+#' @param con A DBI connection or pool object
+#' @param student_id Character UUID
+#' @export
+reset_placement <- function(con, student_id) {
+  db <- local_con(con)
+  DBI::dbWithTransaction(db, {
+    DBI::dbExecute(db,
+      "UPDATE students SET placement_completed_at = NULL WHERE student_id = $1",
+      params = list(student_id)
+    )
+    DBI::dbExecute(db,
+      "UPDATE mastery_states SET
+         mastery_state = 'not_started', difficulty = 1,
+         attempt_count = 0, correct_count = 0, session_count = 0,
+         consecutive_wrong = 0, last_n_results = '{}',
+         ease_factor = 2.50, sm2_interval = 0, repetition = 0,
+         next_review = now(), updated_at = now()
+       WHERE student_id = $1",
+      params = list(student_id)
+    )
+  })
+  invisible(NULL)
+}
+
+#' Save AI configuration for a student
+#'
+#' @param con A DBI connection or pool object
+#' @param student_id Character UUID
+#' @param provider Character, "anthropic" or "openai"
+#' @param encrypted_key Character, the encrypted API key
+#' @export
+save_ai_config <- function(con, student_id, provider, encrypted_key) {
+  DBI::dbExecute(con,
+    "UPDATE students SET ai_provider = $1, ai_api_key_encrypted = $2
+     WHERE student_id = $3",
+    params = list(provider, encrypted_key, student_id)
+  )
+  invisible(NULL)
+}
+
+#' Get AI configuration for a student
+#'
+#' @param con A DBI connection or pool object
+#' @param student_id Character UUID
+#' @return List with provider and encrypted_key, or NULL if not configured
+#' @export
+get_ai_config <- function(con, student_id) {
+  row <- DBI::dbGetQuery(con,
+    "SELECT ai_provider, ai_api_key_encrypted
+     FROM students WHERE student_id = $1",
+    params = list(student_id)
+  )
+  if (nrow(row) == 0) return(NULL)
+  if (is.na(row$ai_provider[1]) || is.null(row$ai_provider[1])) return(NULL)
+  list(
+    provider      = row$ai_provider[1],
+    encrypted_key = row$ai_api_key_encrypted[1]
+  )
+}
+
+#' Delete AI configuration for a student
+#'
+#' @param con A DBI connection or pool object
+#' @param student_id Character UUID
+#' @export
+delete_ai_config <- function(con, student_id) {
+  DBI::dbExecute(con,
+    "UPDATE students SET ai_provider = NULL, ai_api_key_encrypted = NULL
+     WHERE student_id = $1",
+    params = list(student_id)
   )
   invisible(NULL)
 }

@@ -9,6 +9,10 @@ import type {
   PlacementProblem,
   PlacementResult,
   Topic,
+  AiConfig,
+  AiConfigSaveResponse,
+  AiTestResponse,
+  AiExplainResponse,
 } from "../types/api";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
@@ -116,6 +120,24 @@ export function startPlacement(
   });
 }
 
+export function skipPlacement(
+  studentId: string
+): Promise<{ student_id: string; skipped: boolean }> {
+  return request("/placement/skip", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId }),
+  });
+}
+
+export function resetPlacement(
+  studentId: string
+): Promise<{ student_id: string; needs_placement: boolean }> {
+  return request("/placement/reset", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId }),
+  });
+}
+
 export function submitPlacementAnswer(
   studentId: string,
   problemId: string,
@@ -127,6 +149,54 @@ export function submitPlacementAnswer(
       student_id: studentId,
       problem_id: problemId,
       answer,
+    }),
+  });
+}
+
+// --- AI Configuration ---
+
+export function getAiConfig(studentId: string): Promise<AiConfig> {
+  return request(`/students/${studentId}/ai-config`);
+}
+
+export function saveAiConfig(
+  studentId: string,
+  provider: "anthropic" | "openai",
+  apiKey: string
+): Promise<AiConfigSaveResponse> {
+  return request(`/students/${studentId}/ai-config`, {
+    method: "POST",
+    body: JSON.stringify({ provider, api_key: apiKey }),
+  });
+}
+
+export function deleteAiConfig(studentId: string): Promise<{ student_id: string; configured: boolean }> {
+  return request(`/students/${studentId}/ai-config`, {
+    method: "DELETE",
+  });
+}
+
+export function testAiConnection(studentId: string): Promise<AiTestResponse> {
+  return request(`/students/${studentId}/ai-config/test`, {
+    method: "POST",
+  });
+}
+
+export function getAiExplanation(
+  studentId: string,
+  topicId: string,
+  statement: string,
+  studentAnswer: string,
+  correctAnswer: string
+): Promise<AiExplainResponse> {
+  return request("/ai/explain", {
+    method: "POST",
+    body: JSON.stringify({
+      student_id: studentId,
+      topic_id: topicId,
+      statement,
+      student_answer: studentAnswer,
+      correct_answer: correctAnswer,
     }),
   });
 }

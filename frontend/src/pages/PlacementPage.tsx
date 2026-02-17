@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { startPlacement, submitPlacementAnswer } from "../api/client";
+import { startPlacement, submitPlacementAnswer, skipPlacement } from "../api/client";
 import ProblemCard from "../components/ProblemCard";
 import AnswerInput from "../components/AnswerInput";
 import PlacementProgress from "../components/PlacementProgress";
@@ -11,7 +11,7 @@ import { TOPIC_LABELS } from "../components/ProblemCard";
 type PlacementState = "intro" | "loading" | "question" | "done" | "error";
 
 export default function PlacementPage() {
-  const { studentId } = useAuth();
+  const { studentId, setNeedsPlacement } = useAuth();
   const navigate = useNavigate();
   const [state, setState] = useState<PlacementState>("intro");
   const [currentProblem, setCurrentProblem] = useState<PlacementProblem | null>(null);
@@ -35,6 +35,19 @@ export default function PlacementPage() {
     }
   }, [studentId]);
 
+  const handleSkip = useCallback(async () => {
+    if (!studentId) return;
+    setState("loading");
+    try {
+      await skipPlacement(studentId);
+      setNeedsPlacement(false);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to skip placement");
+      setState("error");
+    }
+  }, [studentId, navigate, setNeedsPlacement]);
+
   const handleSubmit = async (answer: string) => {
     if (!studentId || !currentProblem?.problem_id) return;
     setSubmitting(true);
@@ -50,6 +63,7 @@ export default function PlacementPage() {
         const final = result as PlacementResult;
         setPlacements(final.placements);
         setTotalAsked(final.questions_asked);
+        setNeedsPlacement(false);
         setState("done");
       } else {
         // Next question
@@ -76,17 +90,25 @@ export default function PlacementPage() {
         <div className="text-center py-16">
           <h1 className="text-3xl font-bold text-slate-900 mb-4">Placement Test</h1>
           <p className="text-slate-500 mb-2 max-w-md mx-auto">
-            Answer 15–25 questions to determine your starting level across 8 algebra topics.
+            Answer 15-25 questions to determine your starting level across 8 algebra topics.
           </p>
           <p className="text-slate-400 text-sm mb-8">
             The test adapts to your level — difficulty increases when you answer correctly.
           </p>
-          <button
-            onClick={startTest}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium text-lg hover:bg-blue-700 transition-colors"
-          >
-            Begin Test
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={startTest}
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium text-lg hover:bg-blue-700 transition-colors"
+            >
+              Begin Test
+            </button>
+            <button
+              onClick={handleSkip}
+              className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              Skip and start at beginner level
+            </button>
+          </div>
         </div>
       )}
 

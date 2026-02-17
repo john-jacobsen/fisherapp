@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import PlacementPage from "./pages/PlacementPage";
 import PracticePage from "./pages/PracticePage";
 import DashboardPage from "./pages/DashboardPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { studentId } = useAuth();
@@ -13,7 +14,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { studentId } = useAuth();
+  const { studentId, needsPlacement } = useAuth();
+
+  const loggedInRedirect = needsPlacement ? "/placement" : "/dashboard";
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -21,7 +24,7 @@ function AppRoutes() {
       <Routes>
         <Route
           path="/login"
-          element={studentId ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+          element={studentId ? <Navigate to={loggedInRedirect} replace /> : <LoginPage />}
         />
         <Route
           path="/placement"
@@ -47,7 +50,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to={studentId ? "/dashboard" : "/login"} replace />} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to={studentId ? loggedInRedirect : "/login"} replace />} />
       </Routes>
     </div>
   );

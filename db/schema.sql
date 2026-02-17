@@ -30,15 +30,18 @@ CREATE TABLE courses (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE students (
-  student_id     UUID PRIMARY KEY,
-  email          TEXT UNIQUE NOT NULL,
-  password_hash  TEXT NOT NULL,
-  display_name   TEXT,
-  institution_id UUID REFERENCES institutions(institution_id),
-  course_id      UUID REFERENCES courses(course_id),
-  total_attempts INTEGER NOT NULL DEFAULT 0,
-  total_correct  INTEGER NOT NULL DEFAULT 0,
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+  student_id            UUID PRIMARY KEY,
+  email                 TEXT UNIQUE NOT NULL,
+  password_hash         TEXT NOT NULL,
+  display_name          TEXT,
+  institution_id        UUID REFERENCES institutions(institution_id),
+  course_id             UUID REFERENCES courses(course_id),
+  total_attempts        INTEGER NOT NULL DEFAULT 0,
+  total_correct         INTEGER NOT NULL DEFAULT 0,
+  placement_completed_at TIMESTAMPTZ,
+  ai_provider           TEXT CHECK (ai_provider IN ('anthropic', 'openai')),
+  ai_api_key_encrypted  TEXT,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE sessions (
