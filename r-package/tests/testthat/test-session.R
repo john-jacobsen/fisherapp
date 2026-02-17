@@ -5,6 +5,21 @@ test_that("start_session creates valid session", {
   expect_true(nchar(s$current_session$session_id) > 0)
   expect_equal(s$current_session$problems_served, 0L)
   expect_equal(length(s$current_session$topics_attempted), 0)
+  expect_equal(length(s$current_session$templates_served), 0)
+})
+
+test_that("get_next_problem tracks templates_served", {
+  s <- create_student_model()
+  s <- start_session(s)
+  result <- get_next_problem(s)
+  s <- result$student
+  expect_equal(length(s$current_session$templates_served), 1)
+  expect_true(nchar(s$current_session$templates_served[1]) > 0)
+
+  # Second problem should add to the list
+  result2 <- get_next_problem(s)
+  s <- result2$student
+  expect_equal(length(s$current_session$templates_served), 2)
 })
 
 test_that("submit_answer updates student state on correct answer", {

@@ -18,7 +18,8 @@ start_session <- function(student) {
       attempts         = list(),
       problems_served  = 0L,
       problems_correct = 0L,
-      is_placement     = FALSE
+      is_placement     = FALSE,
+      templates_served = character(0)
     ),
     class = "tutor_session"
   )
@@ -74,7 +75,12 @@ get_next_problem <- function(student) {
     }
   }
 
-  problem <- generate_problem(selection$topic_id, selection$difficulty)
+  problem <- generate_problem(selection$topic_id, selection$difficulty,
+    exclude_templates = student$current_session$templates_served)
+
+  # Track the served template
+  student$current_session$templates_served <- c(
+    student$current_session$templates_served, problem$template_id)
 
   list(
     problem      = problem,

@@ -16,6 +16,9 @@
 #' @param template_id Character. Optional specific template. If NULL, a random
 #'   matching template is chosen.
 #' @param seed Integer. Optional seed for reproducibility.
+#' @param exclude_templates Character vector. Template IDs to avoid (recently
+#'   served in session). If all candidates are excluded, the least recently
+#'   served template is used to maximize the gap between repeats.
 #' @return A \code{fisherapp_problem} object (S3 list) with fields:
 #'   problem_id, topic_id, difficulty, template_id, statement, solution_steps,
 #'   answer, answer_raw, prerequisites, params
@@ -26,7 +29,7 @@
 #' print(prob)
 #' }
 generate_problem <- function(topic_id, difficulty, template_id = NULL,
-                             seed = NULL) {
+                             seed = NULL, exclude_templates = NULL) {
   if (!is.null(seed)) set.seed(seed)
 
   # Find matching template(s)
@@ -39,7 +42,7 @@ generate_problem <- function(topic_id, difficulty, template_id = NULL,
       stop("No templates for topic '", topic_id,
            "' at difficulty ", difficulty)
     }
-    tmpl <- candidates[[sample.int(length(candidates), 1)]]
+    tmpl <- select_template(candidates, exclude_templates)
   }
 
   # Draw parameters with constraint checking
@@ -72,6 +75,42 @@ generate_problem <- function(topic_id, difficulty, template_id = NULL,
     ),
     class = "fisherapp_problem"
   )
+}
+
+#' Select a template from candidates, avoiding recently served ones
+#'
+#' Prefers templates not in the exclude list. If all candidates are excluded,
+#' picks the one that was served least recently (earliest in the exclude list)
+#' to maximize the gap between repeats.
+#'
+#' @param candidates List of template objects
+#' @param exclude_templates Character vector of recently served template IDs
+#'   (in chronological order)
+#' @return A single template object
+#' @keywords internal
+select_template <- function(candidates, exclude_templates = NULL) {
+  if (is.null(exclude_templates) || length(exclude_templates) == 0) {
+    return(candidates[[sample.int(length(candidates), 1)]])
+  }
+
+  candidate_ids <- vapply(candidates, function(t) t$template_id, character(1))
+  unseen <- which(!(candidate_ids %in% exclude_templates))
+
+  if (length(unseen) > 0) {
+    # Pick randomly among unseen templates
+    idx <- unseen[sample.int(length(unseen), 1)]
+    return(candidates[[idx]])
+  }
+
+  # All candidates have been seen — pick the one served longest ago
+  # (earliest position in exclude_templates = most gap since last served)
+  last_positions <- vapply(candidate_ids, function(id) {
+    positions <- which(exclude_templates == id)
+    if (length(positions) == 0) return(0L)
+    max(positions)
+  }, integer(1))
+  idx <- which.min(last_positions)
+  candidates[[idx]]
 }
 
 #' Draw parameters from a template, respecting constraints

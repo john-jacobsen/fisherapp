@@ -79,3 +79,93 @@ test_that("problem_to_json produces valid JSON", {
 
   rm("json_test_d1", envir = fisherapp:::.template_registry)
 })
+
+# --- select_template / exclude_templates tests ------------------------------
+
+test_that("select_template picks unseen templates when available", {
+  # Register two templates for the same topic/difficulty
+  t1 <- list(
+    template_id = "sel_test_a", topic_id = "sel_test", difficulty = 1L,
+    params = list(a = function() 1), constraint = NULL,
+    statement = function(p) "A",
+    solve = function(p) list(steps = "A", answer_value = 1),
+    format_answer = function(sol) "1"
+  )
+  t2 <- list(
+    template_id = "sel_test_b", topic_id = "sel_test", difficulty = 1L,
+    params = list(a = function() 2), constraint = NULL,
+    statement = function(p) "B",
+    solve = function(p) list(steps = "B", answer_value = 2),
+    format_answer = function(sol) "2"
+  )
+  register_template(t1)
+  register_template(t2)
+
+  # Excluding "sel_test_a" should always pick "sel_test_b"
+  for (i in 1:10) {
+    prob <- generate_problem("sel_test", 1, exclude_templates = "sel_test_a")
+    expect_equal(prob$template_id, "sel_test_b")
+  }
+
+  rm("sel_test_a", "sel_test_b", envir = fisherapp:::.template_registry)
+})
+
+test_that("select_template falls back to least recently served when all excluded", {
+  t1 <- list(
+    template_id = "fb_test_a", topic_id = "fb_test", difficulty = 1L,
+    params = list(a = function() 1), constraint = NULL,
+    statement = function(p) "A",
+    solve = function(p) list(steps = "A", answer_value = 1),
+    format_answer = function(sol) "1"
+  )
+  register_template(t1)
+
+  # Only one template and it's excluded — should still generate (fallback)
+  prob <- generate_problem("fb_test", 1,
+    exclude_templates = c("fb_test_a"))
+  expect_equal(prob$template_id, "fb_test_a")
+
+  rm("fb_test_a", envir = fisherapp:::.template_registry)
+})
+
+test_that("select_template maximizes gap with multiple seen templates", {
+  t1 <- list(
+    template_id = "gap_test_a", topic_id = "gap_test", difficulty = 1L,
+    params = list(a = function() 1), constraint = NULL,
+    statement = function(p) "A",
+    solve = function(p) list(steps = "A", answer_value = 1),
+    format_answer = function(sol) "1"
+  )
+  t2 <- list(
+    template_id = "gap_test_b", topic_id = "gap_test", difficulty = 1L,
+    params = list(a = function() 2), constraint = NULL,
+    statement = function(p) "B",
+    solve = function(p) list(steps = "B", answer_value = 2),
+    format_answer = function(sol) "2"
+  )
+  register_template(t1)
+  register_template(t2)
+
+  # Both excluded. "a" was served first (position 1), "b" second (position 2)
+  # Should pick "a" since it has the smaller last-position (most gap)
+  prob <- generate_problem("gap_test", 1,
+    exclude_templates = c("gap_test_a", "gap_test_b"))
+  expect_equal(prob$template_id, "gap_test_a")
+
+  # If "b" was served first and "a" second, should pick "b"
+  prob2 <- generate_problem("gap_test", 1,
+    exclude_templates = c("gap_test_b", "gap_test_a"))
+  expect_equal(prob2$template_id, "gap_test_b")
+
+  rm("gap_test_a", "gap_test_b", envir = fisherapp:::.template_registry)
+})
+
+test_that("generate_problem works with NULL exclude_templates", {
+  prob <- generate_problem("fraction_arithmetic", 2, exclude_templates = NULL)
+  expect_s3_class(prob, "fisherapp_problem")
+})
+
+test_that("generate_problem works with empty exclude_templates", {
+  prob <- generate_problem("fraction_arithmetic", 2, exclude_templates = character(0))
+  expect_s3_class(prob, "fisherapp_problem")
+})
