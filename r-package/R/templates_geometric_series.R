@@ -31,12 +31,12 @@ register_geometric_series_templates <- function() {
       terms <- vapply(0:(p$n_terms - 1),
                       function(i) as.integer(p$a * p$r^i), integer(1))
       steps <- c(
-        paste0("Check if each term divided by the previous is constant:"),
-        paste0("$\\dfrac{", terms[2], "}{", terms[1], "} = ", p$r, "$, ",
+        paste0("Step 1: Check if each term divided by the previous is constant:"),
+        paste0("Step 2: $\\dfrac{", terms[2], "}{", terms[1], "} = ", p$r, "$, ",
                "$\\dfrac{", terms[3], "}{", terms[2], "} = ", p$r, "$, ",
                "$\\dfrac{", terms[4], "}{", terms[3], "} = ", p$r, "$."),
-        "The ratio is constant, so this is a geometric sequence.",
-        paste0("The common ratio is $r = ", p$r, "$.")
+        "Step 3: The ratio is constant, so this is a geometric sequence.",
+        paste0("Step 4: The common ratio is $r = ", p$r, "$.")
       )
       list(steps = steps, answer_value = p$r)
     },
@@ -76,15 +76,15 @@ register_geometric_series_templates <- function() {
       expansion <- paste(terms, collapse = " + ")
 
       steps <- c(
-        paste0("This is a finite geometric series with $a = ", p$a,
+        paste0("Step 1: This is a finite geometric series with $a = ", p$a,
                "$, $r = ", p$r, "$, and $n = ", p$n, "$ terms."),
-        paste0("Use the formula: $S_n = a \\cdot \\dfrac{r^n - 1}{r - 1}$."),
-        paste0("$S_{", p$n, "} = ", p$a, " \\cdot \\dfrac{",
+        paste0("Step 2: Use the formula: $S_n = a \\cdot \\dfrac{r^n - 1}{r - 1}$."),
+        paste0("Step 3: $S_{", p$n, "} = ", p$a, " \\cdot \\dfrac{",
                p$r, "^{", p$n, "} - 1}{", p$r, " - 1} = ",
                p$a, " \\cdot \\dfrac{", r_n, " - 1}{", p$r - 1,
                "} = ", p$a, " \\cdot \\dfrac{", r_n - 1, "}{",
                p$r - 1, "} = ", result, "$."),
-        paste0("Verification: $", expansion, " = ", result, "$.")
+        paste0("Step 4: Verification: $", expansion, " = ", result, "$.")
       )
       list(steps = steps, answer_value = result)
     },
@@ -124,16 +124,16 @@ register_geometric_series_templates <- function() {
       rk_den <- as.integer(p$r_den^p$k)
 
       steps <- c(
-        paste0("This is an infinite geometric series starting at $i = ", p$k, "$."),
-        paste0("Factor out the first term: $\\left(", r_str, "\\right)^{", p$k,
+        paste0("Step 1: This is an infinite geometric series starting at $i = ", p$k, "$."),
+        paste0("Step 2: Factor out the first term: $\\left(", r_str, "\\right)^{", p$k,
                "} \\cdot ", latex_sum("j", 0, "\\infty",
                paste0("\\left(", r_str, "\\right)^j")), "$."),
-        paste0("The infinite geometric sum $", latex_sum("j", 0, "\\infty",
+        paste0("Step 3: The infinite geometric sum $", latex_sum("j", 0, "\\infty",
                paste0("\\left(", r_str, "\\right)^j")),
                " = \\dfrac{1}{1 - ", r_str, "} = \\dfrac{1}{",
                latex_frac(p$r_den - 1L, p$r_den), "} = ",
                latex_frac(p$r_den, p$r_den - 1L), "$."),
-        paste0("Multiply: $", latex_frac(1L, rk_den), " \\times ",
+        paste0("Step 4: Multiply: $", latex_frac(1L, rk_den), " \\times ",
                latex_frac(p$r_den, p$r_den - 1L), " = ",
                latex_frac(result$num, result$den), "$.")
       )
@@ -181,15 +181,15 @@ register_geometric_series_templates <- function() {
       q_str <- latex_frac(q_num, q_den)
 
       steps <- c(
-        paste0("$P(X \\geq ", p$k, ") = ",
+        paste0("Step 1: $P(X \\geq ", p$k, ") = ",
                latex_sum("i", p$k, "\\infty",
                paste0("(1-p)^{i-1} \\cdot p")), "$."),
-        paste0("Factor: $= p \\cdot (1-p)^{", p$k - 1, "} \\cdot ",
+        paste0("Step 2: Factor: $= p \\cdot (1-p)^{", p$k - 1, "} \\cdot ",
                latex_sum("j", 0, "\\infty", "(1-p)^j"), "$."),
-        paste0("The infinite geometric sum equals $\\dfrac{1}{1-(1-p)} = \\dfrac{1}{p}$."),
-        paste0("So $P(X \\geq ", p$k, ") = p \\cdot (1-p)^{", p$k - 1,
+        paste0("Step 3: The infinite geometric sum equals $\\dfrac{1}{1-(1-p)} = \\dfrac{1}{p}$."),
+        paste0("Step 4: So $P(X \\geq ", p$k, ") = p \\cdot (1-p)^{", p$k - 1,
                "} \\cdot \\dfrac{1}{p} = (1-p)^{", p$k - 1, "}$."),
-        paste0("Substitute $p = ", p_str, "$: $\\left(", q_str, "\\right)^{",
+        paste0("Step 5: Substitute $p = ", p_str, "$: $\\left(", q_str, "\\right)^{",
                p$k - 1, "} = ", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
@@ -235,17 +235,17 @@ register_geometric_series_templates <- function() {
       inv_str <- latex_frac(p$p_den, p$p_num)
 
       steps <- c(
-        paste0("$", latex_sum("k", 1, "\\infty",
+        paste0("Step 1: $", latex_sum("k", 1, "\\infty",
                paste0("\\left(", q_str, "\\right)^{k-1} \\cdot ", p_str)), "$."),
-        paste0("Factor out the constant $p = ", p_str, "$:"),
-        paste0("$= ", p_str, " \\cdot ", latex_sum("k", 1, "\\infty",
+        paste0("Step 2: Factor out the constant $p = ", p_str, "$:"),
+        paste0("Step 3: $= ", p_str, " \\cdot ", latex_sum("k", 1, "\\infty",
                paste0("\\left(", q_str, "\\right)^{k-1}")), "$."),
-        paste0("Substitute $j = k - 1$: $= ", p_str, " \\cdot ",
+        paste0("Step 4: Substitute $j = k - 1$: $= ", p_str, " \\cdot ",
                latex_sum("j", 0, "\\infty",
                paste0("\\left(", q_str, "\\right)^j")), "$."),
-        paste0("Apply the infinite geometric series formula ($|", q_str,
+        paste0("Step 5: Apply the infinite geometric series formula ($|", q_str,
                "| < 1$):"),
-        paste0("$= ", p_str, " \\cdot \\dfrac{1}{1 - ", q_str, "} = ",
+        paste0("Step 6: $= ", p_str, " \\cdot \\dfrac{1}{1 - ", q_str, "} = ",
                p_str, " \\cdot \\dfrac{1}{", p_str, "} = ",
                p_str, " \\cdot ", inv_str, " = 1$.")
       )

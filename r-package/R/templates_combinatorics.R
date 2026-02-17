@@ -29,9 +29,9 @@ register_combinatorics_templates <- function() {
       expansion <- paste(seq(p$n, 1), collapse = " \\times ")
 
       steps <- c(
-        paste0("$", p$n, "! = ", expansion, " = ", fact, "$."),
-        "Since the officers have distinct roles (president, vice president, secretary), order matters.",
-        "This is a permutation problem."
+        paste0("Step 1: $", p$n, "! = ", expansion, " = ", fact, "$."),
+        "Step 2: Since the officers have distinct roles (president, vice president, secretary), order matters.",
+        "Step 3: This is a permutation problem."
       )
       list(steps = steps, answer_value = fact)
     },
@@ -67,9 +67,9 @@ register_combinatorics_templates <- function() {
       k_fact <- factorial_safe(p$k)
 
       steps <- c(
-        paste0("$\\binom{", p$n, "}{", p$k, "} = \\dfrac{", p$n, "!}{",
+        paste0("Step 1: $\\binom{", p$n, "}{", p$k, "} = \\dfrac{", p$n, "!}{",
                p$k, "!(", p$n, " - ", p$k, ")!}$."),
-        paste0("$= \\dfrac{", num_terms, "}{", den_terms, "}",
+        paste0("Step 2: $= \\dfrac{", num_terms, "}{", den_terms, "}",
                " = \\dfrac{", prod(seq(p$n, p$n - p$k + 1)), "}{", k_fact, "}",
                " = ", result, "$.")
       )
@@ -101,9 +101,9 @@ register_combinatorics_templates <- function() {
       result <- choose_safe(p$n, 2)
 
       steps <- c(
-        "Each handshake involves choosing 2 people from the group.",
-        "Order does not matter (A shaking B's hand = B shaking A's hand).",
-        paste0("Number of handshakes $= \\binom{", p$n, "}{2} = ",
+        "Step 1: Each handshake involves choosing 2 people from the group.",
+        "Step 2: Order does not matter (A shaking B's hand = B shaking A's hand).",
+        paste0("Step 3: Number of handshakes $= \\binom{", p$n, "}{2} = ",
                "\\dfrac{", p$n, " \\times ", p$n - 1, "}{2} = ",
                "\\dfrac{", p$n * (p$n - 1), "}{2} = ", result, "$.")
       )
@@ -153,15 +153,15 @@ register_combinatorics_templates <- function() {
       result <- simplify_fraction(num, c_total)
 
       steps <- c(
-        paste0("Ways to choose ", p$target_women, " women from ", p$women,
+        paste0("Step 1: Ways to choose ", p$target_women, " women from ", p$women,
                ": $\\binom{", p$women, "}{", p$target_women, "} = ", c_women, "$."),
-        paste0("Ways to choose ", target_men, " men from ", p$men,
+        paste0("Step 2: Ways to choose ", target_men, " men from ", p$men,
                ": $\\binom{", p$men, "}{", target_men, "} = ", c_men, "$."),
-        paste0("Total ways to choose ", p$panel, " from ", total,
+        paste0("Step 3: Total ways to choose ", p$panel, " from ", total,
                ": $\\binom{", total, "}{", p$panel, "} = ", c_total, "$."),
-        paste0("$P = \\dfrac{", c_women, " \\times ", c_men, "}{", c_total,
+        paste0("Step 4: $P = \\dfrac{", c_women, " \\times ", c_men, "}{", c_total,
                "} = \\dfrac{", num, "}{", c_total, "}$."),
-        paste0("Simplify: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 5: Simplify: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },
@@ -218,16 +218,16 @@ register_combinatorics_templates <- function() {
       q_str <- latex_frac(q_num, q_den)
 
       steps <- c(
-        paste0("$\\binom{", p$n, "}{", p$k, "} = ", C_nk, "$."),
-        paste0("$p^k = \\left(", p_str, "\\right)^{", p$k, "} = ",
+        paste0("Step 1: $\\binom{", p$n, "}{", p$k, "} = ", C_nk, "$."),
+        paste0("Step 2: $p^k = \\left(", p_str, "\\right)^{", p$k, "} = ",
                latex_frac(pk_num, pk_den), "$."),
-        paste0("$(1-p)^{n-k} = \\left(", q_str, "\\right)^{", nk, "} = ",
+        paste0("Step 3: $(1-p)^{n-k} = \\left(", q_str, "\\right)^{", nk, "} = ",
                latex_frac(qnk_num, qnk_den), "$."),
-        paste0("$P(X = ", p$k, ") = ", C_nk, " \\times ",
+        paste0("Step 4: $P(X = ", p$k, ") = ", C_nk, " \\times ",
                latex_frac(pk_num, pk_den), " \\times ",
                latex_frac(qnk_num, qnk_den), " = ",
                latex_frac(total_num, total_den), "$."),
-        paste0("Simplify: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 5: Simplify: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },

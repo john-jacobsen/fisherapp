@@ -30,19 +30,19 @@ register_exponent_rules_templates <- function() {
       result <- as.integer(p$base ^ p$exp)
       if (p$exp == 0L) {
         steps <- c(
-          "Any nonzero number raised to the power 0 equals 1.",
-          paste0("$", p$base, "^{0} = 1$.")
+          "Step 1: Any nonzero number raised to the power 0 equals 1.",
+          paste0("Step 2: $", p$base, "^{0} = 1$.")
         )
       } else if (p$exp == 1L) {
         steps <- c(
-          "Any number raised to the power 1 equals itself.",
-          paste0("$", p$base, "^{1} = ", result, "$.")
+          "Step 1: Any number raised to the power 1 equals itself.",
+          paste0("Step 2: $", p$base, "^{1} = ", result, "$.")
         )
       } else {
         expansion <- paste(rep(p$base, p$exp), collapse = " \\times ")
         steps <- c(
-          paste0("Expand: $", latex_exp(p$base, p$exp), " = ", expansion, "$."),
-          paste0("Multiply: $", expansion, " = ", result, "$.")
+          paste0("Step 1: Expand: $", latex_exp(p$base, p$exp), " = ", expansion, "$."),
+          paste0("Step 2: Multiply: $", expansion, " = ", result, "$.")
         )
       }
       list(steps = steps, answer_value = result)
@@ -82,15 +82,15 @@ register_exponent_rules_templates <- function() {
       if (p$rule == "product") {
         result <- p$a + p$b
         steps <- c(
-          "Apply the product rule: $x^a \\cdot x^b = x^{a+b}$.",
-          paste0("$", latex_exp("x", p$a), " \\cdot ", latex_exp("x", p$b),
+          "Step 1: Apply the product rule: $x^a \\cdot x^b = x^{a+b}$.",
+          paste0("Step 2: $", latex_exp("x", p$a), " \\cdot ", latex_exp("x", p$b),
                  " = x^{", p$a, "+", p$b, "} = ", latex_exp("x", result), "$.")
         )
       } else {
         result <- p$a - p$b
         steps <- c(
-          "Apply the quotient rule: $\\dfrac{x^a}{x^b} = x^{a-b}$.",
-          paste0("$\\dfrac{", latex_exp("x", p$a), "}{", latex_exp("x", p$b),
+          "Step 1: Apply the quotient rule: $\\dfrac{x^a}{x^b} = x^{a-b}$.",
+          paste0("Step 2: $\\dfrac{", latex_exp("x", p$a), "}{", latex_exp("x", p$b),
                  "} = x^{", p$a, "-", p$b, "} = ", latex_exp("x", result), "$.")
         )
       }
@@ -134,14 +134,14 @@ register_exponent_rules_templates <- function() {
       exp_result <- exp_num - p$e
 
       steps <- c(
-        paste0("Apply the power rule to the numerator: ",
+        paste0("Step 1: Apply the power rule to the numerator: ",
                "$(", p$c_val, latex_exp("x", p$a), ")^{", p$b, "} = ",
                coeff_num_raw, latex_exp("x", exp_num), "$."),
-        paste0("Divide the coefficients: $\\dfrac{", coeff_num_raw, "}{",
+        paste0("Step 2: Divide the coefficients: $\\dfrac{", coeff_num_raw, "}{",
                p$d_val, "} = ", latex_frac(coeff$num, coeff$den), "$."),
-        paste0("Apply the quotient rule for $x$: $x^{", exp_num, " - ",
+        paste0("Step 3: Apply the quotient rule for $x$: $x^{", exp_num, " - ",
                p$e, "} = ", latex_exp("x", exp_result), "$."),
-        paste0("Result: $", latex_frac(coeff$num, coeff$den),
+        paste0("Step 4: Result: $", latex_frac(coeff$num, coeff$den),
                latex_exp("x", exp_result), "$.")
       )
       list(
@@ -184,12 +184,12 @@ register_exponent_rules_templates <- function() {
       k <- as.integer(T_years / p$t_double)
 
       steps <- c(
-        paste0("The population doubles every ", p$t_double, " hours, so after ",
+        paste0("Step 1: The population doubles every ", p$t_double, " hours, so after ",
                "$T$ hours the number of doublings is $\\dfrac{T}{",
                p$t_double, "}$."),
-        paste0("After ", T_years, " hours: $\\dfrac{", T_years, "}{",
+        paste0("Step 2: After ", T_years, " hours: $\\dfrac{", T_years, "}{",
                p$t_double, "} = ", k, "$ doublings."),
-        paste0("The population is $P_0 \\cdot 2^{", k, "}$.")
+        paste0("Step 3: The population is $P_0 \\cdot 2^{", k, "}$.")
       )
       list(steps = steps, answer_value = k)
     },
@@ -248,15 +248,15 @@ register_exponent_rules_templates <- function() {
       q_str <- latex_frac(q_num_base, p$p_den)
 
       steps <- c(
-        paste0("Compute $\\binom{", p$n, "}{", p$k, "} = ", C_nk, "$."),
-        paste0("Compute $\\left(", p_str, "\\right)^{", p$k, "} = ",
+        paste0("Step 1: Compute $\\binom{", p$n, "}{", p$k, "} = ", C_nk, "$."),
+        paste0("Step 2: Compute $\\left(", p_str, "\\right)^{", p$k, "} = ",
                latex_frac(pk_num, pk_den), "$."),
-        paste0("Compute $\\left(", q_str, "\\right)^{", nk, "} = ",
+        paste0("Step 3: Compute $\\left(", q_str, "\\right)^{", nk, "} = ",
                latex_frac(qnk_num, qnk_den), "$."),
-        paste0("Multiply: $", C_nk, " \\times ", latex_frac(pk_num, pk_den),
+        paste0("Step 4: Multiply: $", C_nk, " \\times ", latex_frac(pk_num, pk_den),
                " \\times ", latex_frac(qnk_num, qnk_den), " = ",
                latex_frac(total_num, total_den), "$."),
-        paste0("Simplify: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 5: Simplify: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },

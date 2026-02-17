@@ -27,9 +27,9 @@ register_logarithms_exponentials_templates <- function() {
     solve = function(p) {
       result <- as.integer(p$base ^ p$exp)
       steps <- c(
-        "The relationship $b^n = x$ is equivalent to $\\log_b(x) = n$.",
-        paste0("Here $b = ", p$base, "$, $n = ", p$exp, "$, $x = ", result, "$."),
-        paste0("Therefore: $\\log_{", p$base, "}(", result, ") = ", p$exp, "$.")
+        "Step 1: The relationship $b^n = x$ is equivalent to $\\log_b(x) = n$.",
+        paste0("Step 2: Here $b = ", p$base, "$, $n = ", p$exp, "$, $x = ", result, "$."),
+        paste0("Step 3: Therefore: $\\log_{", p$base, "}(", result, ") = ", p$exp, "$.")
       )
       list(steps = steps, answer_value = p$exp)
     },
@@ -62,22 +62,22 @@ register_logarithms_exponentials_templates <- function() {
       switch(p$rule,
         ln_e = {
           steps <- c(
-            "$\\ln$ and $e^x$ are inverse functions: $\\ln(e^a) = a$.",
-            paste0("$\\ln(e^{", p$n, "}) = ", p$n, "$.")
+            "Step 1: $\\ln$ and $e^x$ are inverse functions: $\\ln(e^a) = a$.",
+            paste0("Step 2: $\\ln(e^{", p$n, "}) = ", p$n, "$.")
           )
           list(steps = steps, answer_value = p$n)
         },
         log_power = {
           steps <- c(
-            "$\\log_b(b^a) = a$ since logarithm and exponentiation are inverses.",
-            paste0("$\\log_{2}(2^{", p$n, "}) = ", p$n, "$.")
+            "Step 1: $\\log_b(b^a) = a$ since logarithm and exponentiation are inverses.",
+            paste0("Step 2: $\\log_{2}(2^{", p$n, "}) = ", p$n, "$.")
           )
           list(steps = steps, answer_value = p$n)
         },
         e_ln = {
           steps <- c(
-            "$e^{\\ln a} = a$ since $e^x$ and $\\ln$ are inverses.",
-            paste0("$e^{\\ln ", p$n, "} = ", p$n, "$.")
+            "Step 1: $e^{\\ln a} = a$ since $e^x$ and $\\ln$ are inverses.",
+            paste0("Step 2: $e^{\\ln ", p$n, "} = ", p$n, "$.")
           )
           list(steps = steps, answer_value = p$n)
         }
@@ -119,12 +119,12 @@ register_logarithms_exponentials_templates <- function() {
       c_str <- if (p$c_val > 0) paste0(" + ", p$c_val) else paste0(" - ", abs(p$c_val))
 
       steps <- c(
-        paste0("Rewrite the right side as a power of ", p$base, ": $",
+        paste0("Step 1: Rewrite the right side as a power of ", p$base, ": $",
                rhs, " = ", p$base, "^{", rhs_exp, "}$."),
-        paste0("Since the bases are equal, set exponents equal: $",
+        paste0("Step 2: Since the bases are equal, set exponents equal: $",
                p$b, "x", c_str, " = ", rhs_exp, "$."),
-        paste0("Solve for $x$: $", p$b, "x = ", rhs_exp - p$c_val, "$."),
-        paste0("$x = ", latex_frac(rhs_exp - p$c_val, p$b), " = ", p$x, "$.")
+        paste0("Step 3: Solve for $x$: $", p$b, "x = ", rhs_exp - p$c_val, "$."),
+        paste0("Step 4: $x = ", latex_frac(rhs_exp - p$c_val, p$b), " = ", p$x, "$.")
       )
       list(steps = steps, answer_value = p$x)
     },
@@ -163,13 +163,13 @@ register_logarithms_exponentials_templates <- function() {
       coeff <- simplify_fraction(p$k_den, p$k_num)
 
       steps <- c(
-        paste0("Set $N(t) = \\dfrac{N_0}{2}$: $\\dfrac{N_0}{2} = N_0 e^{-",
+        paste0("Step 1: Set $N(t) = \\dfrac{N_0}{2}$: $\\dfrac{N_0}{2} = N_0 e^{-",
                k_str, " t}$."),
-        paste0("Divide by $N_0$: $\\dfrac{1}{2} = e^{-", k_str, " t}$."),
-        paste0("Take $\\ln$ of both sides: $\\ln\\left(\\dfrac{1}{2}\\right) = -",
+        paste0("Step 2: Divide by $N_0$: $\\dfrac{1}{2} = e^{-", k_str, " t}$."),
+        paste0("Step 3: Take $\\ln$ of both sides: $\\ln\\left(\\dfrac{1}{2}\\right) = -",
                k_str, " t$."),
-        paste0("Since $\\ln(1/2) = -\\ln 2$: $-\\ln 2 = -", k_str, " t$."),
-        paste0("Solve: $t = \\dfrac{\\ln 2}{", k_str, "} = ",
+        paste0("Step 4: Since $\\ln(1/2) = -\\ln 2$: $-\\ln 2 = -", k_str, " t$."),
+        paste0("Step 5: Solve: $t = \\dfrac{\\ln 2}{", k_str, "} = ",
                latex_frac(coeff$num, coeff$den), " \\ln 2$ years.")
       )
       # Answer is (k_den/k_num) * ln(2)
@@ -215,17 +215,17 @@ register_logarithms_exponentials_templates <- function() {
       result <- simplify_fraction(p$k, p$n)
 
       steps <- c(
-        paste0("(a) $\\ell(p) = \\ln L(p) = ", p$k, "\\ln p + ", nk,
+        paste0("Step 1: (a) $\\ell(p) = \\ln L(p) = ", p$k, "\\ln p + ", nk,
                "\\ln(1 - p)$."),
-        paste0("(b) Differentiate: $\\dfrac{d\\ell}{dp} = \\dfrac{", p$k,
+        paste0("Step 2: (b) Differentiate: $\\dfrac{d\\ell}{dp} = \\dfrac{", p$k,
                "}{p} - \\dfrac{", nk, "}{1 - p}$."),
-        paste0("Set equal to zero: $\\dfrac{", p$k, "}{p} = \\dfrac{", nk,
+        paste0("Step 3: Set equal to zero: $\\dfrac{", p$k, "}{p} = \\dfrac{", nk,
                "}{1 - p}$."),
-        paste0("Cross-multiply: $", p$k, "(1 - p) = ", nk, "p$."),
-        paste0("Expand: $", p$k, " - ", p$k, "p = ", nk, "p$."),
-        paste0("Combine: $", p$k, " = ", p$k, "p + ", nk, "p = ",
+        paste0("Step 4: Cross-multiply: $", p$k, "(1 - p) = ", nk, "p$."),
+        paste0("Step 5: Expand: $", p$k, " - ", p$k, "p = ", nk, "p$."),
+        paste0("Step 6: Combine: $", p$k, " = ", p$k, "p + ", nk, "p = ",
                p$n, "p$."),
-        paste0("Solve: $\\hat{p} = ", latex_frac(result$num, result$den), "$.")
+        paste0("Step 7: Solve: $\\hat{p} = ", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },

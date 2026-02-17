@@ -51,9 +51,9 @@ register_solving_equations_templates <- function() {
                      p$a, " to isolate $x$.")
       )
       steps <- c(
-        "To isolate $x$, apply the inverse operation.",
-        explanation,
-        paste0("The answer is ", correct, ".")
+        "Step 1: To isolate $x$, apply the inverse operation.",
+        paste0("Step 2: ", explanation),
+        paste0("Step 3: The answer is ", correct, ".")
       )
       list(steps = steps, answer_value = p$ans)
     },
@@ -94,10 +94,10 @@ register_solving_equations_templates <- function() {
       }
 
       steps <- c(
-        paste0(sub_op, ": $", p$a, "x = ", after_sub, "$."),
-        paste0("Divide both sides by ", p$a, ": $x = ",
+        paste0("Step 1: ", sub_op, ": $", p$a, "x = ", after_sub, "$."),
+        paste0("Step 2: Divide both sides by ", p$a, ": $x = ",
                latex_frac(after_sub, p$a), "$."),
-        paste0("$x = ", p$x, "$.")
+        paste0("Step 3: $x = ", p$x, "$.")
       )
       list(steps = steps, answer_value = p$x)
     },
@@ -145,12 +145,12 @@ register_solving_equations_templates <- function() {
       after_sub <- cleared - p$b
 
       steps <- c(
-        paste0("Multiply both sides by ", p$c_val, ": $", p$a, "x", b_str,
+        paste0("Step 1: Multiply both sides by ", p$c_val, ": $", p$a, "x", b_str,
                " = ", cleared, "$."),
-        paste0(sub_op, ": $", p$a, "x = ", after_sub, "$."),
-        paste0("Divide both sides by ", p$a, ": $x = ",
+        paste0("Step 2: ", sub_op, ": $", p$a, "x = ", after_sub, "$."),
+        paste0("Step 3: Divide both sides by ", p$a, ": $x = ",
                latex_frac(after_sub, p$a), "$."),
-        paste0("$x = ", p$x, "$.")
+        paste0("Step 4: $x = ", p$x, "$.")
       )
       list(steps = steps, answer_value = p$x)
     },
@@ -195,28 +195,28 @@ register_solving_equations_templates <- function() {
 
       if (p$target == "x") {
         steps <- c(
-          "Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
-          "Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
-          "Add $\\mu$ to both sides: $x = \\mu + z\\sigma$.",
-          paste0("Substitute: $x = ", p$mu, " + (", p$z_val, ")(", p$sigma,
+          "Step 1: Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
+          "Step 2: Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
+          "Step 3: Add $\\mu$ to both sides: $x = \\mu + z\\sigma$.",
+          paste0("Step 4: Substitute: $x = ", p$mu, " + (", p$z_val, ")(", p$sigma,
                  ") = ", p$mu, " + ", p$z_val * p$sigma, " = ", x_val, "$.")
         )
         list(steps = steps, answer_value = x_val)
       } else if (p$target == "mu") {
         steps <- c(
-          "Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
-          "Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
-          "Rearrange: $\\mu = x - z\\sigma$.",
-          paste0("Substitute: $\\mu = ", x_val, " - (", p$z_val, ")(", p$sigma,
+          "Step 1: Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
+          "Step 2: Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
+          "Step 3: Rearrange: $\\mu = x - z\\sigma$.",
+          paste0("Step 4: Substitute: $\\mu = ", x_val, " - (", p$z_val, ")(", p$sigma,
                  ") = ", x_val, " - ", p$z_val * p$sigma, " = ", p$mu, "$.")
         )
         list(steps = steps, answer_value = p$mu)
       } else {
         steps <- c(
-          "Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
-          "Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
-          "Divide both sides by $z$: $\\sigma = \\dfrac{x - \\mu}{z}$.",
-          paste0("Substitute: $\\sigma = \\dfrac{", x_val, " - ", p$mu, "}{",
+          "Step 1: Start with $z = \\dfrac{x - \\mu}{\\sigma}$.",
+          "Step 2: Multiply both sides by $\\sigma$: $z\\sigma = x - \\mu$.",
+          "Step 3: Divide both sides by $z$: $\\sigma = \\dfrac{x - \\mu}{z}$.",
+          paste0("Step 4: Substitute: $\\sigma = \\dfrac{", x_val, " - ", p$mu, "}{",
                  p$z_val, "} = \\dfrac{", x_val - p$mu, "}{", p$z_val,
                  "} = ", p$sigma, "$.")
         )
@@ -279,13 +279,13 @@ register_solving_equations_templates <- function() {
       b_str <- latex_frac(b_frac$num, b_frac$den)
 
       steps <- c(
-        paste0("From $\\text{Var}(aX + b) = a^2 \\text{Var}(X) = 1$:"),
-        paste0("$a^2 \\cdot ", p$var_num, " = 1 \\Rightarrow a^2 = ",
+        paste0("Step 1: From $\\text{Var}(aX + b) = a^2 \\text{Var}(X) = 1$:"),
+        paste0("Step 2: $a^2 \\cdot ", p$var_num, " = 1 \\Rightarrow a^2 = ",
                latex_frac(1L, p$var_num),
                " \\Rightarrow a = ", a_str, "$ (taking $a > 0$)."),
-        paste0("From $E(aX + b) = aE(X) + b = 0$:"),
-        paste0("$b = -aE(X) = -", a_str, " \\cdot ", mu_str, " = ", b_str, "$."),
-        paste0("Therefore $a = ", a_str, "$ and $b = ", b_str, "$.")
+        paste0("Step 3: From $E(aX + b) = aE(X) + b = 0$:"),
+        paste0("Step 4: $b = -aE(X) = -", a_str, " \\cdot ", mu_str, " = ", b_str, "$."),
+        paste0("Step 5: Therefore $a = ", a_str, "$ and $b = ", b_str, "$.")
       )
       list(
         steps = steps,

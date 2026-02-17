@@ -27,9 +27,9 @@ register_order_of_operations_templates <- function() {
       prod_bc <- p$b * p$c
       result <- p$a + prod_bc
       steps <- c(
-        paste0("By order of operations (PEMDAS), perform multiplication before addition."),
-        paste0("First, multiply: $", p$b, " \\times ", p$c, " = ", prod_bc, "$."),
-        paste0("Then, add: $", p$a, " + ", prod_bc, " = ", result, "$.")
+        paste0("Step 1: By order of operations (PEMDAS), perform multiplication before addition."),
+        paste0("Step 2: First, multiply: $", p$b, " \\times ", p$c, " = ", prod_bc, "$."),
+        paste0("Step 3: Then, add: $", p$a, " + ", prod_bc, " = ", result, "$.")
       )
       list(steps = steps, answer_value = result)
     },
@@ -64,10 +64,10 @@ register_order_of_operations_templates <- function() {
       prod_cd <- p$c * p$d
       result <- sq + prod_cd
       steps <- c(
-        paste0("Step 1 — Parentheses: $", p$a, " - ", p$b, " = ", diff_ab, "$."),
-        paste0("Step 2 — Exponent: $", diff_ab, "^{2} = ", sq, "$."),
-        paste0("Step 3 — Multiplication: $", p$c, " \\times ", p$d, " = ", prod_cd, "$."),
-        paste0("Step 4 — Addition: $", sq, " + ", prod_cd, " = ", result, "$.")
+        paste0("Step 1: Parentheses: $", p$a, " - ", p$b, " = ", diff_ab, "$."),
+        paste0("Step 2: Exponent: $", diff_ab, "^{2} = ", sq, "$."),
+        paste0("Step 3: Multiplication: $", p$c, " \\times ", p$d, " = ", prod_cd, "$."),
+        paste0("Step 4: Addition: $", sq, " + ", prod_cd, " = ", result, "$.")
       )
       list(steps = steps, answer_value = result)
     },
@@ -112,14 +112,14 @@ register_order_of_operations_templates <- function() {
       result <- numerator %/% denom
 
       steps <- c(
-        paste0("Step 1 — Parentheses: $", p$a, " - ", p$b, " = ", diff_ab,
+        paste0("Step 1: Parentheses: $", p$a, " - ", p$b, " = ", diff_ab,
                "$ and $", p$c, " + ", p$d, " = ", sum_cd, "$."),
-        paste0("Step 2 — Exponents: $", diff_ab, "^{2} = ", sq_left,
+        paste0("Step 2: Exponents: $", diff_ab, "^{2} = ", sq_left,
                "$ and $", sum_cd, "^{2} = ", sq_right, "$."),
-        paste0("Step 3 — Subtraction in numerator: $", sq_left, " - ", sq_right,
+        paste0("Step 3: Subtraction in numerator: $", sq_left, " - ", sq_right,
                " = ", numerator, "$."),
-        paste0("Step 4 — Exponent in denominator: $", p$e, "^{", p$f, "} = ", denom, "$."),
-        paste0("Step 5 — Division: $", latex_frac(numerator, denom), " = ", result, "$.")
+        paste0("Step 4: Exponent in denominator: $", p$e, "^{", p$f, "} = ", denom, "$."),
+        paste0("Step 5: Division: $", latex_frac(numerator, denom), " = ", result, "$.")
       )
 
       if (numerator %% denom == 0) {
@@ -165,18 +165,18 @@ register_order_of_operations_templates <- function() {
       z <- diff_val / p$sigma
 
       steps <- c(
-        paste0("Step 1 — Subtract the mean (parentheses first): $x - \\mu = ",
+        paste0("Step 1: Subtract the mean (parentheses first): $x - \\mu = ",
                p$x, " - ", p$mu, " = ", diff_val, "$."),
-        paste0("Step 2 — Divide by the standard deviation: $z = ",
+        paste0("Step 2: Divide by the standard deviation: $z = ",
                latex_frac(diff_val, p$sigma), "$.")
       )
 
       if (diff_val %% p$sigma == 0) {
-        steps <- c(steps, paste0("Simplify: $z = ", z, "$."))
+        steps <- c(steps, paste0("Step ", length(steps) + 1, ": Simplify: $z = ", z, "$."))
         list(steps = steps, answer_value = z)
       } else {
         frac <- simplify_fraction(diff_val, p$sigma)
-        steps <- c(steps, paste0("Simplify: $z = ", latex_frac(frac$num, frac$den), "$."))
+        steps <- c(steps, paste0("Step ", length(steps) + 1, ": Simplify: $z = ", latex_frac(frac$num, frac$den), "$."))
         list(steps = steps, answer_num = frac$num, answer_den = frac$den)
       }
     },
@@ -229,31 +229,31 @@ register_order_of_operations_templates <- function() {
 
       # Build step-by-step
       steps <- c(
-        paste0("Step 1 — Compute the mean: $\\bar{x} = ",
+        paste0("Step 1: Compute the mean: $\\bar{x} = ",
                latex_frac(total, n), " = ", xbar, "$."),
-        paste0("Step 2 — Compute each deviation $(x_i - \\bar{x})$:"),
-        paste0("  $", vals[1], " - ", xbar, " = ", devs[1], "$, ",
+        paste0("Step 2: Compute each deviation $(x_i - \\bar{x})$:"),
+        paste0("Step 3: $", vals[1], " - ", xbar, " = ", devs[1], "$, ",
                "$", vals[2], " - ", xbar, " = ", devs[2], "$, ",
                "$", vals[3], " - ", xbar, " = ", devs[3], "$, ",
                "$", vals[4], " - ", xbar, " = ", devs[4], "$."),
-        paste0("Step 3 — Square the deviations:"),
-        paste0("  $(", devs[1], ")^{2} = ", sq_devs[1], "$, ",
+        paste0("Step 4: Square the deviations:"),
+        paste0("Step 5: $(", devs[1], ")^{2} = ", sq_devs[1], "$, ",
                "$(", devs[2], ")^{2} = ", sq_devs[2], "$, ",
                "$(", devs[3], ")^{2} = ", sq_devs[3], "$, ",
                "$(", devs[4], ")^{2} = ", sq_devs[4], "$."),
-        paste0("Step 4 — Sum of squared deviations: $",
+        paste0("Step 6: Sum of squared deviations: $",
                paste(sq_devs, collapse = " + "), " = ", ss, "$."),
-        paste0("Step 5 — Divide by $n - 1 = ", denom,
+        paste0("Step 7: Divide by $n - 1 = ", denom,
                "$: $s^{2} = ", latex_frac(ss, denom), "$.")
       )
 
       frac <- simplify_fraction(ss, denom)
 
       if (frac$den == 1L) {
-        steps <- c(steps, paste0("Simplify: $s^{2} = ", frac$num, "$."))
+        steps <- c(steps, paste0("Step ", length(steps) + 1, ": Simplify: $s^{2} = ", frac$num, "$."))
         list(steps = steps, answer_num = frac$num, answer_den = 1L)
       } else {
-        steps <- c(steps, paste0("Simplify: $s^{2} = ",
+        steps <- c(steps, paste0("Step ", length(steps) + 1, ": Simplify: $s^{2} = ",
                                  latex_frac(frac$num, frac$den), "$."))
         list(steps = steps, answer_num = frac$num, answer_den = frac$den)
       }

@@ -31,9 +31,9 @@ register_summation_notation_templates <- function() {
       n_terms <- p$upper - p$lower + 1L
       list(
         steps = c(
-          paste0("The index variable is $i$."),
-          paste0("The lower bound is ", p$lower, " and the upper bound is ", p$upper, "."),
-          paste0("Number of terms = upper - lower + 1 = ", p$upper, " - ", p$lower, " + 1 = ", n_terms, ".")
+          paste0("Step 1: The index variable is $i$."),
+          paste0("Step 2: The lower bound is ", p$lower, " and the upper bound is ", p$upper, "."),
+          paste0("Step 3: Number of terms = upper - lower + 1 = ", p$upper, " - ", p$lower, " + 1 = ", n_terms, ".")
         ),
         answer_value = n_terms
       )
@@ -63,9 +63,9 @@ register_summation_notation_templates <- function() {
       values <- paste(terms, collapse = " + ")
       list(
         steps = c(
-          paste0("Expand: $", expansion, "$."),
-          paste0("Evaluate each term: $", values, "$."),
-          paste0("Sum: $", total, "$.")
+          paste0("Step 1: Expand: $", expansion, "$."),
+          paste0("Step 2: Evaluate each term: $", values, "$."),
+          paste0("Step 3: Sum: $", total, "$.")
         ),
         answer_value = total
       )
@@ -99,12 +99,12 @@ register_summation_notation_templates <- function() {
       sign_b <- if (p$b > 0) "+" else "-"
       list(
         steps = c(
-          paste0("Apply linearity: $", p$a, "\\sum_{i=1}^{", p$n, "} i ",
+          paste0("Step 1: Apply linearity: $", p$a, "\\sum_{i=1}^{", p$n, "} i ",
                  sign_b, " ", abs(p$b), " \\cdot ", p$n, "$."),
-          paste0("Use the formula $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$:"),
-          paste0("$\\sum_{i=1}^{", p$n, "} i = \\frac{", p$n, " \\cdot ", p$n + 1L,
+          paste0("Step 2: Use the formula $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$:"),
+          paste0("Step 3: $\\sum_{i=1}^{", p$n, "} i = \\frac{", p$n, " \\cdot ", p$n + 1L,
                  "}{2} = ", sum_i, "$."),
-          paste0("Compute: $", p$a, " \\cdot ", sum_i, " ", sign_b, " ",
+          paste0("Step 4: Compute: $", p$a, " \\cdot ", sum_i, " ", sign_b, " ",
                  abs(p$b), " \\cdot ", p$n, " = ", p$a * sum_i, " ",
                  sign_b, " ", abs(p$b * p$n), " = ", result, "$.")
         ),
@@ -153,13 +153,13 @@ register_summation_notation_templates <- function() {
       terms <- paste(paste0(1:4, " \\cdot ", sapply(probs, function(p) latex_frac(p, 10))), collapse = " + ")
       list(
         steps = c(
-          paste0("$E(X) = ", terms, "$."),
-          paste0("$= ", latex_frac(1L * probs[1], 10), " + ",
+          paste0("Step 1: $E(X) = ", terms, "$."),
+          paste0("Step 2: $= ", latex_frac(1L * probs[1], 10), " + ",
                  latex_frac(2L * probs[2], 10), " + ",
                  latex_frac(3L * probs[3], 10), " + ",
                  latex_frac(4L * probs[4], 10), "$."),
-          paste0("$= ", latex_frac(num, 10), "$."),
-          if (result$den != 10) paste0("Simplify: $", latex_frac(result$num, result$den), "$.") else NULL
+          paste0("Step 3: $= ", latex_frac(num, 10), "$."),
+          if (result$den != 10) paste0("Step 4: Simplify: $", latex_frac(result$num, result$den), "$.") else NULL
         ),
         answer_num = result$num,
         answer_den = result$den
@@ -198,12 +198,12 @@ register_summation_notation_templates <- function() {
 
       list(
         steps = c(
-          paste0("$\\bar{x} = \\frac{", paste(vals, collapse = " + "), "}{4} = ",
+          paste0("Step 1: $\\bar{x} = \\frac{", paste(vals, collapse = " + "), "}{4} = ",
                  "\\frac{", sum(vals), "}{4} = ", xbar, "$."),
-          paste0("Deviations: ",
+          paste0("Step 2: Deviations: ",
                  paste(paste0("$(", vals, " - ", xbar, ") = ", devs, "$"), collapse = ", "),
                  "."),
-          paste0("Sum of deviations: $", paste(devs, collapse = " + "), " = ",
+          paste0("Step 3: Sum of deviations: $", paste(devs, collapse = " + "), " = ",
                  sum(devs), "$.")
         ),
         answer_value = 0
