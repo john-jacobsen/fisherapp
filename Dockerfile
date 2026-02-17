@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
+    zlib1g-dev \
+    libsodium-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R package dependencies
@@ -19,7 +21,9 @@ RUN R -e "install.packages(c( \
     'uuid', \
     'glue', \
     'stringr', \
-    'sodium' \
+    'sodium', \
+    'httr', \
+    'openssl' \
   ), repos = 'https://cran.r-project.org')"
 
 # Install the fisherapp R package

@@ -24,6 +24,7 @@ export default function PracticePage() {
   const [submitting, setSubmitting] = useState(false);
   const [problemCount, setProblemCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [lastAnswer, setLastAnswer] = useState("");
 
   const initSession = useCallback(async () => {
     if (!studentId) return;
@@ -52,6 +53,7 @@ export default function PracticePage() {
   const handleSubmit = async (answer: string) => {
     if (!studentId || !sessionId || !problem) return;
     setSubmitting(true);
+    setLastAnswer(answer);
     try {
       const result = await checkAnswer(studentId, sessionId, problem.problem_id, answer);
       setFeedback(result);
@@ -157,7 +159,12 @@ export default function PracticePage() {
               statement={problem.statement}
             />
           )}
-          <FeedbackPanel result={feedback} onNext={handleNext} />
+          <FeedbackPanel
+            result={feedback}
+            problemStatement={problem?.statement || ""}
+            studentAnswer={lastAnswer}
+            onNext={handleNext}
+          />
         </div>
       )}
 

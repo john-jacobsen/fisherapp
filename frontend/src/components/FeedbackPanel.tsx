@@ -1,12 +1,43 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import MathRenderer from "./MathRenderer";
+import { useAuth } from "../context/AuthContext";
+import { getAiExplanation } from "../api/client";
 import type { AnswerResult } from "../types/api";
 
 interface FeedbackPanelProps {
   result: AnswerResult;
+  problemStatement: string;
+  studentAnswer: string;
   onNext: () => void;
 }
 
-export default function FeedbackPanel({ result, onNext }: FeedbackPanelProps) {
+export default function FeedbackPanel({ result, problemStatement, studentAnswer, onNext }: FeedbackPanelProps) {
+  const { studentId, hasAiKey } = useAuth();
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+
+  const handleShowAiSolution = async () => {
+    if (!studentId) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const response = await getAiExplanation(
+        studentId,
+        result.topic_id,
+        problemStatement,
+        studentAnswer,
+        result.correct_answer
+      );
+      setAiExplanation(response.explanation);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Failed to get AI explanation");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className={`rounded-xl border p-6 ${
       result.correct
@@ -52,10 +83,44 @@ export default function FeedbackPanel({ result, onNext }: FeedbackPanelProps) {
         </div>
       )}
 
+      {/* AI Solution section — only on incorrect answers */}
+      {!result.correct && (
+        <div className="mb-4">
+          {aiExplanation ? (
+            <div className="bg-white rounded-lg border border-slate-200 p-4 mt-3">
+              <p className="text-sm font-medium text-purple-700 mb-2">AI Explanation:</p>
+              <div className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                <MathRenderer text={aiExplanation} />
+              </div>
+            </div>
+          ) : aiLoading ? (
+            <div className="text-sm text-slate-500 mt-2">
+              Getting AI explanation...
+            </div>
+          ) : aiError ? (
+            <div className="text-sm text-red-600 mt-2">{aiError}</div>
+          ) : hasAiKey ? (
+            <button
+              onClick={handleShowAiSolution}
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium mt-2 transition-colors"
+            >
+              Show AI Solution
+            </button>
+          ) : (
+            <Link
+              to="/settings"
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium mt-2 inline-block transition-colors"
+            >
+              Connect AI in Settings
+            </Link>
+          )}
+        </div>
+      )}
+
       {result.mastery_changed && result.new_mastery === "mastered" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
           <p className="text-yellow-800 font-medium">
-            🎓 Topic mastered: {result.topic_id.replace(/_/g, " ")}!
+            Topic mastered: {result.topic_id.replace(/_/g, " ")}!
           </p>
         </div>
       )}
