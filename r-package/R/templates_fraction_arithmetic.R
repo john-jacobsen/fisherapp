@@ -41,12 +41,13 @@ register_fraction_arithmetic_templates <- function() {
       equiv_den <- p$den * p$multiplier
       list(
         steps = c(
-          paste0("Multiply numerator and denominator by ", p$multiplier, ":"),
-          paste0("$", latex_frac(p$num, p$den), " = ",
+          paste0("Step 1: Multiply numerator and denominator by ", p$multiplier, ":"),
+          paste0("Step 2: $", latex_frac(p$num, p$den), " = ",
                  latex_frac(equiv_num, equiv_den), "$"),
-          paste0("The answer is (a).")
+          paste0("Step 3: The answer is (a).")
         ),
-        answer_value = p$num / p$den
+        answer_value = p$num / p$den,
+        answer_letter = "a"
       )
     },
     format_answer = function(sol) {
@@ -83,15 +84,15 @@ register_fraction_arithmetic_templates <- function() {
       total_num <- new_n1 + new_n2
       result <- simplify_fraction(total_num, l)
       steps <- c(
-        paste0("Find the LCD of ", p$d1, " and ", p$d2, ": LCD = ", l, "."),
-        paste0("Rewrite: $", latex_frac(new_n1, l), " + ",
+        paste0("Step 1: Find the LCD of ", p$d1, " and ", p$d2, ": LCD = ", l, "."),
+        paste0("Step 2: Rewrite: $", latex_frac(new_n1, l), " + ",
                latex_frac(new_n2, l), "$."),
-        paste0("Add numerators: $", latex_frac(total_num, l), "$.")
+        paste0("Step 3: Add numerators: $", latex_frac(total_num, l), "$.")
       )
       g <- gcd(abs(total_num), l)
       if (g > 1) {
         steps <- c(steps,
-          paste0("Simplify by dividing by ", g, ": $",
+          paste0("Step ", length(steps) + 1, ": Simplify by dividing by ", g, ": $",
                  latex_frac(result$num, result$den), "$."))
       }
       list(steps = steps, answer_num = result$num, answer_den = result$den)
@@ -137,13 +138,13 @@ register_fraction_arithmetic_templates <- function() {
       final <- frac_mul(sub_result$num, sub_result$den, p$n3, p$d3)
 
       steps <- c(
-        paste0("Subtract the fractions: $", latex_frac(p$n1, p$d1), " - ",
+        paste0("Step 1: Subtract the fractions: $", latex_frac(p$n1, p$d1), " - ",
                latex_frac(p$n2, p$d2), " = ",
                latex_frac(sub_result$num, sub_result$den), "$."),
-        paste0("Multiply: $", latex_frac(sub_result$num, sub_result$den),
+        paste0("Step 2: Multiply: $", latex_frac(sub_result$num, sub_result$den),
                " \\times ", latex_frac(p$n3, p$d3), " = ",
                latex_frac(sub_result$num * p$n3, sub_result$den * p$d3), "$."),
-        paste0("Simplify: $", latex_frac(final$num, final$den), "$.")
+        paste0("Step 3: Simplify: $", latex_frac(final$num, final$den), "$.")
       )
       list(steps = steps, answer_num = final$num, answer_den = final$den)
     },
@@ -182,15 +183,15 @@ register_fraction_arithmetic_templates <- function() {
       result <- simplify_fraction(num, den)
 
       steps <- c(
-        paste0("Total marbles: ", p$red, " + ", p$blue, " = ", total, "."),
-        paste0("P(1st red) = $", latex_frac(p$red, total), "$."),
-        paste0("After drawing one red, there are ", p$red - 1,
+        paste0("Step 1: Total marbles: ", p$red, " + ", p$blue, " = ", total, "."),
+        paste0("Step 2: P(1st red) = $", latex_frac(p$red, total), "$."),
+        paste0("Step 3: After drawing one red, there are ", p$red - 1,
                " red marbles out of ", total - 1, " total."),
-        paste0("P(2nd red | 1st red) = $", latex_frac(p$red - 1, total - 1), "$."),
-        paste0("P(both red) = $", latex_frac(p$red, total), " \\times ",
+        paste0("Step 4: P(2nd red | 1st red) = $", latex_frac(p$red - 1, total - 1), "$."),
+        paste0("Step 5: P(both red) = $", latex_frac(p$red, total), " \\times ",
                latex_frac(p$red - 1, total - 1), " = ",
                latex_frac(num, den), "$."),
-        paste0("Simplify: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 6: Simplify: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },
@@ -232,7 +233,7 @@ register_fraction_arithmetic_templates <- function() {
                           pow_part$num, pow_part$den)
 
         term_strs <- c(term_strs,
-          paste0("$i=", i, "$: $", latex_frac(i, i + 1L), " - ",
+          paste0("Step ", i + 1, ": $i=", i, "$: $", latex_frac(i, i + 1L), " - ",
                  latex_frac(1L, 2L^i), " = ",
                  latex_frac(term$num, term$den), "$"))
 
@@ -249,9 +250,9 @@ register_fraction_arithmetic_templates <- function() {
 
       result <- simplify_fraction(total_num, total_den)
       steps <- c(
-        "Evaluate each term:",
+        "Step 1: Evaluate each term:",
         term_strs,
-        paste0("Sum all terms: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step ", length(term_strs) + 2, ": Sum all terms: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },
