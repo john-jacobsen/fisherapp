@@ -6,3 +6,21 @@ body {
   min-height: 100vh;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* MathLive math-field styling */
+math-field.math-input-field {
+  display: block;
+  flex: 1;
+  font-size: 1.125rem;
+  --caret-color: #3b82f6;
+}
+
+math-field.math-input-field::part(virtual-keyboard-toggle) {
+  color: #94a3b8;
+}
+
+math-field.math-input-field:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
+  border-color: transparent;
+}

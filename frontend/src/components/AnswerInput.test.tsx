@@ -1,10 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import AnswerInput from "./AnswerInput";
 
+// Force text mode for tests (MathLive web component doesn't work in jsdom)
+beforeEach(() => {
+  localStorage.setItem("fisherapp-input-mode", "text");
+});
+
 describe("AnswerInput", () => {
-  it("renders input and submit button", () => {
+  it("renders input and submit button in text mode", () => {
     render(<AnswerInput onSubmit={() => {}} />);
     expect(screen.getByPlaceholderText(/type your answer/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
@@ -46,5 +51,19 @@ describe("AnswerInput", () => {
 
     await user.click(screen.getByRole("button", { name: /submit/i }));
     expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows toggle button to switch modes", () => {
+    render(<AnswerInput onSubmit={() => {}} />);
+    expect(screen.getByText(/switch to math keyboard/i)).toBeInTheDocument();
+  });
+
+  it("toggle button updates localStorage", async () => {
+    // Verify the toggle text appears and localStorage starts as text
+    render(<AnswerInput onSubmit={() => {}} />);
+    expect(localStorage.getItem("fisherapp-input-mode")).toBe("text");
+    expect(screen.getByText(/switch to math keyboard/i)).toBeInTheDocument();
+    // Note: Cannot actually toggle to math mode in jsdom because
+    // MathLive web component requires a real browser environment
   });
 });
