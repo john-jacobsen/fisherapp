@@ -47,7 +47,7 @@ get_next_problem <- function(student, allowed_topics = NULL) {
     return(list(
       problem      = NULL,
       intervention = list(type = "session_complete",
-                          message = "All topics mastered and none due for review."),
+                          message = "No problems available for the selected topics."),
       student      = student
     ))
   }

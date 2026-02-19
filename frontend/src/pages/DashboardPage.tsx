@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   useEffect(() => {
     if (!studentId) return;
@@ -46,16 +47,42 @@ export default function DashboardPage() {
     ? Math.round(progress.overall_accuracy * 100)
     : null;
 
+  const toggleTopic = (topicId: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topicId)
+        ? prev.filter((id) => id !== topicId)
+        : [...prev, topicId]
+    );
+  };
+
+  const handlePractice = () => {
+    if (selectedTopics.length === 0) return;
+    navigate(`/practice?topics=${selectedTopics.join(",")}`);
+  };
+
+  const handleSmartPractice = () => {
+    navigate("/practice?smart=true");
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <button
-          onClick={() => navigate("/practice")}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-        >
-          Start Practice
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePractice}
+            disabled={selectedTopics.length === 0}
+            className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Practice{selectedTopics.length > 0 ? ` (${selectedTopics.length})` : ""}
+          </button>
+          <button
+            onClick={handleSmartPractice}
+            className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Smart Practice
+          </button>
+        </div>
       </div>
 
       {/* Stats overview */}
@@ -63,12 +90,21 @@ export default function DashboardPage() {
         <StatCard label="Topics Mastered" value={`${mastered}/8`} />
         <StatCard label="In Progress" value={String(inProgress)} />
         <StatCard label="Total Problems" value={String(progress.total_attempts)} />
-        <StatCard label="Accuracy" value={accuracy != null ? `${accuracy}%` : "—"} />
+        <StatCard label="Accuracy" value={accuracy != null ? `${accuracy}%` : "\u2014"} />
       </div>
 
       {/* Topic mastery grid */}
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">Topic Progress</h2>
-      <MasteryGrid topics={progress.topics} />
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">Topic Progress</h2>
+        <p className="text-xs text-slate-400">
+          Click topics to select, then press Practice. Or use Smart Practice for auto-selection.
+        </p>
+      </div>
+      <MasteryGrid
+        topics={progress.topics}
+        selectedTopics={selectedTopics}
+        onToggleTopic={toggleTopic}
+      />
     </div>
   );
 }

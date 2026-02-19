@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { saveAiConfig } from "../api/client";
 
-type AiProvider = "anthropic" | "openai";
+type AiProvider = "anthropic" | "openai" | "gemini" | "deepseek";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -155,7 +155,15 @@ export default function LoginPage() {
                       >
                         <option value="anthropic">Anthropic Claude</option>
                         <option value="openai">OpenAI</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="deepseek">DeepSeek</option>
                       </select>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {aiProvider === "anthropic" && "Get your API key at console.anthropic.com under API Keys."}
+                        {aiProvider === "openai" && "Get your API key at platform.openai.com under API Keys."}
+                        {aiProvider === "gemini" && "Get your API key at aistudio.google.com under API Keys."}
+                        {aiProvider === "deepseek" && "Get your API key at platform.deepseek.com under API Keys."}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">API Key</label>

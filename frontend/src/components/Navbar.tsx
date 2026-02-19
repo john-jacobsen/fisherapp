@@ -27,12 +27,6 @@ export default function Navbar() {
             Dashboard
           </Link>
           <Link
-            to="/practice"
-            className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
-          >
-            Practice
-          </Link>
-          <Link
             to="/settings"
             className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
           >

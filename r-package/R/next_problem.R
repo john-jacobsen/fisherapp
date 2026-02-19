@@ -9,6 +9,8 @@
 #'   \item Mastered topics due for spaced review (most overdue first)
 #'   \item In-progress topics (first in topological order, at adjusted difficulty)
 #'   \item New topics whose prerequisites are all mastered (topological order, difficulty 1)
+#'   \item Mastered topics not yet due for review (random pick, at current difficulty)
+#'   \item Any available topic (fallback for edge cases)
 #' }
 #'
 #' @param student A \code{student_model} object
@@ -63,7 +65,36 @@ select_next_topic <- function(student, current_time = Sys.time(), graph = NULL,
     }
   }
 
-  # Nothing available
+  # Bucket 4: Mastered topics not yet due for review (practice fallback)
+  # Keeps practice sessions going even when nothing is "optimally" due.
+  # Pick a random mastered topic to add variety.
+  mastered_not_due <- character(0)
+  for (tid in topo_order) {
+    ts <- student$topics[[tid]]
+    if (!is.null(ts) && ts$mastery_state == "mastered") {
+      mastered_not_due <- c(mastered_not_due, tid)
+    }
+  }
+  if (length(mastered_not_due) > 0) {
+    chosen <- if (length(mastered_not_due) == 1L) {
+      mastered_not_due
+    } else {
+      sample(mastered_not_due, 1L)
+    }
+    ts <- student$topics[[chosen]]
+    return(list(topic_id = chosen, difficulty = ts$difficulty))
+  }
+
+  # Bucket 5: Any topic at all (should rarely reach here)
+  # Handles edge cases like all topics not_started with unmet prerequisites
+  for (tid in topo_order) {
+    ts <- student$topics[[tid]]
+    if (!is.null(ts)) {
+      return(list(topic_id = tid, difficulty = ts$difficulty))
+    }
+  }
+
+  # Nothing available (no topics exist at all)
   NULL
 }
 

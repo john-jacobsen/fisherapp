@@ -166,6 +166,12 @@ export default function SettingsPage() {
                   <option value="gemini">Google Gemini</option>
                   <option value="deepseek">DeepSeek</option>
                 </select>
+                <p className="mt-1 text-xs text-slate-400">
+                  {aiProvider === "anthropic" && "Get your API key at console.anthropic.com under API Keys."}
+                  {aiProvider === "openai" && "Get your API key at platform.openai.com under API Keys."}
+                  {aiProvider === "gemini" && "Get your API key at aistudio.google.com under API Keys."}
+                  {aiProvider === "deepseek" && "Get your API key at platform.deepseek.com under API Keys."}
+                </p>
               </div>
 
               <div>

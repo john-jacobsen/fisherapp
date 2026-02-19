@@ -44,14 +44,18 @@ test_that("select_next_topic never returns topic with unmet prereqs", {
   expect_equal(result$topic_id, "fraction_arithmetic")
 })
 
-test_that("select_next_topic returns NULL when all mastered and not due", {
+test_that("select_next_topic returns mastered topic when all mastered and not due", {
   s <- create_student_model()
   for (tid in names(s$topics)) {
     s$topics[[tid]]$mastery_state <- "mastered"
+    s$topics[[tid]]$difficulty <- 3L
     s$topics[[tid]]$next_review <- Sys.time() + 100000
   }
   result <- select_next_topic(s)
-  expect_null(result)
+  # Bucket 4: should still return a mastered topic for practice
+  expect_false(is.null(result))
+  expect_true(result$topic_id %in% names(s$topics))
+  expect_equal(result$difficulty, 3L)
 })
 
 test_that("next_problem_for_student returns fisherapp_problem", {
@@ -61,12 +65,14 @@ test_that("next_problem_for_student returns fisherapp_problem", {
   expect_equal(prob$topic_id, "fraction_arithmetic")
 })
 
-test_that("next_problem_for_student returns NULL when nothing available", {
+test_that("next_problem_for_student returns problem even when all mastered", {
   s <- create_student_model()
   for (tid in names(s$topics)) {
     s$topics[[tid]]$mastery_state <- "mastered"
+    s$topics[[tid]]$difficulty <- 3L
     s$topics[[tid]]$next_review <- Sys.time() + 100000
   }
   prob <- next_problem_for_student(s)
-  expect_null(prob)
+  # Bucket 4 fallback: should still generate a problem
+  expect_s3_class(prob, "fisherapp_problem")
 })

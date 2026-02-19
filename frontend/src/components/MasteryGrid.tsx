@@ -3,13 +3,21 @@ import TopicProgress from "./TopicProgress";
 
 interface MasteryGridProps {
   topics: TopicProgressType[];
+  selectedTopics?: string[];
+  onToggleTopic?: (topicId: string) => void;
 }
 
-export default function MasteryGrid({ topics }: MasteryGridProps) {
+export default function MasteryGrid({ topics, selectedTopics, onToggleTopic }: MasteryGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {topics.map((topic) => (
-        <TopicProgress key={topic.topic_id} topic={topic} />
+        <TopicProgress
+          key={topic.topic_id}
+          topic={topic}
+          selectable={!!onToggleTopic}
+          selected={selectedTopics?.includes(topic.topic_id) ?? false}
+          onToggle={onToggleTopic ? () => onToggleTopic(topic.topic_id) : undefined}
+        />
       ))}
     </div>
   );

@@ -1,9 +1,14 @@
-Here are Phase 2.5 fixes and improvements to implement one at a time:
+Here are the next round of fixes and improvements. Work through them one at a time.
 
-1. ADDITIONAL AI PROVIDERS: Add support for Google Gemini and DeepSeek API keys alongside the existing Claude and OpenAI options. For Gemini, use the Generative Language API endpoint. For DeepSeek, use their OpenAI-compatible chat completions endpoint at api.deepseek.com.
+1. PRACTICE SESSION BUG - "ALL CAUGHT UP": When a user selects topics and starts a practice session, it immediately shows "All caught up! All topics mastered and none are due for review." This is wrong — practice mode should always serve problems. If no problems are due for spaced repetition review, it should generate new problems at the user's current difficulty level for the selected topics. The "all caught up" message should only appear if the user has truly mastered everything AND there's nothing new to practice, which should be very rare. Fix the problem selection logic to fall back to fresh problem generation.
 
-2. TOPIC SELECTION: Allow users to select which topics they want to practice from the 8 available topics. Add a topic selection screen or checkboxes so users can focus on specific areas (e.g., just logarithms and summation notation). This selection should be changeable at any time.
+2. API KEY HELP TEXT: On the AI settings page (both in registration and settings), add a brief 1-2 sentence helper note under each provider explaining where users can find their API key. For example:
+   - Anthropic Claude: "Get your API key at console.anthropic.com under API Keys."
+   - OpenAI: "Get your API key at platform.openai.com under API Keys."
+   - Google Gemini: "Get your API key at aistudio.google.com under API Keys."
+   - DeepSeek: "Get your API key at platform.deepseek.com under API Keys."
 
-3. MATH KEYBOARD EXPONENT BUG: When entering a two-digit exponent (like 15) using the MathLive keyboard, only the first digit registers in the exponent position — the second digit drops to the base level. Also, entering the exponent as (15) with parentheses should be accepted as equivalent to 15. Fix both the input behavior and the answer matching to handle parenthesized exponents.
-
-4. PLACEMENT TEST CRASH AT QUESTION 16: The placement test crashes at question 16 with "argument is of length zero." The R backend is likely running out of problems to serve or hitting an index out-of-bounds error. Debug the placement test problem generation logic — check array indexing, ensure enough problems exist for all 16+ questions, and handle edge cases where no problems match the current difficulty/topic filter.
+3. DASHBOARD-BASED PRACTICE FLOW REDESIGN: Replace the separate topic selection screen with an integrated dashboard flow:
+   - Make each topic card on the dashboard selectable with a highlighted state when clicked/tapped
+   - Add two buttons: "Practice" (begins a session with the manually selected/highlighted topics) and "Smart Practice" (app automatically picks the topics where the user has lowest accuracy or most overdue reviews and starts immediately — no need to visually highlight the cards first)
+   - Remove the old separate topic selection screen

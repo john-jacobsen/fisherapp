@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { startSession, endSession, getNextProblem, checkAnswer, getTopics } from "../api/client";
+import { startSession, endSession, getNextProblem, checkAnswer, getProgress } from "../api/client";
 import ProblemCard from "../components/ProblemCard";
 import AnswerInput from "../components/AnswerInput";
 import FeedbackPanel from "../components/FeedbackPanel";
 import InterventionBanner from "../components/InterventionBanner";
 import SessionSummary from "../components/SessionSummary";
-import type { Problem, AnswerResult, SessionEndResponse, Intervention, Topic } from "../types/api";
+import type { Problem, AnswerResult, SessionEndResponse, Intervention } from "../types/api";
 
-type PracticeState = "topic-select" | "loading" | "problem" | "feedback" | "ended" | "error" | "complete";
+type PracticeState = "loading" | "problem" | "feedback" | "ended" | "error" | "complete";
 
 export default function PracticePage() {
   const { studentId } = useAuth();
   const navigate = useNavigate();
-  const [state, setState] = useState<PracticeState>("topic-select");
+  const [searchParams] = useSearchParams();
+  const [state, setState] = useState<PracticeState>("loading");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
@@ -26,32 +27,45 @@ export default function PracticePage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [lastAnswer, setLastAnswer] = useState("");
 
-  // Topic selection
-  const [allTopics, setAllTopics] = useState<Topic[]>([]);
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [topicsLoading, setTopicsLoading] = useState(true);
+  // Parse topics from URL params
+  const topicsParam = searchParams.get("topics");
+  const isSmartMode = searchParams.get("smart") === "true";
+  const selectedTopics = topicsParam ? topicsParam.split(",").filter(Boolean) : [];
 
-  // Load available topics on mount
+  // For smart mode, we compute topics from progress data
+  const [smartTopics, setSmartTopics] = useState<string[] | null>(null);
+
+  // Resolve smart practice topics
   useEffect(() => {
-    getTopics()
-      .then((topics) => {
-        setAllTopics(topics);
-        setSelectedTopics(topics.map((t) => t.topic_id));
-      })
-      .catch(() => {})
-      .finally(() => setTopicsLoading(false));
-  }, []);
+    if (!isSmartMode || !studentId) return;
+    getProgress(studentId).then((progress) => {
+      // Pick topics with lowest accuracy or most overdue reviews
+      const ranked = [...progress.topics]
+        .filter((t) => t.mastery !== "not_started" || t.attempts === 0)
+        .sort((a, b) => {
+          // Prioritize not_started (never practiced) first
+          if (a.mastery === "not_started" && b.mastery !== "not_started") return -1;
+          if (b.mastery === "not_started" && a.mastery !== "not_started") return 1;
+          // Then by lowest accuracy
+          const accA = a.accuracy ?? 0;
+          const accB = b.accuracy ?? 0;
+          return accA - accB;
+        });
+      // Select the top half (at least 2, at most all)
+      const count = Math.max(2, Math.ceil(ranked.length / 2));
+      setSmartTopics(ranked.slice(0, count).map((t) => t.topic_id));
+    }).catch(() => {
+      // Fallback: no topic filter (practice everything)
+      setSmartTopics([]);
+    });
+  }, [isSmartMode, studentId]);
 
-  const toggleTopic = (topicId: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topicId)
-        ? prev.filter((id) => id !== topicId)
-        : [...prev, topicId]
-    );
-  };
-
-  const selectAll = () => setSelectedTopics(allTopics.map((t) => t.topic_id));
-  const selectNone = () => setSelectedTopics([]);
+  const getTopicFilter = useCallback((): string[] | undefined => {
+    if (isSmartMode) {
+      return smartTopics && smartTopics.length > 0 ? smartTopics : undefined;
+    }
+    return selectedTopics.length > 0 ? selectedTopics : undefined;
+  }, [isSmartMode, smartTopics, selectedTopics]);
 
   const initSession = useCallback(async () => {
     if (!studentId) return;
@@ -59,7 +73,7 @@ export default function PracticePage() {
     try {
       const sess = await startSession(studentId);
       setSessionId(sess.session_id);
-      const topics = selectedTopics.length === allTopics.length ? undefined : selectedTopics;
+      const topics = getTopicFilter();
       const prob = await getNextProblem(studentId, topics);
       if (prob.problem_id) {
         setProblem(prob);
@@ -72,7 +86,14 @@ export default function PracticePage() {
       setError(err instanceof Error ? err.message : "Failed to start session");
       setState("error");
     }
-  }, [studentId, selectedTopics, allTopics.length]);
+  }, [studentId, getTopicFilter]);
+
+  // Auto-start session when component mounts (or when smart topics resolve)
+  useEffect(() => {
+    if (!studentId) return;
+    if (isSmartMode && smartTopics === null) return; // Wait for smart topics to resolve
+    initSession();
+  }, [studentId, isSmartMode, smartTopics]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (answer: string) => {
     if (!studentId || !sessionId || !problem) return;
@@ -96,7 +117,7 @@ export default function PracticePage() {
     if (!studentId) return;
     setState("loading");
     try {
-      const topics = selectedTopics.length === allTopics.length ? undefined : selectedTopics;
+      const topics = getTopicFilter();
       const prob = await getNextProblem(studentId, topics);
       if (prob.problem_id) {
         setProblem(prob);
@@ -129,91 +150,19 @@ export default function PracticePage() {
     return null;
   }
 
+  // Redirect to dashboard if no topics specified and not smart mode
+  if (!isSmartMode && selectedTopics.length === 0) {
+    navigate("/dashboard");
+    return null;
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Topic selection screen */}
-      {state === "topic-select" && (
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Practice</h1>
-          <p className="text-sm text-slate-500 mb-6">
-            Select which topics you want to practice, then start your session.
-          </p>
-
-          {topicsLoading ? (
-            <div className="text-center py-8 text-slate-500">Loading topics...</div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={selectAll}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Select All
-                </button>
-                <span className="text-slate-300">|</span>
-                <button
-                  onClick={selectNone}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Deselect All
-                </button>
-                <span className="ml-auto text-sm text-slate-500">
-                  {selectedTopics.length}/{allTopics.length} selected
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                {allTopics.map((topic) => {
-                  const isSelected = selectedTopics.includes(topic.topic_id);
-                  return (
-                    <button
-                      key={topic.topic_id}
-                      onClick={() => toggleTopic(topic.topic_id)}
-                      className={`text-left p-4 rounded-lg border-2 transition-colors ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 bg-white hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                            isSelected
-                              ? "border-blue-500 bg-blue-500 text-white"
-                              : "border-slate-300"
-                          }`}
-                        >
-                          {isSelected && (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
-                          {topic.title}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={initSession}
-                disabled={selectedTopics.length === 0}
-                className="w-full px-5 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Start Practice Session
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
       {/* Session stats bar */}
-      {state !== "ended" && state !== "error" && state !== "topic-select" && (
+      {state !== "ended" && state !== "error" && (
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-slate-500">
+            {isSmartMode && <span className="text-emerald-600 font-medium mr-3">Smart Practice</span>}
             Problems: {problemCount} | Correct: {correctCount}
             {problemCount > 0 && ` (${Math.round((correctCount / problemCount) * 100)}%)`}
           </div>
@@ -274,16 +223,24 @@ export default function PracticePage() {
 
       {state === "complete" && (
         <div className="text-center py-16">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">All caught up!</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">No problems available</h2>
           <p className="text-slate-500 mb-6">
-            All topics mastered and none are due for review.
+            No problems could be generated for the selected topics. Try selecting different topics or starting a new session.
           </p>
-          <button
-            onClick={handleEndSession}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-          >
-            End Session
-          </button>
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+            >
+              Back to Dashboard
+            </button>
+            <button
+              onClick={handleEndSession}
+              className="px-6 py-2.5 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300"
+            >
+              End Session
+            </button>
+          </div>
         </div>
       )}
 
@@ -291,12 +248,7 @@ export default function PracticePage() {
         <SessionSummary
           summary={sessionSummary}
           onDashboard={() => navigate("/dashboard")}
-          onNewSession={() => {
-            setProblemCount(0);
-            setCorrectCount(0);
-            setSessionId(null);
-            setState("topic-select");
-          }}
+          onNewSession={() => navigate("/dashboard")}
         />
       )}
     </div>
