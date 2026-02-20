@@ -94,7 +94,8 @@ register_exponent_rules_templates <- function() {
                  "} = x^{", p$a, "-", p$b, "} = ", latex_exp("x", result), "$.")
         )
       }
-      list(steps = steps, answer_value = result)
+      list(steps = steps, answer_value = result,
+           answer_expr = paste0("x^{", result, "}"))
     },
     format_answer = function(sol) {
       paste0("x^{", sol$answer_value, "}")
@@ -144,11 +145,14 @@ register_exponent_rules_templates <- function() {
         paste0("Step 4: Result: $", latex_frac(coeff$num, coeff$den),
                latex_exp("x", exp_result), "$.")
       )
+      coeff_str <- if (coeff$den == 1L) as.character(coeff$num) else
+                     paste0(coeff$num, "/", coeff$den)
       list(
         steps = steps,
         coeff_num = coeff$num,
         coeff_den = coeff$den,
-        exp_result = exp_result
+        exp_result = exp_result,
+        answer_expr = paste0(coeff_str, "x^{", exp_result, "}")
       )
     },
     format_answer = function(sol) {
