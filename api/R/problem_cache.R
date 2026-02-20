@@ -64,3 +64,48 @@ remove_placement_state <- function(student_id) {
     rm(list = student_id, envir = .placement_cache)
   }
 }
+
+# --- Placement state DB persistence ---
+# These functions back the in-memory cache with the database so placement
+# progress survives server restarts and browser closes.
+
+#' Persist placement state to the database
+#'
+#' @param pool Database connection pool
+#' @param student_id Character UUID
+#' @param state Placement state list
+save_placement_state_db <- function(pool, student_id, state) {
+  state_json <- jsonlite::toJSON(state, auto_unbox = TRUE, null = "null")
+  DBI::dbExecute(pool,
+    "INSERT INTO placement_sessions (student_id, state, updated_at)
+     VALUES ($1::uuid, $2::jsonb, now())
+     ON CONFLICT (student_id) DO UPDATE
+       SET state = EXCLUDED.state, updated_at = now()",
+    params = list(student_id, as.character(state_json))
+  )
+}
+
+#' Load placement state from the database
+#'
+#' @param pool Database connection pool
+#' @param student_id Character UUID
+#' @return Placement state list, or NULL if not found
+load_placement_state_db <- function(pool, student_id) {
+  row <- DBI::dbGetQuery(pool,
+    "SELECT state FROM placement_sessions WHERE student_id = $1::uuid",
+    params = list(student_id)
+  )
+  if (nrow(row) == 0) return(NULL)
+  jsonlite::fromJSON(row$state[1], simplifyVector = FALSE)
+}
+
+#' Remove placement state from the database
+#'
+#' @param pool Database connection pool
+#' @param student_id Character UUID
+remove_placement_state_db <- function(pool, student_id) {
+  DBI::dbExecute(pool,
+    "DELETE FROM placement_sessions WHERE student_id = $1::uuid",
+    params = list(student_id)
+  )
+}

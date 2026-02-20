@@ -170,6 +170,20 @@ function(req, res) {
   )
 }
 
+#* Check if a student has an in-progress placement test
+#* @get /placement/status
+#* @param student_id:character Student UUID
+#* @serializer unboxedJSON
+function(student_id, res) {
+  tryCatch(
+    handle_placement_status(student_id, res, db_pool),
+    error = function(e) {
+      res$status <- 500
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+}
+
 #* Submit a placement answer
 #* @post /placement/answer
 #* @serializer unboxedJSON

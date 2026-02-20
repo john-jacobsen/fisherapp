@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { startPlacement, submitPlacementAnswer, skipPlacement } from "../api/client";
+import { startPlacement, submitPlacementAnswer, skipPlacement, getPlacementStatus } from "../api/client";
 import ProblemCard from "../components/ProblemCard";
 import AnswerInput from "../components/AnswerInput";
 import PlacementProgress from "../components/PlacementProgress";
@@ -19,12 +19,26 @@ export default function PlacementPage() {
   const [totalAsked, setTotalAsked] = useState(0);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resumeInfo, setResumeInfo] = useState<{ questionsAsked: number; total: number } | null>(null);
 
-  const startTest = useCallback(async () => {
+  // On mount, check for an in-progress placement test and offer to resume
+  useEffect(() => {
+    if (!studentId) return;
+    getPlacementStatus(studentId)
+      .then((status) => {
+        if (status.active && status.questions_asked != null && status.total_questions != null) {
+          setResumeInfo({ questionsAsked: status.questions_asked, total: status.total_questions });
+        }
+      })
+      .catch(() => {/* ignore — just show intro */});
+  }, [studentId]);
+
+  const startTest = useCallback(async (forceRestart = false) => {
     if (!studentId) return;
     setState("loading");
+    setResumeInfo(null);
     try {
-      const result = await startPlacement(studentId);
+      const result = await startPlacement(studentId, undefined, forceRestart);
       if (result.placement_active) {
         setCurrentProblem(result);
         setState("question");
@@ -89,26 +103,60 @@ export default function PlacementPage() {
       {state === "intro" && (
         <div className="text-center py-16">
           <h1 className="text-3xl font-bold text-slate-900 mb-4">Placement Test</h1>
-          <p className="text-slate-500 mb-2 max-w-md mx-auto">
-            Answer 15-25 questions to determine your starting level across 8 algebra topics.
-          </p>
-          <p className="text-slate-400 text-sm mb-8">
-            The test adapts to your level — difficulty increases when you answer correctly.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <button
-              onClick={startTest}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium text-lg hover:bg-blue-700 transition-colors"
-            >
-              Begin Test
-            </button>
-            <button
-              onClick={handleSkip}
-              className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
-            >
-              Skip and start at beginner level
-            </button>
-          </div>
+
+          {resumeInfo ? (
+            <>
+              <p className="text-slate-600 mb-2 max-w-md mx-auto">
+                You have an in-progress placement test.
+              </p>
+              <p className="text-slate-400 text-sm mb-8">
+                {resumeInfo.questionsAsked} of {resumeInfo.total} questions answered.
+              </p>
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={() => startTest(false)}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium text-lg hover:bg-blue-700 transition-colors"
+                >
+                  Resume Test
+                </button>
+                <button
+                  onClick={() => startTest(true)}
+                  className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  Start over from the beginning
+                </button>
+                <button
+                  onClick={handleSkip}
+                  className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Skip and start at beginner level
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-slate-500 mb-2 max-w-md mx-auto">
+                Answer 15-25 questions to determine your starting level across 8 algebra topics.
+              </p>
+              <p className="text-slate-400 text-sm mb-8">
+                The test adapts to your level — difficulty increases when you answer correctly.
+              </p>
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={() => startTest(false)}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium text-lg hover:bg-blue-700 transition-colors"
+                >
+                  Begin Test
+                </button>
+                <button
+                  onClick={handleSkip}
+                  className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  Skip and start at beginner level
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

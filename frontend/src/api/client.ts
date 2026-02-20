@@ -111,15 +111,23 @@ export function checkAnswer(
 
 // --- Placement ---
 
+export function getPlacementStatus(
+  studentId: string
+): Promise<{ active: boolean; questions_asked?: number; total_questions?: number }> {
+  return request(`/placement/status?student_id=${studentId}`);
+}
+
 export function startPlacement(
   studentId: string,
-  maxQuestions?: number
+  maxQuestions?: number,
+  forceRestart?: boolean
 ): Promise<PlacementProblem> {
   return request("/placement/start", {
     method: "POST",
     body: JSON.stringify({
       student_id: studentId,
       max_questions: maxQuestions,
+      force_restart: forceRestart ?? false,
     }),
   });
 }

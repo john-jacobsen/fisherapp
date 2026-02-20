@@ -90,6 +90,13 @@ CREATE TABLE mastery_states (
   PRIMARY KEY (student_id, topic_id)
 );
 
+-- In-progress placement test state (persists across server restarts)
+CREATE TABLE placement_sessions (
+  student_id  UUID PRIMARY KEY REFERENCES students(student_id) ON DELETE CASCADE,
+  state       JSONB NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- -----------------------------------------------------------------------------
 -- Indexes
 -- -----------------------------------------------------------------------------

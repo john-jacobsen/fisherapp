@@ -297,6 +297,38 @@ handle_placement_start <- function(req, res, pool) {
     return(not_found(res, "Student not found"))
   }
 
+  # Check for in-progress placement test in DB (survives server restarts)
+  force_restart <- isTRUE(body$force_restart)
+  if (!force_restart) {
+    existing_state <- load_placement_state_db(pool, body$student_id)
+    if (!is.null(existing_state) && !isTRUE(existing_state$completed)) {
+      # Resume: restore in-memory cache and generate next problem
+      cache_placement_state(body$student_id, existing_state)
+      result <- placement_generate_next(existing_state, student)
+      if (result$completed) {
+        remove_placement_state(body$student_id)
+        remove_placement_state_db(pool, body$student_id)
+        return(finalize_placement(result$state, student, pool))
+      }
+      cache_placement_state(body$student_id, result$state)
+      save_placement_state_db(pool, body$student_id, result$state)
+      if (!is.null(result$problem)) cache_problem(result$problem)
+      return(list(
+        placement_active = TRUE,
+        resumed          = TRUE,
+        question_number  = result$state$total_asked + 1L,
+        problem_id       = result$problem$problem_id,
+        topic_id         = result$problem$topic_id,
+        difficulty       = result$problem$difficulty,
+        statement        = result$problem$statement,
+        total_questions  = result$state$max_questions
+      ))
+    }
+  }
+
+  # Clear any stale DB state before starting fresh
+  remove_placement_state_db(pool, body$student_id)
+
   graph <- fisherapp::load_knowledge_graph()
   topo_order <- fisherapp::get_topic_order(graph)
   questions_per_topic <- 3L
@@ -330,12 +362,14 @@ handle_placement_start <- function(req, res, pool) {
   }
 
   cache_placement_state(body$student_id, result$state)
+  save_placement_state_db(pool, body$student_id, result$state)
   if (!is.null(result$problem)) {
     cache_problem(result$problem)
   }
 
   list(
     placement_active = TRUE,
+    resumed          = FALSE,
     question_number  = result$state$total_asked + 1L,
     problem_id       = if (!is.null(result$problem)) result$problem$problem_id else NULL,
     topic_id         = if (!is.null(result$problem)) result$problem$topic_id else NULL,
@@ -357,6 +391,13 @@ handle_placement_answer <- function(req, res, pool) {
   }
 
   state <- get_placement_state(body$student_id)
+  if (is.null(state)) {
+    # In-memory cache cleared (server restart) — try loading from DB
+    state <- load_placement_state_db(pool, body$student_id)
+    if (!is.null(state)) {
+      cache_placement_state(body$student_id, state)
+    }
+  }
   if (is.null(state)) {
     return(bad_request(res, "No active placement test. Start one first."))
   }
@@ -438,6 +479,7 @@ handle_placement_answer <- function(req, res, pool) {
 
     student <- fisherapp::load_student_model(pool, body$student_id)
     remove_placement_state(body$student_id)
+    remove_placement_state_db(pool, body$student_id)
     return(finalize_placement(state, student, pool))
   }
 
@@ -445,10 +487,12 @@ handle_placement_answer <- function(req, res, pool) {
   student <- fisherapp::load_student_model(pool, body$student_id)
   next_result <- placement_generate_next(state, student)
   cache_placement_state(body$student_id, next_result$state)
+  save_placement_state_db(pool, body$student_id, next_result$state)
 
   if (next_result$completed || is.null(next_result$problem)) {
     student <- fisherapp::load_student_model(pool, body$student_id)
     remove_placement_state(body$student_id)
+    remove_placement_state_db(pool, body$student_id)
     return(finalize_placement(next_result$state, student, pool))
   }
 
@@ -516,6 +560,26 @@ finalize_placement <- function(state, student, pool) {
     completed        = TRUE,
     questions_asked  = state$total_asked,
     placements       = state$topic_placements
+  )
+}
+
+#' Check placement test status (active in-progress test)
+#'
+#' Returns whether a student has an in-progress placement test saved in the DB.
+#' Used by the frontend on page load to decide whether to offer auto-resume.
+#'
+#' @param student_id Character UUID
+#' @param res Plumber response
+#' @param pool Database pool
+handle_placement_status <- function(student_id, res, pool) {
+  state <- load_placement_state_db(pool, student_id)
+  if (is.null(state) || isTRUE(state$completed)) {
+    return(list(active = FALSE))
+  }
+  list(
+    active           = TRUE,
+    questions_asked  = state$total_asked,
+    total_questions  = state$max_questions
   )
 }
 
