@@ -28,6 +28,8 @@ normalize_answer <- function(answer) {
   answer <- gsub("\\\\!", "", answer)                 # negative thin space
   # Remove parentheses around exponents: ^(15) -> ^15
   answer <- gsub("\\^\\((-?\\d+)\\)", "^\\1", answer)
+  # Strip curly braces from exponents: x^{3} -> x^3, x^{11} -> x^11
+  answer <- gsub("\\^\\{(-?[^}]+)\\}", "^\\1", answer)
   # Remove spaces around operators
   answer <- gsub("\\s+", "", answer)
   answer
@@ -50,6 +52,11 @@ normalize_answer <- function(answer) {
 check_answer <- function(problem, student_answer) {
   correct_raw <- problem$answer_raw
   is_correct <- compare_answers(student_answer, correct_raw)
+  # Fallback: compare normalized student answer against the formatted answer string
+  # This handles templates where answer_raw lacks answer_expr (e.g. answer_value only)
+  if (!is_correct && !is.null(problem$answer) && nchar(problem$answer) > 0) {
+    is_correct <- normalize_algebra(student_answer) == normalize_algebra(problem$answer)
+  }
 
   list(
     correct = is_correct,
