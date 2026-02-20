@@ -15,43 +15,50 @@ register_fraction_arithmetic_templates <- function() {
     difficulty = 1L,
     description = "Identify the fraction equivalent to a given fraction",
     params = list(
-      num = function() sample(1:8, 1),
-      den = function() sample(2:12, 1),
-      multiplier = function() sample(2:5, 1)
+      num        = function() sample(1:8, 1),
+      den        = function() sample(2:12, 1),
+      multiplier = function() sample(2:5, 1),
+      correct_pos = function() sample(1:3, 1)   # randomize correct answer position
     ),
     constraint = function(p) {
       p$num < p$den && gcd(p$num, p$den) == 1
     },
     statement = function(p) {
-      equiv_num <- p$num * p$multiplier
-      equiv_den <- p$den * p$multiplier
-      # Generate two wrong answers
+      equiv_num  <- p$num * p$multiplier
+      equiv_den  <- p$den * p$multiplier
       wrong1_num <- p$num + 1
       wrong1_den <- p$den + 1
       wrong2_num <- p$num * p$multiplier
       wrong2_den <- p$den * p$multiplier + 1
+      # Place correct answer at correct_pos; wrong answers fill remaining spots
+      fracs <- vector("list", 3)
+      fracs[[p$correct_pos]] <- latex_frac(equiv_num, equiv_den)
+      wrong_spots <- setdiff(1:3, p$correct_pos)
+      fracs[[wrong_spots[1]]] <- latex_frac(wrong1_num, wrong1_den)
+      fracs[[wrong_spots[2]]] <- latex_frac(wrong2_num, wrong2_den)
       paste0("Which of the following is equivalent to $",
              latex_frac(p$num, p$den), "$?\n\n",
-             "(a) $", latex_frac(equiv_num, equiv_den), "$\n",
-             "(b) $", latex_frac(wrong1_num, wrong1_den), "$\n",
-             "(c) $", latex_frac(wrong2_num, wrong2_den), "$")
+             "(a) $", fracs[[1]], "$\n",
+             "(b) $", fracs[[2]], "$\n",
+             "(c) $", fracs[[3]], "$")
     },
     solve = function(p) {
       equiv_num <- p$num * p$multiplier
       equiv_den <- p$den * p$multiplier
+      letter <- c("a", "b", "c")[p$correct_pos]
       list(
         steps = c(
           paste0("Step 1: Multiply numerator and denominator by ", p$multiplier, ":"),
           paste0("Step 2: $", latex_frac(p$num, p$den), " = ",
                  latex_frac(equiv_num, equiv_den), "$"),
-          paste0("Step 3: The answer is (a).")
+          paste0("Step 3: The answer is (", letter, ").")
         ),
         answer_value = p$num / p$den,
-        answer_letter = "a"
+        answer_letter = letter
       )
     },
     format_answer = function(sol) {
-      "(a)"
+      paste0("(", sol$answer_letter, ")")
     }
   ))
 

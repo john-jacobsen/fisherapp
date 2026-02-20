@@ -16,6 +16,19 @@ test_that("fraction_arithmetic D1 recognition gives valid answer", {
   expect_true(nchar(prob$answer) > 0)
 })
 
+test_that("fraction_arithmetic D1 correct answer position is randomized across seeds", {
+  # Generate multiple instances and collect the answer letters
+  answers <- character(20)
+  for (i in seq_along(answers)) {
+    prob <- generate_problem("fraction_arithmetic", difficulty = 1, seed = i * 7)
+    answers[i] <- prob$answer
+  }
+  # The correct answer should NOT always be "(a)" — all three positions should appear
+  unique_positions <- unique(answers)
+  expect_gt(length(unique_positions), 1,
+            label = "correct answer should appear in more than one position")
+})
+
 test_that("fraction_arithmetic D2 subtraction gives valid answer", {
   prob <- generate_problem("fraction_arithmetic", difficulty = 2, seed = 55)
   expect_true(nchar(prob$answer) > 0)
