@@ -108,7 +108,42 @@ compare_answers <- function(student_answer, correct_raw) {
     if (correct_expr == student_expr) return(TRUE)
   }
 
+  # Strategy 4: Numeric evaluation at test points
+  # Handles cases like "6.75x^11" == "27x^{11}/4" (equivalent fractional coefficients)
+  if (is.list(correct_raw) && !is.null(correct_raw$answer_expr)) {
+    v1s <- eval_expr_at(student_answer, 2)
+    v1c <- eval_expr_at(correct_raw$answer_expr, 2)
+    v2s <- eval_expr_at(student_answer, 3)
+    v2c <- eval_expr_at(correct_raw$answer_expr, 3)
+    if (!is.na(v1s) && !is.na(v1c) && !is.na(v2s) && !is.na(v2c) &&
+        isTRUE(all.equal(v1s, v1c, tolerance = 1e-9)) &&
+        isTRUE(all.equal(v2s, v2c, tolerance = 1e-9))) {
+      return(TRUE)
+    }
+  }
+
   FALSE
+}
+
+#' Evaluate an algebraic expression at a given x value
+#'
+#' Inserts implicit multiplication (e.g. "2x" -> "2*x") then evaluates.
+#' Returns NA_real_ if the expression cannot be parsed or evaluated.
+#'
+#' @param expr Character string (will be normalized before evaluation)
+#' @param x_val Numeric value to substitute for x
+#' @return Numeric, or NA_real_
+#' @keywords internal
+eval_expr_at <- function(expr, x_val) {
+  e <- normalize_answer(expr)
+  # Insert * for implicit multiplication: digit immediately before letter
+  # e.g. "27x" -> "27*x", "6.75x" -> "6.75*x"
+  e <- gsub("(\\d)([a-z])", "\\1*\\2", e, perl = TRUE)
+  tryCatch(
+    eval(parse(text = e), envir = list(x = x_val)),
+    error   = function(err) NA_real_,
+    warning = function(w)   NA_real_
+  )
 }
 
 #' Normalize an algebraic expression for comparison
