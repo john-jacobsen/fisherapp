@@ -237,7 +237,7 @@ handle_check_answer <- function(req, res, pool) {
   # Retrieve cached problem
   problem <- get_cached_problem(body$problem_id)
   if (is.null(problem)) {
-    return(bad_request(res, "Problem not found or expired. Request a new problem."))
+    return(bad_request(res, "Problem not found. Please request a new problem."))
   }
 
   # Load student
@@ -363,7 +363,7 @@ handle_placement_answer <- function(req, res, pool) {
 
   problem <- get_cached_problem(body$problem_id)
   if (is.null(problem)) {
-    return(bad_request(res, "Problem not found or expired."))
+    return(bad_request(res, "Problem not found. Please request a new problem."))
   }
 
   # Check answer
