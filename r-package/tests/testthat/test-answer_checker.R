@@ -331,3 +331,22 @@ test_that("compare_answers: 2\\cdot3 is parsed after normalization", {
   norm <- fisherapp:::normalize_answer("2\\cdot3")
   expect_equal(norm, "2*3")
 })
+
+# --- Exponent expression normalization (Fix 1) ---
+
+test_that("normalize_answer strips curly braces from exponents", {
+  expect_equal(fisherapp:::normalize_answer("x^{3}"), "x^3")
+  expect_equal(fisherapp:::normalize_answer("x^{11}"), "x^11")
+  expect_equal(fisherapp:::normalize_answer("2x^{5}"), "2x^5")
+})
+
+test_that("compare_answers: x^3 matches x^{3} answer_expr", {
+  raw <- list(answer_expr = "x^{3}")
+  expect_true(fisherapp:::compare_answers("x^3", raw))
+  expect_true(fisherapp:::compare_answers("x^{3}", raw))
+})
+
+test_that("compare_answers: 27x^11/4 matches answer_expr 27x^{11}/4", {
+  raw <- list(answer_expr = "27x^{11}/4")
+  expect_true(fisherapp:::compare_answers("27x^11/4", raw))
+})

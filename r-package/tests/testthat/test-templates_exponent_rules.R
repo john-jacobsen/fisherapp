@@ -48,3 +48,21 @@ test_that("exponent_rules produces different problems with different seeds", {
   p2 <- generate_problem("exponent_rules", difficulty = 2, seed = 2)
   expect_false(p1$statement == p2$statement && p1$answer == p2$answer)
 })
+
+# Fix 1: answer matching for algebraic exponent expressions
+
+test_that("exponent_rules D2 answer accepted when student types x^N without braces", {
+  prob <- generate_problem("exponent_rules", difficulty = 2, seed = 55)
+  cat("D2 answer:", prob$answer, "\n")
+  # Strip curly braces to simulate student input: x^{7} -> x^7
+  correct_no_braces <- gsub("\\{(\\d+)\\}", "\\1", prob$answer)
+  result <- check_answer(prob, correct_no_braces)
+  expect_true(result$correct)
+})
+
+test_that("exponent_rules D3 answer accepted when student submits exact answer", {
+  prob <- generate_problem("exponent_rules", difficulty = 3, seed = 77)
+  cat("D3 answer:", prob$answer, "\n")
+  result <- check_answer(prob, prob$answer)
+  expect_true(result$correct)
+})
