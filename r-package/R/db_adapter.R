@@ -140,6 +140,14 @@ load_student_model <- function(con, student_id) {
       "SELECT DISTINCT topic_id FROM problem_attempts WHERE session_id = $1",
       params = list(session_row$session_id[1])
     )
+    # Restore templates_served from full attempt history (last 200 across all sessions)
+    # so cross-session and cross-restart deduplication works correctly
+    templates_hist <- DBI::dbGetQuery(con,
+      "SELECT template_id FROM problem_attempts
+       WHERE student_id = $1 AND template_id IS NOT NULL
+       ORDER BY created_at DESC LIMIT 200",
+      params = list(student_id)
+    )
     current_session <- structure(
       list(
         session_id       = session_row$session_id[1],
@@ -151,7 +159,8 @@ load_student_model <- function(con, student_id) {
         problems_served  = as.integer(session_row$problems_served[1]),
         problems_correct = as.integer(session_row$problems_correct[1]),
         is_placement     = as.logical(session_row$is_placement[1]),
-        templates_served = character(0)
+        templates_served = if (nrow(templates_hist) > 0) templates_hist$template_id
+                           else character(0)
       ),
       class = "tutor_session"
     )
@@ -317,11 +326,12 @@ save_attempt <- function(con, session_id, student_id, problem,
   DBI::dbExecute(con,
     "INSERT INTO problem_attempts
        (session_id, student_id, problem_id, topic_id, difficulty,
-        student_answer, correct_answer, is_correct, attempt_number)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        template_id, student_answer, correct_answer, is_correct, attempt_number)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
     params = list(
       session_id, student_id, problem$problem_id,
       problem$topic_id, problem$difficulty,
+      problem$template_id %||% NA_character_,
       answer, problem$answer, result$correct,
       attempt_number
     )

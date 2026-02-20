@@ -62,6 +62,7 @@ CREATE TABLE problem_attempts (
   problem_id     UUID NOT NULL,
   topic_id       TEXT NOT NULL,
   difficulty     INTEGER NOT NULL CHECK (difficulty BETWEEN 1 AND 5),
+  template_id    TEXT,
   student_answer TEXT,
   correct_answer TEXT NOT NULL,
   is_correct     BOOLEAN NOT NULL,
@@ -106,5 +107,7 @@ CREATE INDEX idx_sessions_active     ON sessions(student_id) WHERE ended_at IS N
 CREATE INDEX idx_attempts_session    ON problem_attempts(session_id);
 CREATE INDEX idx_attempts_student    ON problem_attempts(student_id);
 CREATE INDEX idx_attempts_topic      ON problem_attempts(student_id, topic_id);
+CREATE INDEX idx_attempts_template   ON problem_attempts(student_id, template_id)
+  WHERE template_id IS NOT NULL;
 CREATE INDEX idx_mastery_review      ON mastery_states(next_review)
                                      WHERE mastery_state = 'mastered';
