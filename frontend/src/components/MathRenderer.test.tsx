@@ -41,4 +41,24 @@ describe("MathRenderer", () => {
     const { container } = render(<MathRenderer text="test" className="my-class" />);
     expect(container.querySelector("span.my-class")).toBeInTheDocument();
   });
+
+  it("converts single newline to <br> tag", () => {
+    const { container } = render(<MathRenderer text={"line1\nline2"} />);
+    expect(container.innerHTML).toContain("<br>");
+  });
+
+  it("converts double newline to two <br> tags", () => {
+    const { container } = render(<MathRenderer text={"paragraph1\n\nparagraph2"} />);
+    expect(container.innerHTML).toContain("<br><br>");
+  });
+
+  it("converts newlines between multiple-choice options", () => {
+    const { container } = render(
+      <MathRenderer text={"Which is correct?\n\n(a) option one\n(b) option two\n(c) option three"} />
+    );
+    // Each option should be on its own line (separated by <br>)
+    expect(container.innerHTML).toContain("<br>");
+    expect(container.innerHTML).toContain("(a) option one");
+    expect(container.innerHTML).toContain("(b) option two");
+  });
 });

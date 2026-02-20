@@ -32,8 +32,8 @@ register_fraction_arithmetic_templates <- function() {
       wrong2_den <- p$den * p$multiplier + 1
       paste0("Which of the following is equivalent to $",
              latex_frac(p$num, p$den), "$?\n\n",
-             "(a) $", latex_frac(equiv_num, equiv_den), "$ ",
-             "(b) $", latex_frac(wrong1_num, wrong1_den), "$ ",
+             "(a) $", latex_frac(equiv_num, equiv_den), "$\n",
+             "(b) $", latex_frac(wrong1_num, wrong1_den), "$\n",
              "(c) $", latex_frac(wrong2_num, wrong2_den), "$")
     },
     solve = function(p) {
