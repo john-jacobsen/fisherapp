@@ -136,9 +136,14 @@ compare_answers <- function(student_answer, correct_raw) {
 #' @keywords internal
 eval_expr_at <- function(expr, x_val) {
   e <- normalize_answer(expr)
+  # Convert LaTeX \frac{a}{b} to (a)/(b) so R can evaluate it
+  # e.g. "\frac{16}{5}x^7" -> "(16)/(5)x^7"
+  e <- gsub("\\\\frac\\{([^}]*)\\}\\{([^}]*)\\}", "(\\1)/(\\2)", e, perl = TRUE)
   # Insert * for implicit multiplication: digit immediately before letter
-  # e.g. "27x" -> "27*x", "6.75x" -> "6.75*x"
+  # e.g. "27x" -> "27*x", "6.75x" -> "6.75*x", "(125x^12)/(6)" -> "(125*x^12)/(6)"
   e <- gsub("(\\d)([a-z])", "\\1*\\2", e, perl = TRUE)
+  # Insert * between closing paren and variable: "(16/5)x^7" -> "(16/5)*x^7"
+  e <- gsub("\\)([a-zA-Z])", ")*\\1", e, perl = TRUE)
   tryCatch(
     eval(parse(text = e), envir = list(x = x_val)),
     error   = function(err) NA_real_,

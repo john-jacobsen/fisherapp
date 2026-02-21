@@ -96,7 +96,14 @@ load_placement_state_db <- function(pool, student_id) {
     params = list(student_id)
   )
   if (nrow(row) == 0) return(NULL)
-  jsonlite::fromJSON(row$state[1], simplifyVector = FALSE)
+  state <- jsonlite::fromJSON(row$state[1], simplifyVector = FALSE)
+  # topo_order is saved as a JSON array and comes back as a list after
+  # fromJSON(simplifyVector=FALSE). Convert to character vector so
+  # state$topo_order[idx] returns a string, not a list.
+  if (!is.null(state$topo_order)) {
+    state$topo_order <- unlist(state$topo_order)
+  }
+  state
 }
 
 #' Remove placement state from the database
