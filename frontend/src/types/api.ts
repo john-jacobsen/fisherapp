@@ -66,6 +66,7 @@ export interface Progress {
   total_attempts: number;
   total_correct: number;
   overall_accuracy: number | null;
+  problems_since_placement: number;
   topics: TopicProgress[];
 }
 

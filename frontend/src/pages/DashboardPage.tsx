@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getProgress } from "../api/client";
 import MasteryGrid from "../components/MasteryGrid";
+import MilestoneBanner from "../components/MilestoneBanner";
 import type { Progress } from "../types/api";
 
 export default function DashboardPage() {
@@ -11,13 +12,22 @@ export default function DashboardPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   useEffect(() => {
     if (!studentId) return;
     setLoading(true);
     getProgress(studentId)
-      .then(setProgress)
+      .then((p) => {
+        setProgress(p);
+        // Check if the banner for this milestone was already dismissed
+        const milestone = Math.floor(p.problems_since_placement / 100) * 100;
+        if (milestone > 0) {
+          const key = `placement-banner-${studentId}-${milestone}`;
+          setBannerDismissed(localStorage.getItem(key) === "true");
+        }
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load progress"))
       .finally(() => setLoading(false));
   }, [studentId]);
@@ -64,8 +74,23 @@ export default function DashboardPage() {
     navigate("/practice?smart=true");
   };
 
+  const milestone = progress
+    ? Math.floor(progress.problems_since_placement / 100) * 100
+    : 0;
+  const showBanner = milestone > 0 && !bannerDismissed;
+
+  const handleDismiss = () => {
+    if (!studentId) return;
+    const key = `placement-banner-${studentId}-${milestone}`;
+    localStorage.setItem(key, "true");
+    setBannerDismissed(true);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      {showBanner && (
+        <MilestoneBanner milestone={milestone} onDismiss={handleDismiss} />
+      )}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
         <div className="flex items-center gap-3">

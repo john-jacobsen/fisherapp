@@ -84,14 +84,26 @@ handle_get_progress <- function(student_id, res, pool) {
     return(not_found(res, "Student not found"))
   }
 
+  # Count practice attempts since last placement test
+  problems_since_placement <- if (!is.null(student$placement_completed_at)) {
+    row <- DBI::dbGetQuery(pool,
+      "SELECT COUNT(*)::int AS n FROM problem_attempts
+       WHERE student_id = $1::uuid AND created_at > $2",
+      params = list(student_id, student$placement_completed_at))
+    row$n[1]
+  } else {
+    0L
+  }
+
   progress <- fisherapp::student_progress(student)
   list(
-    student_id      = student_id,
-    total_attempts  = student$total_attempts,
-    total_correct   = student$total_correct,
+    student_id               = student_id,
+    total_attempts           = student$total_attempts,
+    total_correct            = student$total_correct,
     overall_accuracy = if (student$total_attempts > 0) {
       round(student$total_correct / student$total_attempts, 3)
     } else NA,
+    problems_since_placement = problems_since_placement,
     topics = progress
   )
 }
