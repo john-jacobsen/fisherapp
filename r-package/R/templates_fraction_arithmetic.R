@@ -161,44 +161,37 @@ register_fraction_arithmetic_templates <- function() {
   ))
 
   # ---------------------------------------------------------------------------
-  # Difficulty 4: Transfer — Probability word problem with fractions
+  # Difficulty 4: Transfer — Fraction of a fraction word problem
   # ---------------------------------------------------------------------------
   register_template(list(
-    template_id = "frac_arith_d4_probability",
+    template_id = "frac_arith_d4_transfer",
     topic_id = "fraction_arithmetic",
     difficulty = 4L,
-    description = "Drawing without replacement probability problem",
+    description = "Word problem: fraction of a fraction (real-world context)",
     params = list(
-      red = function() sample(3:8, 1),
-      blue = function() sample(2:7, 1)
+      n1 = function() sample(2:5, 1),
+      d1 = function() sample(3:8, 1),
+      n2 = function() sample(2:5, 1),
+      d2 = function() sample(3:8, 1)
     ),
     constraint = function(p) {
-      p$red >= 3 && (p$red + p$blue) <= 15
+      p$n1 < p$d1 && p$n2 < p$d2 &&
+      gcd(p$n1, p$d1) == 1 && gcd(p$n2, p$d2) == 1
     },
     statement = function(p) {
-      total <- p$red + p$blue
-      paste0("A bag contains ", p$red, " red marbles and ", p$blue,
-             " blue marbles. You draw one marble, do not replace it, ",
-             "then draw a second marble. What is the probability that ",
-             "both marbles are red? Simplify your answer.")
+      paste0("A recipe requires $", latex_frac(p$n1, p$d1), "$ cup of sugar. ",
+             "You decide to make $", latex_frac(p$n2, p$d2), "$ of the full recipe. ",
+             "How many cups of sugar do you need? Simplify your answer.")
     },
     solve = function(p) {
-      total <- p$red + p$blue
-      # P(both red) = (red/total) * ((red-1)/(total-1))
-      num <- p$red * (p$red - 1)
-      den <- total * (total - 1)
-      result <- simplify_fraction(num, den)
-
+      result <- frac_mul(p$n1, p$d1, p$n2, p$d2)
       steps <- c(
-        paste0("Step 1: Total marbles: ", p$red, " + ", p$blue, " = ", total, "."),
-        paste0("Step 2: P(1st red) = $", latex_frac(p$red, total), "$."),
-        paste0("Step 3: After drawing one red, there are ", p$red - 1,
-               " red marbles out of ", total - 1, " total."),
-        paste0("Step 4: P(2nd red | 1st red) = $", latex_frac(p$red - 1, total - 1), "$."),
-        paste0("Step 5: P(both red) = $", latex_frac(p$red, total), " \\times ",
-               latex_frac(p$red - 1, total - 1), " = ",
-               latex_frac(num, den), "$."),
-        paste0("Step 6: Simplify: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 1: To find $", latex_frac(p$n2, p$d2), "$ of $",
+               latex_frac(p$n1, p$d1), "$, multiply the fractions."),
+        paste0("Step 2: $", latex_frac(p$n1, p$d1), " \\times ",
+               latex_frac(p$n2, p$d2), " = ",
+               latex_frac(p$n1 * p$n2, p$d1 * p$d2), "$."),
+        paste0("Step 3: Simplify: $", latex_frac(result$num, result$den), "$.")
       )
       list(steps = steps, answer_num = result$num, answer_den = result$den)
     },
@@ -208,60 +201,49 @@ register_fraction_arithmetic_templates <- function() {
   ))
 
   # ---------------------------------------------------------------------------
-  # Difficulty 5: Synthesis — Sum involving fractions and powers
+  # Difficulty 5: Synthesis — Complex fraction chain: (a/b + c/d) ÷ e/f
   # ---------------------------------------------------------------------------
   register_template(list(
-    template_id = "frac_arith_d5_synthesis",
+    template_id = "frac_arith_d5_chain",
     topic_id = "fraction_arithmetic",
     difficulty = 5L,
-    description = "Evaluate a sum combining fractions with powers",
+    description = "Complex fraction chain: (a/b + c/d) divided by e/f",
     params = list(
-      upper = function() sample(3:5, 1)
+      n1 = function() sample(1:5, 1),
+      d1 = function() sample(2:8, 1),
+      n2 = function() sample(1:5, 1),
+      d2 = function() sample(2:8, 1),
+      n3 = function() sample(1:4, 1),
+      d3 = function() sample(2:7, 1)
     ),
-    constraint = NULL,
+    constraint = function(p) {
+      p$n1 < p$d1 && p$n2 < p$d2 && p$n3 < p$d3 &&
+      p$d1 != p$d2 &&
+      gcd(p$n1, p$d1) == 1 && gcd(p$n2, p$d2) == 1 &&
+      gcd(p$n3, p$d3) == 1
+    },
     statement = function(p) {
-      paste0("Evaluate $", latex_sum("i", 1, p$upper,
-             "\\left(\\frac{i}{i+1} - \\left(\\frac{1}{2}\\right)^i\\right)"),
-             "$.")
+      paste0("Compute $\\left(", latex_frac(p$n1, p$d1), " + ",
+             latex_frac(p$n2, p$d2), "\\right) \\div ",
+             latex_frac(p$n3, p$d3), "$ and simplify.")
     },
     solve = function(p) {
-      # Compute each term: i/(i+1) - (1/2)^i
-      total_num <- 0L
-      total_den <- 1L
-      term_strs <- character()
-
-      for (i in seq_len(p$upper)) {
-        # i/(i+1) as fraction
-        frac_part <- list(num = i, den = i + 1L)
-        # (1/2)^i = 1/2^i
-        pow_part <- list(num = 1L, den = 2L^i)
-        # Subtract
-        term <- frac_sub(frac_part$num, frac_part$den,
-                          pow_part$num, pow_part$den)
-
-        term_strs <- c(term_strs,
-          paste0("Step ", i + 1, ": $i=", i, "$: $", latex_frac(i, i + 1L), " - ",
-                 latex_frac(1L, 2L^i), " = ",
-                 latex_frac(term$num, term$den), "$"))
-
-        # Accumulate sum
-        if (i == 1) {
-          total_num <- term$num
-          total_den <- term$den
-        } else {
-          acc <- frac_add(total_num, total_den, term$num, term$den)
-          total_num <- acc$num
-          total_den <- acc$den
-        }
-      }
-
-      result <- simplify_fraction(total_num, total_den)
+      # Step 1: add the fractions inside parentheses
+      sum_result <- frac_add(p$n1, p$d1, p$n2, p$d2)
+      # Step 2: divide by n3/d3 = multiply by d3/n3
+      final <- frac_mul(sum_result$num, sum_result$den, p$d3, p$n3)
       steps <- c(
-        "Step 1: Evaluate each term:",
-        term_strs,
-        paste0("Step ", length(term_strs) + 2, ": Sum all terms: $", latex_frac(result$num, result$den), "$.")
+        paste0("Step 1: Add the fractions inside the parentheses: $",
+               latex_frac(p$n1, p$d1), " + ", latex_frac(p$n2, p$d2), " = ",
+               latex_frac(sum_result$num, sum_result$den), "$."),
+        paste0("Step 2: Divide by $", latex_frac(p$n3, p$d3),
+               "$ by multiplying by its reciprocal $", latex_frac(p$d3, p$n3), "$: $",
+               latex_frac(sum_result$num, sum_result$den), " \\times ",
+               latex_frac(p$d3, p$n3), " = ",
+               latex_frac(sum_result$num * p$d3, sum_result$den * p$n3), "$."),
+        paste0("Step 3: Simplify: $", latex_frac(final$num, final$den), "$.")
       )
-      list(steps = steps, answer_num = result$num, answer_den = result$den)
+      list(steps = steps, answer_num = final$num, answer_den = final$den)
     },
     format_answer = function(sol) {
       latex_frac(sol$answer_num, sol$answer_den)

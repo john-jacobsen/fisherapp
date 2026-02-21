@@ -40,6 +40,26 @@ test_that("fraction_arithmetic D3 multi-step gives valid answer", {
   expect_true(length(prob$solution_steps) >= 2)
 })
 
+test_that("fraction_arithmetic D4 transfer is NOT a probability problem", {
+  for (seed in c(10, 20, 30, 40, 50)) {
+    prob <- generate_problem("fraction_arithmetic", difficulty = 4, seed = seed)
+    # Should not mention marbles, probability, or drawing
+    stmt <- tolower(prob$statement)
+    expect_false(grepl("marble|probability|draw.*marble", stmt),
+                 label = paste0("D4 seed ", seed, " should not be a probability problem"))
+  }
+})
+
+test_that("fraction_arithmetic D5 synthesis is NOT a summation notation problem", {
+  for (seed in c(10, 20, 30, 40, 50)) {
+    prob <- generate_problem("fraction_arithmetic", difficulty = 5, seed = seed)
+    # Should not have sigma/sum notation as the primary structure
+    stmt <- prob$statement
+    expect_false(grepl("\\\\sum_\\{i=", stmt),
+                 label = paste0("D5 seed ", seed, " should not be a summation problem"))
+  }
+})
+
 test_that("fraction_arithmetic D5 synthesis gives valid answer", {
   prob <- generate_problem("fraction_arithmetic", difficulty = 5, seed = 33)
   expect_true(nchar(prob$answer) > 0)
