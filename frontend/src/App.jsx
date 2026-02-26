@@ -7,6 +7,10 @@ import Dashboard from './pages/Dashboard.jsx'
 import PlacementIntro from './pages/PlacementIntro.jsx'
 import PlacementQuestion from './pages/PlacementQuestion.jsx'
 import PlacementResults from './pages/PlacementResults.jsx'
+import LessonPage from './pages/LessonPage.jsx'
+import WorkedExamplesPage from './pages/WorkedExamplesPage.jsx'
+import PracticePage from './pages/PracticePage.jsx'
+import ScoreReport from './pages/ScoreReport.jsx'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -35,6 +39,22 @@ function App() {
           <Route
             path="/placement/results"
             element={<ProtectedRoute><PlacementResults /></ProtectedRoute>}
+          />
+          <Route
+            path="/lesson/:nodeId"
+            element={<ProtectedRoute><LessonPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/lesson/:nodeId/examples"
+            element={<ProtectedRoute><WorkedExamplesPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/practice/:nodeId"
+            element={<ProtectedRoute><PracticePage /></ProtectedRoute>}
+          />
+          <Route
+            path="/score/:nodeId"
+            element={<ProtectedRoute><ScoreReport /></ProtectedRoute>}
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
