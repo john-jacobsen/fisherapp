@@ -11,6 +11,8 @@ import LessonPage from './pages/LessonPage.jsx'
 import WorkedExamplesPage from './pages/WorkedExamplesPage.jsx'
 import PracticePage from './pages/PracticePage.jsx'
 import ScoreReport from './pages/ScoreReport.jsx'
+import AISetupPage from './pages/AISetupPage.jsx'
+import ReviewQueue from './pages/ReviewQueue.jsx'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -55,6 +57,14 @@ function App() {
           <Route
             path="/score/:nodeId"
             element={<ProtectedRoute><ScoreReport /></ProtectedRoute>}
+          />
+          <Route
+            path="/ai-setup"
+            element={<ProtectedRoute><AISetupPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/reviews"
+            element={<ProtectedRoute><ReviewQueue /></ProtectedRoute>}
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

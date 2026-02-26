@@ -6,11 +6,13 @@ import MasteryMeter from '../components/MasteryMeter';
 import HintPanel from '../components/HintPanel';
 import ProgressSteps from '../components/ProgressSteps';
 import MathInput from '../components/MathInput';
+import { useAI, callAI } from '../contexts/AIContext';
 import { theme } from '../theme';
 
 export default function PracticePage() {
   const { nodeId } = useParams();
   const navigate = useNavigate();
+  const { aiConfig } = useAI();
   const [sessionId, setSessionId] = useState(null);
   const [problem, setProblem] = useState(null);
   const [mastery, setMastery] = useState(0);
@@ -228,6 +230,15 @@ export default function PracticePage() {
         <HintPanel
           hints={hints}
           onOpen={fetchHints}
+          aiConfig={aiConfig}
+          onAiHint={async () => {
+            if (!problem || !aiConfig) throw new Error('Not configured');
+            return callAI(
+              aiConfig,
+              `You are a math tutor helping a student with ${nodeTitle || 'algebra'}. Give a helpful hint without giving away the final answer. Be encouraging and concise.`,
+              `Problem: ${problem.statement}\nStudent's current attempt: ${answer || '(no attempt yet)'}`
+            );
+          }}
         />
       </div>
     </>

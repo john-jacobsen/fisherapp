@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import NavBar from '../components/NavBar.jsx'
 import KnowledgeGraph from '../components/KnowledgeGraph.jsx'
 import KnowledgeList from '../components/KnowledgeList.jsx'
+import ReviewBanner from '../components/ReviewBanner.jsx'
 import api from '../api/client.js'
 import { theme } from '../theme.js'
 
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('graph') // 'graph' | 'list'
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   useEffect(() => {
     api.get('/dashboard')
@@ -48,21 +50,6 @@ export default function Dashboard() {
       <div style={styles.page}>
         <div style={styles.container}>
 
-          {/* Reviews due banner */}
-          {reviews_due.length > 0 && (
-            <div style={styles.reviewBanner}>
-              <span>
-                {reviews_due.length} skill{reviews_due.length > 1 ? 's are' : ' is'} due for review
-              </span>
-              <button
-                onClick={() => navigate('/reviews')}
-                style={styles.reviewBtn}
-              >
-                Review Now
-              </button>
-            </div>
-          )}
-
           {/* Placement CTA (if not done) */}
           {!placement_completed && (
             <div style={styles.placementBanner}>
@@ -79,6 +66,11 @@ export default function Dashboard() {
                 Start Placement Test
               </button>
             </div>
+          )}
+
+          {/* Reviews due banner */}
+          {!bannerDismissed && reviews_due > 0 && (
+            <ReviewBanner count={reviews_due} onDismiss={() => setBannerDismissed(true)} />
           )}
 
           {/* Stats row */}

@@ -3,11 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
 import MasteryMeter from '../components/MasteryMeter';
+import AIChat from '../components/AIChat';
+import { useAI } from '../contexts/AIContext';
 import { theme } from '../theme';
 
 export default function LessonPage() {
   const { nodeId } = useParams();
   const navigate = useNavigate();
+  const { aiConfig } = useAI();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,8 +90,22 @@ export default function LessonPage() {
           </div>
         </div>
 
+        {/* AI Chat */}
+        {aiConfig && (
+          <AIChat
+            aiConfig={aiConfig}
+            systemPrompt={`You are a math tutor. The student is reading a lesson about "${lesson.title}" (${lesson.topic}). Here is the lesson content:\n\n${lesson.content_md}\n\nAnswer their question helpfully. Be encouraging. Do not give away answers to problems directly.`}
+            placeholder={`Ask about ${lesson.title}…`}
+          />
+        )}
+        {!aiConfig && (
+          <div style={{ padding: '12px 16px', background: theme.colors.surfaceAlt, borderRadius: theme.radius.md, fontSize: 13, color: theme.colors.textSecondary, marginTop: 16 }}>
+            💡 <Link to="/ai-setup" style={{ color: theme.colors.primary }}>Set up AI hints</Link> to ask questions about this lesson.
+          </div>
+        )}
+
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
           {lesson.worked_examples_count > 0 && (
             <button
               onClick={() => navigate(`/lesson/${nodeId}/examples`)}

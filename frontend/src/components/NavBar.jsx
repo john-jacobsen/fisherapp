@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { useAI } from '../contexts/AIContext.jsx'
 import { theme } from '../theme.js'
 
 export default function NavBar() {
   const { user, logout } = useAuth()
+  const { aiConfig } = useAI()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -23,6 +25,15 @@ export default function NavBar() {
               <Link to="/dashboard" style={styles.link}>Dashboard</Link>
               <Link to="/reviews" style={styles.link}>Reviews</Link>
               <Link to="/settings" style={styles.link}>Settings</Link>
+              <Link to="/ai-setup" style={{
+                fontSize: 12, padding: '4px 10px', borderRadius: 20,
+                background: aiConfig ? theme.colors.successLight : theme.colors.surfaceAlt,
+                color: aiConfig ? theme.colors.success : theme.colors.textSecondary,
+                border: `1px solid ${aiConfig ? theme.colors.success : theme.colors.border}`,
+                textDecoration: 'none', fontFamily: theme.fonts.sans,
+              }}>
+                {aiConfig ? '🤖 AI On' : '🤖 AI Off'}
+              </Link>
               <button onClick={handleLogout} style={styles.logoutBtn}>
                 Sign Out
               </button>
