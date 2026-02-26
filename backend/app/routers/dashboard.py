@@ -8,6 +8,7 @@ from app.models.progress import StudentState, ReviewSchedule
 from app.routers.auth import get_current_user
 from app.models.user import User
 from app.kst.kst_engine import get_active_graph, get_or_build_cache
+from app.services.review_service import apply_decay
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -38,6 +39,8 @@ def get_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    apply_decay(current_user.id, db)
+
     graph = get_active_graph(db)
     if not graph:
         raise HTTPException(status_code=503, detail="No active knowledge graph found")
