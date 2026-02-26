@@ -1,0 +1,318 @@
+{
+  "metadata": {
+    "domain_name": "Algebra for Statistics — UC Berkeley STAT 20",
+    "version": "1.0.0",
+    "created_at": "2026-02-25T00:00:00Z",
+    "provenance": {
+      "methodology": "Expert-defined prerequisite structure for UC Berkeley statistics prerequisite algebra skills"
+    }
+  },
+  "items": [
+    {
+      "id": "frac-simplify",
+      "label": "Simplifying Fractions",
+      "description": "Reduce fractions to lowest terms by dividing numerator and denominator by their GCD.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 80,
+      "display_y": 200
+    },
+    {
+      "id": "frac-add-like",
+      "label": "Adding Fractions (Like Denominators)",
+      "description": "Add and subtract fractions that share the same denominator.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 220,
+      "display_y": 140
+    },
+    {
+      "id": "frac-common-denom",
+      "label": "Finding Common Denominators",
+      "description": "Find the least common denominator (LCD) of two or more fractions.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 360,
+      "display_y": 80
+    },
+    {
+      "id": "frac-add-unlike",
+      "label": "Adding Fractions (Unlike Denominators)",
+      "description": "Add and subtract fractions with different denominators using the LCD.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 500,
+      "display_y": 80
+    },
+    {
+      "id": "frac-multiply",
+      "label": "Multiplying Fractions",
+      "description": "Multiply two fractions by multiplying numerators and denominators.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 360,
+      "display_y": 200
+    },
+    {
+      "id": "frac-divide",
+      "label": "Dividing Fractions",
+      "description": "Divide fractions by multiplying by the reciprocal of the divisor.",
+      "tags": ["Fractions"],
+      "topic": "Fractions",
+      "display_x": 500,
+      "display_y": 200
+    },
+    {
+      "id": "order-pemdas",
+      "label": "Order of Operations (PEMDAS)",
+      "description": "Apply PEMDAS/BODMAS rules to evaluate arithmetic expressions correctly.",
+      "tags": ["Order of Operations"],
+      "topic": "Order of Operations",
+      "display_x": 80,
+      "display_y": 360
+    },
+    {
+      "id": "order-nested",
+      "label": "Nested Expressions and Grouping",
+      "description": "Evaluate expressions with nested parentheses, brackets, and complex grouping.",
+      "tags": ["Order of Operations"],
+      "topic": "Order of Operations",
+      "display_x": 220,
+      "display_y": 360
+    },
+    {
+      "id": "exp-product",
+      "label": "Product Rule for Exponents",
+      "description": "Apply the product rule: x^a · x^b = x^(a+b).",
+      "tags": ["Exponents"],
+      "topic": "Exponents",
+      "display_x": 80,
+      "display_y": 500
+    },
+    {
+      "id": "exp-power",
+      "label": "Power Rule for Exponents",
+      "description": "Apply the power rule: (x^a)^b = x^(ab).",
+      "tags": ["Exponents"],
+      "topic": "Exponents",
+      "display_x": 220,
+      "display_y": 500
+    },
+    {
+      "id": "exp-negative",
+      "label": "Negative and Zero Exponents",
+      "description": "Evaluate expressions with negative exponents (x^-n = 1/x^n) and zero exponents (x^0 = 1).",
+      "tags": ["Exponents"],
+      "topic": "Exponents",
+      "display_x": 360,
+      "display_y": 500
+    },
+    {
+      "id": "exp-combined",
+      "label": "Combining Exponent Rules",
+      "description": "Apply multiple exponent rules in a single expression (quotient rule, product rule, power rule together).",
+      "tags": ["Exponents"],
+      "topic": "Exponents",
+      "display_x": 500,
+      "display_y": 500
+    },
+    {
+      "id": "eq-one-step",
+      "label": "One-Step Linear Equations",
+      "description": "Solve equations requiring a single operation to isolate the variable.",
+      "tags": ["Equations"],
+      "topic": "Equations",
+      "display_x": 360,
+      "display_y": 360
+    },
+    {
+      "id": "eq-two-step",
+      "label": "Two-Step Linear Equations",
+      "description": "Solve equations requiring two operations to isolate the variable.",
+      "tags": ["Equations"],
+      "topic": "Equations",
+      "display_x": 500,
+      "display_y": 360
+    },
+    {
+      "id": "eq-fractions",
+      "label": "Equations with Fractions",
+      "description": "Solve linear equations that contain fractional coefficients or terms.",
+      "tags": ["Equations"],
+      "topic": "Equations",
+      "display_x": 640,
+      "display_y": 280
+    },
+    {
+      "id": "eq-distribution",
+      "label": "Equations with Distribution",
+      "description": "Solve equations requiring the distributive property to expand expressions.",
+      "tags": ["Equations"],
+      "topic": "Equations",
+      "display_x": 640,
+      "display_y": 420
+    },
+    {
+      "id": "eq-quadratic",
+      "label": "Quadratic Equations (Factoring)",
+      "description": "Solve quadratic equations by factoring into binomials.",
+      "tags": ["Equations"],
+      "topic": "Equations",
+      "display_x": 780,
+      "display_y": 420
+    },
+    {
+      "id": "log-exponential",
+      "label": "Exponential Functions",
+      "description": "Understand and evaluate exponential functions of the form f(x) = a^x.",
+      "tags": ["Logarithms"],
+      "topic": "Logarithms",
+      "display_x": 640,
+      "display_y": 560
+    },
+    {
+      "id": "log-definition",
+      "label": "Logarithm Definition",
+      "description": "Convert between exponential and logarithmic forms: log_a(b) = c ↔ a^c = b.",
+      "tags": ["Logarithms"],
+      "topic": "Logarithms",
+      "display_x": 780,
+      "display_y": 560
+    },
+    {
+      "id": "log-rules",
+      "label": "Logarithm Rules",
+      "description": "Apply product, quotient, and power rules for logarithms.",
+      "tags": ["Logarithms"],
+      "topic": "Logarithms",
+      "display_x": 920,
+      "display_y": 560
+    },
+    {
+      "id": "log-equations",
+      "label": "Solving Logarithmic Equations",
+      "description": "Solve equations involving logarithms by applying log rules and exponentiating.",
+      "tags": ["Logarithms"],
+      "topic": "Logarithms",
+      "display_x": 1060,
+      "display_y": 490
+    },
+    {
+      "id": "sum-sigma",
+      "label": "Sigma Notation",
+      "description": "Read and write sums using sigma (Σ) notation, including index, bounds, and summand.",
+      "tags": ["Summation"],
+      "topic": "Summation",
+      "display_x": 640,
+      "display_y": 200
+    },
+    {
+      "id": "sum-arithmetic",
+      "label": "Arithmetic Sums",
+      "description": "Compute sums of arithmetic sequences using closed-form formulas.",
+      "tags": ["Summation"],
+      "topic": "Summation",
+      "display_x": 780,
+      "display_y": 200
+    },
+    {
+      "id": "sum-nested",
+      "label": "Nested Sums",
+      "description": "Evaluate double sigma notation and sums with inner and outer indices.",
+      "tags": ["Summation"],
+      "topic": "Summation",
+      "display_x": 920,
+      "display_y": 200
+    },
+    {
+      "id": "comb-counting",
+      "label": "Counting Principles",
+      "description": "Apply the fundamental counting principle (multiplication rule) to count outcomes.",
+      "tags": ["Combinatorics"],
+      "topic": "Combinatorics",
+      "display_x": 640,
+      "display_y": 340
+    },
+    {
+      "id": "comb-permutations",
+      "label": "Permutations",
+      "description": "Count ordered arrangements using P(n,r) = n!/(n-r)!",
+      "tags": ["Combinatorics"],
+      "topic": "Combinatorics",
+      "display_x": 780,
+      "display_y": 340
+    },
+    {
+      "id": "comb-combinations",
+      "label": "Combinations",
+      "description": "Count unordered selections using C(n,r) = n!/(r!(n-r)!)",
+      "tags": ["Combinatorics"],
+      "topic": "Combinatorics",
+      "display_x": 920,
+      "display_y": 340
+    },
+    {
+      "id": "geo-sequences",
+      "label": "Geometric Sequences",
+      "description": "Identify and evaluate geometric sequences with common ratio r.",
+      "tags": ["Geometric Series"],
+      "topic": "Geometric Series",
+      "display_x": 1060,
+      "display_y": 340
+    },
+    {
+      "id": "geo-finite",
+      "label": "Finite Geometric Sums",
+      "description": "Compute finite geometric series using S_n = a(1-r^n)/(1-r).",
+      "tags": ["Geometric Series"],
+      "topic": "Geometric Series",
+      "display_x": 1200,
+      "display_y": 400
+    },
+    {
+      "id": "geo-infinite",
+      "label": "Infinite Geometric Series",
+      "description": "Evaluate convergent infinite geometric series S = a/(1-r) when |r| < 1.",
+      "tags": ["Geometric Series"],
+      "topic": "Geometric Series",
+      "display_x": 1200,
+      "display_y": 520
+    }
+  ],
+  "surmise_relations": [
+    {"prerequisite": "frac-simplify", "target": "frac-add-like", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-add-like", "target": "frac-common-denom", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-common-denom", "target": "frac-add-unlike", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-add-like", "target": "frac-multiply", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-multiply", "target": "frac-divide", "relation_type": "prerequisite-of"},
+    {"prerequisite": "exp-product", "target": "exp-power", "relation_type": "prerequisite-of"},
+    {"prerequisite": "exp-power", "target": "exp-negative", "relation_type": "prerequisite-of"},
+    {"prerequisite": "exp-negative", "target": "exp-combined", "relation_type": "prerequisite-of"},
+    {"prerequisite": "order-pemdas", "target": "order-nested", "relation_type": "prerequisite-of"},
+    {"prerequisite": "order-nested", "target": "eq-one-step", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-one-step", "target": "eq-two-step", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-two-step", "target": "eq-fractions", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-add-unlike", "target": "eq-fractions", "relation_type": "prerequisite-of"},
+    {"prerequisite": "frac-multiply", "target": "eq-fractions", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-two-step", "target": "eq-distribution", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-distribution", "target": "eq-quadratic", "relation_type": "prerequisite-of"},
+    {"prerequisite": "exp-combined", "target": "log-exponential", "relation_type": "prerequisite-of"},
+    {"prerequisite": "log-exponential", "target": "log-definition", "relation_type": "prerequisite-of"},
+    {"prerequisite": "log-definition", "target": "log-rules", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-distribution", "target": "log-equations", "relation_type": "prerequisite-of"},
+    {"prerequisite": "log-rules", "target": "log-equations", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-two-step", "target": "sum-sigma", "relation_type": "prerequisite-of"},
+    {"prerequisite": "sum-sigma", "target": "sum-arithmetic", "relation_type": "prerequisite-of"},
+    {"prerequisite": "sum-arithmetic", "target": "sum-nested", "relation_type": "prerequisite-of"},
+    {"prerequisite": "order-nested", "target": "comb-counting", "relation_type": "prerequisite-of"},
+    {"prerequisite": "eq-two-step", "target": "comb-counting", "relation_type": "prerequisite-of"},
+    {"prerequisite": "comb-counting", "target": "comb-permutations", "relation_type": "prerequisite-of"},
+    {"prerequisite": "comb-permutations", "target": "comb-combinations", "relation_type": "prerequisite-of"},
+    {"prerequisite": "exp-negative", "target": "geo-sequences", "relation_type": "prerequisite-of"},
+    {"prerequisite": "sum-arithmetic", "target": "geo-sequences", "relation_type": "prerequisite-of"},
+    {"prerequisite": "comb-combinations", "target": "geo-finite", "relation_type": "prerequisite-of"},
+    {"prerequisite": "geo-sequences", "target": "geo-finite", "relation_type": "prerequisite-of"},
+    {"prerequisite": "log-rules", "target": "geo-infinite", "relation_type": "prerequisite-of"},
+    {"prerequisite": "geo-finite", "target": "geo-infinite", "relation_type": "prerequisite-of"}
+  ]
+}

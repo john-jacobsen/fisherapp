@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext.jsx'
 import { theme } from './theme.js'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -16,6 +17,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
