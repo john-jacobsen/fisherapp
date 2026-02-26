@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://fisher:fisher@db:5432/fisherapp
+      - SECRET_KEY=${SECRET_KEY}
+      - CORS_ORIGINS=http://localhost:5173
+      - BLIM_LUCKY_GUESS=0.1
+      - BLIM_CARELESS_ERROR=0.05
+      - BLIM_MASTERY_THRESHOLD=0.85
+      - BLIM_ENTROPY_TERMINATION=0.15
+      - JWT_EXPIRY_HOURS=24
+      - REVIEW_GRACE_DAYS=7
+      - REVIEW_DECAY_RATE=0.02
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=fisher
+      - POSTGRES_PASSWORD=fisher
+      - POSTGRES_DB=fisherapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fisher -d fisherapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
