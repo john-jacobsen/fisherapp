@@ -4,6 +4,9 @@ import { theme } from './theme.js'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import PlacementIntro from './pages/PlacementIntro.jsx'
+import PlacementQuestion from './pages/PlacementQuestion.jsx'
+import PlacementResults from './pages/PlacementResults.jsx'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -19,11 +22,19 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+          />
+          <Route
+            path="/placement/intro"
+            element={<ProtectedRoute><PlacementIntro /></ProtectedRoute>}
+          />
+          <Route
+            path="/placement/start"
+            element={<ProtectedRoute><PlacementQuestion /></ProtectedRoute>}
+          />
+          <Route
+            path="/placement/results"
+            element={<ProtectedRoute><PlacementResults /></ProtectedRoute>}
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
