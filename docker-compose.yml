@@ -8,6 +8,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://fisher:fisher@db:5432/fisherapp
       - SECRET_KEY=${SECRET_KEY}
+      - PYTHONPATH=/app
       - CORS_ORIGINS=http://localhost:5173
       - BLIM_LUCKY_GUESS=0.1
       - BLIM_CARELESS_ERROR=0.05
@@ -28,7 +29,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://backend:8000
     volumes:
       - ./frontend:/app
       - /app/node_modules
