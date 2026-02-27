@@ -2,13 +2,9 @@
 Seed lesson content and worked examples for all knowledge nodes.
 Run after seed_knowledge_graph.py.
 
-Usage:
-    docker compose run --rm backend python /app/../scripts/seed_lessons.py
+Usage (from project root):
+    docker compose run --rm backend python scripts/seed_lessons.py
 """
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "backend"))
-
 from app.database import SessionLocal
 from app.models.content import Lesson, WorkedExample
 from app.models.knowledge import KnowledgeNode

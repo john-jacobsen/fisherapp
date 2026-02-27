@@ -3,17 +3,12 @@
 Generate parameterized algebra problems for Fisher App knowledge nodes.
 Fills nodes that have < 10 problems with up to 10 generated problems.
 
-Usage:
-    docker compose run --rm backend python /app/../scripts/generate_problems.py
+Usage (from project root):
+    docker compose run --rm backend python scripts/generate_problems.py
 """
-import os
-import sys
 import uuid
 import random
-from pathlib import Path
 from fractions import Fraction
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 MIN_PROBLEMS = 10
 

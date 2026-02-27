@@ -3,13 +3,9 @@ Seed basic stub problems for each knowledge node.
 These are minimal problems to make the placement test functional.
 Run after seed_knowledge_graph.py.
 
-Usage:
-    docker compose run --rm backend python /app/../scripts/seed_problems.py
+Usage (from project root):
+    docker compose run --rm backend python scripts/seed_problems.py
 """
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "backend"))
-
 from app.database import SessionLocal
 from app.models.content import Problem, Hint
 from app.models.knowledge import KnowledgeNode

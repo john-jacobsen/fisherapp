@@ -2,7 +2,6 @@
 KST Engine — wrapper around kst_utils.py with database integration and caching.
 """
 import logging
-from functools import lru_cache
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
 
@@ -42,6 +41,22 @@ def _get_items(db: DBSession, graph_id: str) -> list[str]:
     return [n.id for n in nodes]
 
 
+def _build_graph_dict(items: list[str], relations: list[tuple[str, str]]) -> dict:
+    """Build a graph dict in the format expected by kst_utils functions."""
+    return {
+        "items": [{"id": iid} for iid in items],
+        "surmise_relations": [
+            {"prerequisite": p, "target": t, "confidence": 1.0, "relation_type": "prerequisite-of"}
+            for p, t in relations
+        ],
+    }
+
+
+def _state_key(s: frozenset) -> str:
+    """Serialize a frozenset state to a stable string key."""
+    return "|".join(sorted(s))
+
+
 def get_or_build_cache(db: DBSession, graph_id: str) -> dict:
     """
     Build (or return cached) the knowledge states enumeration for a graph.
@@ -53,10 +68,19 @@ def get_or_build_cache(db: DBSession, graph_id: str) -> dict:
 
     items = _get_items(db, graph_id)
     relations = _get_relations(db, graph_id)
-    closed_relations = transitive_closure(relations)
+
+    # Build graph dict as required by kst_utils
+    graph = _build_graph_dict(items, relations)
+
+    # Compute transitive closure — returns list of new relation dicts
+    new_rels = transitive_closure(graph)
+    closed_graph = {
+        "items": graph["items"],
+        "surmise_relations": graph["surmise_relations"] + new_rels,
+    }
 
     try:
-        states = enumerate_downsets(items, closed_relations)
+        states = enumerate_downsets(closed_graph)
         if len(states) > 10000:
             logger.warning(
                 "State space has %d states (>10000) for graph %s. "
@@ -67,11 +91,17 @@ def get_or_build_cache(db: DBSession, graph_id: str) -> dict:
         logger.error("Failed to enumerate states for graph %s: %s", graph_id_str, e)
         states = [frozenset(), frozenset(items)]
 
+    # states_dict: {string_key -> frozenset} for blim_update and select_assessment_item
+    states_dict = {_state_key(s): s for s in states}
+
     cache = {
         "items": items,
+        "item_ids_set": set(items),
         "relations": relations,
-        "closed_relations": closed_relations,
-        "states": states,
+        "closed_graph": closed_graph,
+        "states": states,           # list[frozenset[str]]
+        "states_set": set(states),  # set[frozenset[str]]
+        "states_dict": states_dict, # dict[str, frozenset[str]]
         "graph_id": graph_id_str,
     }
     _state_cache[graph_id_str] = cache
@@ -100,8 +130,7 @@ def initialize_uniform_prior(db: DBSession, graph_id: str) -> dict:
     if n == 0:
         return {}
     prob = 1.0 / n
-    # Key states by their sorted tuple representation for JSON serialization
-    return {"|".join(sorted(s)): prob for s in states}
+    return {_state_key(s): prob for s in states}
 
 
 def run_blim_update(
@@ -117,27 +146,21 @@ def run_blim_update(
     Returns updated posterior distribution.
     """
     cache = get_or_build_cache(db, graph_id)
-    states = cache["states"]
-
-    # Reconstruct frozenset states from string keys
-    state_list = [frozenset(k.split("|")) if k else frozenset() for k in prior.keys()]
-    prob_list = list(prior.values())
-
-    params = {item_id: {"lucky_guess": LUCKY_GUESS, "careless_error": CARELESS_ERROR}}
+    states_dict = cache["states_dict"]  # {str_key: frozenset}
 
     try:
         updated = blim_update(
-            prior={s: p for s, p in zip(state_list, prob_list)},
-            response=is_correct,
-            item=item_id,
-            states=states,
-            params=params,
+            state_probs=prior,
+            states=states_dict,
+            item_id=item_id,
+            response_correct=is_correct,
+            lucky_guess=LUCKY_GUESS,
+            careless_error=CARELESS_ERROR,
         )
-        # Normalize and serialize
         total = sum(updated.values())
         if total == 0:
             return prior
-        return {"|".join(sorted(s)): p / total for s, p in updated.items()}
+        return {k: v / total for k, v in updated.items()}
     except Exception as e:
         logger.error("BLIM update failed: %s", e)
         return prior
@@ -149,10 +172,10 @@ def get_mastered_nodes_from_distribution(distribution: dict) -> list[str]:
     """
     if not distribution:
         return []
-    best_state_key = max(distribution, key=lambda k: distribution[k])
-    if not best_state_key:
+    best_key = max(distribution, key=lambda k: distribution[k])
+    if not best_key:
         return []
-    return best_state_key.split("|") if best_state_key else []
+    return best_key.split("|")
 
 
 def compute_node_fringes(db: DBSession, graph_id: str, mastered_set: set[str]) -> tuple[list[str], list[str]]:
@@ -161,12 +184,11 @@ def compute_node_fringes(db: DBSession, graph_id: str, mastered_set: set[str]) -
     Returns (inner_fringe, outer_fringe).
     """
     cache = get_or_build_cache(db, graph_id)
-    closed_relations = cache["closed_relations"]
+    states_set = cache["states_set"]
+    item_ids = cache["item_ids_set"]
 
     try:
-        result = compute_fringes(frozenset(mastered_set), closed_relations)
-        inner = list(result.get("inner_fringe", []))
-        outer = list(result.get("outer_fringe", []))
+        inner, outer = compute_fringes(frozenset(mastered_set), states_set, item_ids)
         return inner, outer
     except Exception as e:
         logger.error("Fringe computation failed: %s", e)
@@ -184,30 +206,33 @@ def select_next_assessment_item(
     Excludes already-asked items.
     """
     cache = get_or_build_cache(db, graph_id)
-    states = cache["states"]
-    items = [i for i in cache["items"] if i not in asked_items]
+    states_dict = cache["states_dict"]
+    all_items = cache["item_ids_set"]
+    assessed = set(asked_items)
 
-    if not items:
+    if not (all_items - assessed):
         return None
 
-    # Reconstruct distribution with frozenset keys
-    dist = {frozenset(k.split("|")) if k else frozenset(): v for k, v in distribution.items()}
-
     try:
-        selected = select_assessment_item(dist, states, items)
+        selected = select_assessment_item(
+            state_probs=distribution,
+            states=states_dict,
+            assessed_items=assessed,
+            all_item_ids=all_items,
+        )
         return selected
     except Exception as e:
         logger.error("Assessment item selection failed: %s", e)
-        return items[0] if items else None
+        remaining = [i for i in cache["items"] if i not in assessed]
+        return remaining[0] if remaining else None
 
 
 def get_distribution_entropy(distribution: dict) -> float:
     """Compute Shannon entropy of a state distribution."""
     if not distribution:
         return 0.0
-    dist = {frozenset(k.split("|")) if k else frozenset(): v for k, v in distribution.items()}
     try:
-        return entropy(dist)
+        return entropy(distribution)
     except Exception as e:
         logger.error("Entropy computation failed: %s", e)
         return 0.0

@@ -1,24 +1,17 @@
 """
-Seed the knowledge graph from backend/data/knowledge_graph.json into the database.
+Seed the knowledge graph from data/knowledge_graph.json into the database.
 
-Usage:
-    docker compose run --rm backend python /app/../scripts/seed_knowledge_graph.py
-
-Or from project root:
-    python scripts/seed_knowledge_graph.py
+Usage (from project root):
+    docker compose run --rm backend python scripts/seed_knowledge_graph.py
 """
 import json
-import sys
 import os
-
-# Allow running from project root
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "backend"))
 
 from app.database import SessionLocal, engine
 from app.models.knowledge import KnowledgeGraph, KnowledgeNode, KnowledgeEdge
 import app.models  # noqa — register all models
 
-GRAPH_PATH = os.path.join(os.path.dirname(__file__), "backend", "data", "knowledge_graph.json")
+GRAPH_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "knowledge_graph.json")
 
 
 def seed():

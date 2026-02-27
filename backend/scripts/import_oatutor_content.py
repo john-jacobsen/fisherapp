@@ -3,20 +3,16 @@
 Import OATutor algebra content into Fisher App's problems and hints tables.
 
 Usage:
-    1. Clone OATutor: git clone https://github.com/CAHLR/OATutor oatutor
-    2. Run: docker compose run --rm backend python /app/../scripts/import_oatutor_content.py
-
-Or without Docker (with DATABASE_URL set):
-    python scripts/import_oatutor_content.py
+    1. Clone OATutor into the backend directory:
+       git clone https://github.com/CAHLR/OATutor backend/oatutor
+    2. Run (from project root):
+       docker compose run --rm backend python scripts/import_oatutor_content.py
 """
 import os
 import sys
 import json
 import uuid
 from pathlib import Path
-
-# Add backend to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 OATUTOR_DIR = Path(__file__).parent.parent / "oatutor"
 CONTENT_DIR = OATUTOR_DIR / "content"
@@ -115,9 +111,8 @@ def main():
     if not OATUTOR_DIR.exists():
         print(f"OATutor directory not found at: {OATUTOR_DIR}")
         print()
-        print("To import OATutor content:")
-        print("  cd 'C:/Users/jjcas/Desktop/Fisher App/Fisher App 3.0'")
-        print("  git clone https://github.com/CAHLR/OATutor oatutor")
+        print("To import OATutor content, clone it into the backend directory:")
+        print("  git clone https://github.com/CAHLR/OATutor backend/oatutor")
         print("  Then re-run this script.")
         sys.exit(0)
 

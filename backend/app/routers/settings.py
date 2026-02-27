@@ -2,16 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from passlib.context import CryptContext
-
 from app.database import get_db
 from app.routers.auth import get_current_user
 from app.models.user import User
 from app.models.progress import StudentState, ReviewSchedule, Session as SessionModel, ResponseLog
 from app.models.knowledge import KnowledgeGraph
+from app.services.auth_service import hash_password, verify_password
 
 router = APIRouter(prefix="/settings", tags=["settings"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class ProfileUpdate(BaseModel):
@@ -59,9 +57,9 @@ def change_password(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not pwd_context.verify(body.current_password, current_user.password_hash):
+    if not verify_password(body.current_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    current_user.password_hash = pwd_context.hash(body.new_password)
+    current_user.password_hash = hash_password(body.new_password)
     db.commit()
     return {"message": "Password updated"}
 

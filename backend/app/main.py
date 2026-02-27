@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth, dashboard, placement, lessons, practice, review, settings
+from app.routers import auth, dashboard, placement, lessons, practice, review, settings as settings_router
 
 app = FastAPI(title="Fisher App API", version="3.0.0")
 
@@ -19,7 +19,7 @@ app.include_router(placement.router)
 app.include_router(lessons.router)
 app.include_router(practice.router)
 app.include_router(review.router)
-app.include_router(settings.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/health")
