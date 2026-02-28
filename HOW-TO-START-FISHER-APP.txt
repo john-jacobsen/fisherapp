@@ -1,0 +1,75 @@
+HOW TO START FISHER APP 3.0
+===========================
+
+PREREQUISITES:
+- Docker Desktop must be installed and running
+- Open Docker Desktop and wait until it says "Docker Desktop is running"
+  (check the system tray icon — it should be steady, not animating)
+
+
+STEP 1: OPEN TERMINAL
+- Open PowerShell or Windows Terminal
+- Navigate to the project:
+
+  cd "C:\Users\jjcas\Desktop\Fisher App\Fisher App 3.0"
+
+
+STEP 2: START THE APP
+
+  docker compose up --build
+
+- Wait for the build to finish. You'll see logs scrolling.
+- The app is ready when you see lines like:
+    frontend-1  | VITE vX.X.X ready in XXX ms
+    backend-1   | INFO:     Uvicorn running on http://0.0.0.0:8000
+- Leave this terminal open. Don't close it or press Ctrl+C.
+
+
+STEP 3: OPEN IN BROWSER
+
+  http://localhost:5173
+
+
+STEP 4: IF YOU NEED TO RESET THE DATABASE (optional)
+- Open a SECOND terminal (don't close the first one)
+- Run:
+
+  cd "C:\Users\jjcas\Desktop\Fisher App\Fisher App 3.0"
+  docker compose run --rm backend alembic upgrade head
+  docker compose run --rm backend python scripts/seed_knowledge_graph.py
+  docker compose run --rm backend python scripts/seed_problems.py
+  docker compose run --rm backend python scripts/seed_lessons.py
+  docker compose run --rm backend python scripts/generate_problems.py
+
+
+STEP 5: TO STOP THE APP
+- Go to the terminal running docker compose
+- Press Ctrl+C
+- Then run:
+
+  docker compose down
+
+
+STEP 6: TO RESTART AFTER STOPPING
+
+  cd "C:\Users\jjcas\Desktop\Fisher App\Fisher App 3.0"
+  docker compose up --build
+
+
+TROUBLESHOOTING:
+
+"port is already in use"
+  docker compose down
+  docker compose up --build
+
+"Docker daemon not running"
+  Open Docker Desktop, wait for it to fully start, try again.
+
+App loads but shows blank/errors after code changes:
+  docker compose down -v
+  docker compose up --build
+  (then re-run Step 4 seed commands)
+
+  NOTE: "docker compose down -v" deletes the database volume.
+  You will lose all user accounts and progress. Only do this
+  if something is truly broken.
