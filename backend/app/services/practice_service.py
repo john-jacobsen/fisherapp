@@ -18,6 +18,7 @@ from app.models.content import Problem, Hint
 from app.models.knowledge import KnowledgeNode, KnowledgeEdge
 from app.models.progress import Session, StudentState, ReviewSchedule, ResponseLog
 from app.services.answer_checker import check_answer
+from app.services.problem_generator import generate_problem
 from app.kst.kst_engine import (
     get_active_graph,
     get_or_build_cache,
@@ -116,10 +117,6 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
     if not node:
         raise ValueError(f"Node '{node_id}' not found")
 
-    problem = _get_problem(node_id, [], db)
-    if not problem:
-        raise ValueError(f"No problems found for node '{node_id}'")
-
     # Close existing active sessions for this node
     db.query(Session).filter(
         Session.user_id == user_id,
@@ -130,12 +127,38 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
 
     posterior = _get_node_prior(user_id, node_id, db)
 
+    # Try on-the-fly generation first
+    ephemeral_problems = {}
+    generated = generate_problem(node_id)
+    if generated:
+        ephemeral_id = str(uuid.uuid4())
+        ephemeral_problems[ephemeral_id] = {
+            "correct_answer": generated["correct_answer"],
+            "answer_type": generated["answer_type"],
+        }
+        first_problem = {
+            "id": ephemeral_id,
+            "problem_text": generated["problem_text"],
+            "answer_type": generated["answer_type"],
+        }
+    else:
+        # Fall back to DB
+        db_problem = _get_problem(node_id, [], db)
+        if not db_problem:
+            raise ValueError(f"No problems found for node '{node_id}'")
+        first_problem = {
+            "id": str(db_problem.id),
+            "problem_text": db_problem.problem_text,
+            "answer_type": db_problem.answer_type,
+        }
+
     session_state = {
         "posterior": posterior,
         "questions_asked": 0,
         "correct_count": 0,
         "seen_problems": [],
         "node_id": node_id,
+        "ephemeral_problems": ephemeral_problems,
     }
 
     session = Session(
@@ -150,11 +173,7 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
 
     return {
         "session_id": str(session.id),
-        "problem": {
-            "id": str(problem.id),
-            "problem_text": problem.problem_text,
-            "answer_type": problem.answer_type,
-        },
+        "problem": first_problem,
         "mastery": {
             "current_posterior": round(posterior, 3),
             "threshold": MASTERY_THRESHOLD,
@@ -182,17 +201,32 @@ def submit_practice_answer(
     if not session:
         raise ValueError("Session not found or already completed")
 
-    problem = db.query(Problem).filter(Problem.id == problem_id).first()
-    if not problem:
-        raise ValueError("Problem not found")
-
     state = session.state_snapshot.copy()
     posterior = state["posterior"]
     questions_asked = state["questions_asked"]
     correct_count = state["correct_count"]
     seen_problems = state["seen_problems"]
+    ephemeral_problems = state.get("ephemeral_problems", {})
 
-    is_correct = check_answer(answer, problem.correct_answer, problem.answer_type)
+    # Look up the correct answer — check ephemeral cache first, then DB
+    ephemeral = ephemeral_problems.get(problem_id)
+    if ephemeral:
+        correct_answer_str = ephemeral["correct_answer"]
+        answer_type_str = ephemeral["answer_type"]
+        log_problem_id = None  # no DB problem ID
+    else:
+        try:
+            problem_uuid = uuid.UUID(problem_id)
+        except ValueError:
+            raise ValueError("Invalid problem ID")
+        problem = db.query(Problem).filter(Problem.id == problem_uuid).first()
+        if not problem:
+            raise ValueError("Problem not found")
+        correct_answer_str = problem.correct_answer
+        answer_type_str = problem.answer_type
+        log_problem_id = problem.id
+
+    is_correct = check_answer(answer, correct_answer_str, answer_type_str)
     is_learning_mode = (mode == "learning")
 
     # In learning mode: record answer but do NOT update BKT posterior or mastery
@@ -202,16 +236,16 @@ def submit_practice_answer(
             correct_count += 1
         questions_asked += 1
 
-    seen_problems.append(str(problem.id))
+    seen_problems.append(problem_id)
 
-    # Log response for analytics
+    # Log response for analytics (only for DB-backed problems)
     graph = get_active_graph(db)
-    if graph:
+    if graph and log_problem_id:
         log = ResponseLog(
             user_id=user_id,
             session_id=session.id,
             node_id=node_id,
-            problem_id=problem.id,
+            problem_id=log_problem_id,
             session_type="practice",
             is_correct=is_correct,
             student_answer=answer,
@@ -223,39 +257,54 @@ def submit_practice_answer(
     soft_cap = (not is_learning_mode) and questions_asked >= 10
     low_posterior = (not is_learning_mode) and posterior <= 0.15 and questions_asked >= 3
 
-    state.update({
-        "posterior": posterior,
-        "questions_asked": questions_asked,
-        "correct_count": correct_count,
-        "seen_problems": seen_problems,
-        "is_mastered": is_mastered,
-    })
-
     next_problem = None
     if not is_mastered and not soft_cap and not low_posterior:
-        np = _get_problem(node_id, seen_problems, db)
-        if np:
+        # Try on-the-fly generation first
+        generated = generate_problem(node_id)
+        if generated:
+            next_ephemeral_id = str(uuid.uuid4())
+            ephemeral_problems[next_ephemeral_id] = {
+                "correct_answer": generated["correct_answer"],
+                "answer_type": generated["answer_type"],
+            }
             next_problem = {
-                "id": str(np.id),
-                "problem_text": np.problem_text,
-                "answer_type": np.answer_type,
+                "id": next_ephemeral_id,
+                "problem_text": generated["problem_text"],
+                "answer_type": generated["answer_type"],
             }
         else:
-            # No more unseen problems — recycle
-            np = _get_problem(node_id, [], db)
+            # Fall back to DB
+            np = _get_problem(node_id, seen_problems, db)
             if np:
                 next_problem = {
                     "id": str(np.id),
                     "problem_text": np.problem_text,
                     "answer_type": np.answer_type,
                 }
+            else:
+                # Recycle DB problems
+                np = _get_problem(node_id, [], db)
+                if np:
+                    next_problem = {
+                        "id": str(np.id),
+                        "problem_text": np.problem_text,
+                        "answer_type": np.answer_type,
+                    }
 
+    state.update({
+        "posterior": posterior,
+        "questions_asked": questions_asked,
+        "correct_count": correct_count,
+        "seen_problems": seen_problems,
+        "is_mastered": is_mastered,
+        "ephemeral_problems": ephemeral_problems,
+    })
     session.state_snapshot = state
     db.commit()
 
     return {
         "is_correct": is_correct,
-        "correct_answer": problem.correct_answer,
+        "correct_answer": correct_answer_str,
         "mastery": {
             "current_posterior": round(posterior, 3),
             "questions_answered": questions_asked,
