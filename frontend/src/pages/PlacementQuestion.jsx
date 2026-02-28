@@ -80,6 +80,10 @@ export default function PlacementQuestion() {
       navigate('/placement/results')
       return
     }
+    if (!nextQuestion) {
+      setError('No next question received. Please refresh and try again.')
+      return
+    }
     setQuestion(nextQuestion)
     setAnswer('')
     setFeedback(null)
@@ -89,9 +93,12 @@ export default function PlacementQuestion() {
   }
 
   const handleErrorAdvance = () => {
-    if (errorNextQuestion) {
-      setQuestion(errorNextQuestion)
+    if (!errorNextQuestion) {
+      setError('Could not load next question. Please refresh.')
+      setErrorMessage(null)
+      return
     }
+    setQuestion(errorNextQuestion)
     setAnswer('')
     setErrorMessage(null)
     setErrorNextQuestion(null)
@@ -209,6 +216,7 @@ export default function PlacementQuestion() {
                   background: '#F59E0B',
                   width: 'auto',
                   padding: '10px 24px',
+                  cursor: 'pointer',
                 }}
               >
                 Next Question →
