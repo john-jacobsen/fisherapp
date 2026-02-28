@@ -34,6 +34,7 @@ export default function PracticePage() {
   const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer, studentAnswer }
   const [nextProblemData, setNextProblemData] = useState(null);
   const [sessionDone, setSessionDone] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   // Hints
   const [hints, setHints] = useState([]);
@@ -87,6 +88,7 @@ export default function PracticePage() {
   const submit = async () => {
     if (!answer.trim() || submitting || !problem || feedback) return;
     setSubmitting(true);
+    setNetworkError(false);
     try {
       const r = await api.post(`/practice/${nodeId}/submit`, {
         session_id: sessionId,
@@ -142,7 +144,9 @@ export default function PracticePage() {
         setNextProblemData(null);
       }
     } catch {
-      setFeedback({ isCorrect: false, correctAnswer: null, studentAnswer: answer.trim(), error: true });
+      setNetworkError(true);
+      setSubmitting(false);
+      return;
     } finally {
       setSubmitting(false);
     }
@@ -457,6 +461,31 @@ export default function PracticePage() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Network error — shown outside the problem card, with a Retry button */}
+        {networkError && (
+          <div style={{
+            padding: '14px 16px', borderRadius: theme.radius.md, marginBottom: 16,
+            background: '#FEF2F2', border: `1px solid ${theme.colors.error}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: 12,
+            fontFamily: theme.fonts.sans,
+          }}>
+            <span style={{ color: theme.colors.error, fontSize: 14, fontWeight: 600 }}>
+              Connection error — your answer could not be submitted.
+            </span>
+            <button
+              onClick={() => setNetworkError(false)}
+              style={{
+                padding: '8px 20px', background: theme.colors.error, color: '#fff',
+                border: 'none', borderRadius: theme.radius.sm,
+                cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: theme.fonts.sans,
+              }}
+            >
+              Try Again
+            </button>
           </div>
         )}
 

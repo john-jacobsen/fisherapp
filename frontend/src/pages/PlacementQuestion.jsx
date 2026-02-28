@@ -12,6 +12,8 @@ export default function PlacementQuestion() {
   const [question, setQuestion] = useState(null)      // { problem_id, node_id, problem_text, topic }
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState(null)      // { is_correct, correct_answer }
+  const [errorMessage, setErrorMessage] = useState(null) // structured error from answer checker
+  const [errorNextQuestion, setErrorNextQuestion] = useState(null) // next_question when error occurred
   const [progress, setProgress] = useState({ questions_answered: 0, estimated_remaining: 15 })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -39,6 +41,8 @@ export default function PlacementQuestion() {
 
     setSubmitting(true)
     setFeedback(null)
+    setErrorMessage(null)
+    setErrorNextQuestion(null)
 
     try {
       const res = await api.post('/placement/submit', {
@@ -48,6 +52,16 @@ export default function PlacementQuestion() {
       })
 
       const data = res.data
+
+      // Handle structured error from answer checker (200 response but error: true)
+      if (data.error) {
+        setErrorMessage('Could not evaluate your answer — please continue to the next question.')
+        setErrorNextQuestion(data.next_question || null)
+        if (data.progress) setProgress(data.progress)
+        setSubmitting(false)
+        return
+      }
+
       setFeedback({ is_correct: data.is_correct, correct_answer: data.correct_answer })
       setProgress(data.progress)
 
@@ -65,6 +79,16 @@ export default function PlacementQuestion() {
     } catch (err) {
       setError(err.response?.data?.detail || 'Submission failed')
     }
+    setSubmitting(false)
+  }
+
+  const handleErrorAdvance = () => {
+    if (errorNextQuestion) {
+      setQuestion(errorNextQuestion)
+    }
+    setAnswer('')
+    setErrorMessage(null)
+    setErrorNextQuestion(null)
     setSubmitting(false)
   }
 
@@ -141,8 +165,39 @@ export default function PlacementQuestion() {
             </div>
           )}
 
+          {/* Answer checker error — warning without revealing correct answer */}
+          {errorMessage && (
+            <div style={{
+              ...styles.feedbackBox,
+              background: '#FFFBEB',
+              border: '1px solid #F59E0B',
+            }}>
+              <span style={{
+                fontFamily: theme.fonts.sans,
+                fontSize: '15px',
+                fontWeight: 600,
+                color: '#92400E',
+                display: 'block',
+                marginBottom: '12px',
+              }}>
+                {errorMessage}
+              </span>
+              <button
+                onClick={handleErrorAdvance}
+                style={{
+                  ...styles.submitBtn,
+                  background: '#F59E0B',
+                  width: 'auto',
+                  padding: '10px 24px',
+                }}
+              >
+                Next Question →
+              </button>
+            </div>
+          )}
+
           {/* Input */}
-          {!feedback && (
+          {!feedback && !errorMessage && (
             <div style={styles.inputSection}>
               <MathInput
                 value={answer}

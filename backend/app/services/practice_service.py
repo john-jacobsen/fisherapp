@@ -269,7 +269,11 @@ def submit_practice_answer(
                     "answer_type": np.answer_type,
                 }
 
-        # Persist session state unchanged (no BKT update)
+        # Track the failing problem so it won't be shown again
+        seen_problems.append(problem_id)
+        state["seen_problems"] = seen_problems
+
+        # Persist session state (no BKT update, but seen_problems updated)
         state["ephemeral_problems"] = ephemeral_problems
         session.state_snapshot = state
         db.commit()

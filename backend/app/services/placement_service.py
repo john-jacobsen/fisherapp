@@ -190,7 +190,11 @@ def submit_answer(
                     "topic": node.topic if node else "",
                 }
 
-        # Persist session state unchanged (no BLIM update, no count increment)
+        # Track the failing problem so it won't be shown again
+        # (Do not modify asked_items — that would corrupt BLIM integrity)
+        state["asked_problems"] = asked_problems + [str(problem.id)]
+
+        # Persist session state (no BLIM update, no count increment)
         session.state_snapshot = state
         db.commit()
 
