@@ -14,6 +14,7 @@ class SubmitRequest(BaseModel):
     session_id: str
     problem_id: str
     answer: str
+    mode: str = "test"  # "learning" | "test"
 
 
 class CompleteRequest(BaseModel):
@@ -43,7 +44,8 @@ def submit_answer(
 ):
     try:
         return practice_service.submit_practice_answer(
-            node_id, req.session_id, req.problem_id, req.answer, str(current_user.id), db
+            node_id, req.session_id, req.problem_id, req.answer, str(current_user.id), db,
+            mode=req.mode,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

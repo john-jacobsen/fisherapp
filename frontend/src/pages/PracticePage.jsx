@@ -27,15 +27,17 @@ export default function PracticePage() {
   const [error, setError] = useState(null);
   const [nodeTitle, setNodeTitle] = useState('');
 
-  // Feedback state — set after submit, cleared when advancing
-  const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer, studentAnswer }
-  const [nextProblemData, setNextProblemData] = useState(null); // pending next problem
-  const [sessionDone, setSessionDone] = useState(false); // mastered or ended
+  // Mode: "learning" | "test"
+  const [mode, setMode] = useState('learning');
 
-  // Hints state
+  // Feedback state
+  const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer, studentAnswer }
+  const [nextProblemData, setNextProblemData] = useState(null);
+  const [sessionDone, setSessionDone] = useState(false);
+
+  // Hints
   const [hints, setHints] = useState([]);
   const [loadingHints, setLoadingHints] = useState(false);
-  const [hintsOpen, setHintsOpen] = useState(false); // controlled from "Review Hint" button
 
   const initialized = useRef(false);
 
@@ -52,7 +54,6 @@ export default function PracticePage() {
       setSessionId(d.session_id);
       setProblem(d.problem);
       setMastery(d.mastery?.current_posterior ?? 0);
-      setQuestionsAnswered(0);
     }).catch(() => {
       setError('Could not start practice session.');
     }).finally(() => setLoading(false));
@@ -61,11 +62,7 @@ export default function PracticePage() {
   const fetchHints = async () => {
     if (!problem || loadingHints) return;
     setLoadingHints(true);
-
-    const timeoutId = setTimeout(() => {
-      setLoadingHints(false);
-    }, 5000);
-
+    const timeoutId = setTimeout(() => setLoadingHints(false), 5000);
     try {
       const r1 = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: 1 } });
       const maxLevel = r1.data.max_level || 1;
@@ -83,10 +80,8 @@ export default function PracticePage() {
     }
   };
 
-  // Reset hints when problem changes
   useEffect(() => {
     setHints([]);
-    setHintsOpen(false);
   }, [problem?.id]);
 
   const submit = async () => {
@@ -97,6 +92,7 @@ export default function PracticePage() {
         session_id: sessionId,
         problem_id: problem.id,
         answer: answer.trim(),
+        mode,
       });
       const d = r.data;
       const newMastery = d.mastery?.current_posterior ?? mastery;
@@ -104,25 +100,27 @@ export default function PracticePage() {
       const isCorrect = d.is_correct;
       const isMastered = d.mastery?.is_mastered ?? false;
 
-      setMastery(newMastery);
-      setQuestionsAnswered(newQuestionsAnswered);
+      // Only update mastery display in test mode
+      if (mode === 'test') {
+        setMastery(newMastery);
+        setQuestionsAnswered(newQuestionsAnswered);
+      }
       setCorrectAnswers(prev => [...prev, isCorrect]);
 
-      // Show feedback — student stays on problem until they click "Next Problem"
       setFeedback({
         isCorrect,
         correctAnswer: d.correct_answer,
         studentAnswer: answer.trim(),
       });
 
-      // Store what comes next (or that session is done)
-      if (isMastered || (!d.next_problem && !isMastered)) {
+      if (mode === 'test' && (isMastered || (!d.next_problem && !isMastered))) {
         setSessionDone(true);
         setNextProblemData(null);
       } else if (d.next_problem) {
         setNextProblemData(d.next_problem);
       } else {
-        setSessionDone(true);
+        // In learning mode there's always more problems available
+        setNextProblemData(null);
       }
     } catch {
       setFeedback({ isCorrect: false, correctAnswer: null, studentAnswer: answer.trim(), error: true });
@@ -133,17 +131,26 @@ export default function PracticePage() {
 
   const advance = () => {
     if (sessionDone) {
-      navigate(`/score/${nodeId}`, {
-        state: { mastery, questionsAnswered, correct: correctAnswers }
-      });
+      navigate(`/score/${nodeId}`, { state: { mastery, questionsAnswered, correct: correctAnswers } });
       return;
     }
     if (nextProblemData) {
       setProblem(nextProblemData);
-      setAnswer('');
-      setFeedback(null);
-      setNextProblemData(null);
     }
+    // In learning mode without a next problem queued, fetch a new one
+    setAnswer('');
+    setFeedback(null);
+    setNextProblemData(null);
+  };
+
+  const switchToTest = () => {
+    setMode('test');
+    setFeedback(null);
+  };
+
+  const switchToLearning = () => {
+    setMode('learning');
+    setFeedback(null);
   };
 
   const endSession = async () => {
@@ -181,11 +188,60 @@ export default function PracticePage() {
 
   const hasFeedback = !!feedback;
   const isCorrect = feedback?.isCorrect;
+  const isLearning = mode === 'learning';
+
+  // Mode banner colors
+  const bannerBg = isLearning ? '#EEF6FF' : '#FFF8EE';
+  const bannerBorder = isLearning ? theme.colors.primary : '#E8961A';
+  const bannerColor = isLearning ? theme.colors.primary : '#B86A00';
 
   return (
     <>
       <NavBar />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px', fontFamily: theme.fonts.sans }}>
+
+        {/* Mode banner */}
+        <div style={{
+          padding: '10px 16px', borderRadius: theme.radius.md, marginBottom: 16,
+          background: bannerBg, border: `1px solid ${bannerBorder}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: 8,
+        }}>
+          <span style={{ color: bannerColor, fontSize: 13, fontWeight: 600 }}>
+            {isLearning
+              ? '📖 Learning Mode — hints and AI available. Problems do not count toward mastery.'
+              : '🎯 Test Mode — answer without help to demonstrate mastery.'}
+          </span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isLearning ? (
+              <>
+                <button onClick={switchToTest} style={{
+                  padding: '5px 14px', background: '#E8961A', color: '#fff', border: 'none',
+                  borderRadius: theme.radius.sm, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                  fontFamily: theme.fonts.sans,
+                }}>
+                  Ready to Test →
+                </button>
+                <button onClick={switchToTest} style={{
+                  padding: '5px 12px', background: 'transparent', color: '#B86A00',
+                  border: `1px solid #E8961A`, borderRadius: theme.radius.sm,
+                  cursor: 'pointer', fontSize: 12, fontFamily: theme.fonts.sans,
+                }}>
+                  Skip to Test
+                </button>
+              </>
+            ) : (
+              <button onClick={switchToLearning} style={{
+                padding: '5px 14px', background: 'transparent', color: theme.colors.primary,
+                border: `1px solid ${theme.colors.primary}`, borderRadius: theme.radius.sm,
+                cursor: 'pointer', fontSize: 12, fontFamily: theme.fonts.sans,
+              }}>
+                ← Back to Learning
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
           <div>
@@ -222,7 +278,7 @@ export default function PracticePage() {
                       border: `2px solid ${answer === ch ? theme.colors.primary : theme.colors.border}`,
                       borderRadius: theme.radius.md, cursor: hasFeedback ? 'default' : 'pointer',
                       fontSize: 14, color: theme.colors.text, fontFamily: theme.fonts.sans,
-                      transition: 'all 0.15s', opacity: hasFeedback ? 0.7 : 1,
+                      opacity: hasFeedback ? 0.7 : 1,
                     }}
                   >
                     {String.fromCharCode(65 + i)}. {ch}
@@ -231,7 +287,7 @@ export default function PracticePage() {
               </div>
             )}
 
-            {/* Free-entry math input */}
+            {/* Math input */}
             {problem.answer_type !== 'multiple_choice' && (
               <MathInput
                 value={answer}
@@ -245,7 +301,6 @@ export default function PracticePage() {
             {/* Feedback section */}
             {hasFeedback && !feedback.error && (
               <div style={{ marginTop: 16 }}>
-                {/* Correct / Incorrect banner */}
                 <div style={{
                   padding: '14px 16px', borderRadius: theme.radius.md, marginBottom: 12,
                   background: isCorrect ? theme.colors.successLight : theme.colors.errorLight,
@@ -256,46 +311,37 @@ export default function PracticePage() {
                   {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
                 </div>
 
-                {/* Show correct answer if wrong */}
                 {!isCorrect && feedback.correctAnswer != null && (
                   <div style={{
                     padding: '12px 16px', borderRadius: theme.radius.md, marginBottom: 12,
-                    background: theme.colors.surfaceAlt,
-                    border: `1px solid ${theme.colors.border}`,
+                    background: theme.colors.surfaceAlt, border: `1px solid ${theme.colors.border}`,
                     fontSize: 14, color: theme.colors.text,
                   }}>
-                    <div style={{ marginBottom: 6, color: theme.colors.textSecondary, fontSize: 13 }}>
-                      Your answer:
-                    </div>
-                    <div style={{ fontWeight: 500 }}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 4 }}>Your answer:</div>
+                    <div style={{ fontWeight: 500, marginBottom: 10 }}>
                       <MathDisplay content={feedback.studentAnswer} />
                     </div>
-                    <div style={{ marginTop: 10, marginBottom: 6, color: theme.colors.textSecondary, fontSize: 13 }}>
-                      Correct answer:
-                    </div>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 4 }}>Correct answer:</div>
                     <div style={{ fontWeight: 600, color: theme.colors.success }}>
                       <MathDisplay content={feedback.correctAnswer} />
                     </div>
-                    {/* Review Hint button */}
-                    <button
-                      onClick={() => {
-                        setHintsOpen(true);
-                        fetchHints();
-                      }}
-                      style={{
-                        marginTop: 10, padding: '6px 14px',
-                        background: 'transparent',
-                        border: `1px solid ${theme.colors.accent}`,
-                        borderRadius: theme.radius.sm, cursor: 'pointer',
-                        fontSize: 13, color: theme.colors.accent, fontFamily: theme.fonts.sans,
-                      }}
-                    >
-                      💡 Review Hint
-                    </button>
+
+                    {/* Review hint — only in learning mode */}
+                    {isLearning && (
+                      <button
+                        onClick={fetchHints}
+                        style={{
+                          marginTop: 10, padding: '6px 14px', background: 'transparent',
+                          border: `1px solid ${theme.colors.accent}`, borderRadius: theme.radius.sm,
+                          cursor: 'pointer', fontSize: 13, color: theme.colors.accent, fontFamily: theme.fonts.sans,
+                        }}
+                      >
+                        💡 Review Hint
+                      </button>
+                    )}
                   </div>
                 )}
 
-                {/* Next Problem / End buttons */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
                   <button
                     onClick={advance}
@@ -309,15 +355,11 @@ export default function PracticePage() {
                     {sessionDone ? 'See Results →' : 'Next Problem →'}
                   </button>
                   {!sessionDone && (
-                    <button
-                      onClick={endSession}
-                      style={{
-                        padding: '11px 20px', background: 'transparent',
-                        border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
-                        cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary,
-                        fontFamily: theme.fonts.sans,
-                      }}
-                    >
+                    <button onClick={endSession} style={{
+                      padding: '11px 20px', background: 'transparent',
+                      border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                      cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.fonts.sans,
+                    }}>
                       Finish session
                     </button>
                   )}
@@ -325,7 +367,6 @@ export default function PracticePage() {
               </div>
             )}
 
-            {/* Error feedback */}
             {hasFeedback && feedback.error && (
               <div style={{
                 padding: '12px 16px', borderRadius: theme.radius.md, marginTop: 12,
@@ -336,7 +377,6 @@ export default function PracticePage() {
               </div>
             )}
 
-            {/* Submit / End buttons (only when no feedback shown) */}
             {!hasFeedback && (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 16 }}>
                 <button
@@ -352,15 +392,11 @@ export default function PracticePage() {
                 >
                   {submitting ? 'Checking…' : 'Submit'}
                 </button>
-                <button
-                  onClick={endSession}
-                  style={{
-                    padding: '11px 20px', background: 'transparent',
-                    border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
-                    cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary,
-                    fontFamily: theme.fonts.sans,
-                  }}
-                >
+                <button onClick={endSession} style={{
+                  padding: '11px 20px', background: 'transparent',
+                  border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                  cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.fonts.sans,
+                }}>
                   Finish session
                 </button>
               </div>
@@ -368,12 +404,13 @@ export default function PracticePage() {
           </div>
         )}
 
-        {/* Hints panel */}
+        {/* Hints — only visible in Learning Mode */}
         <HintPanel
           hints={hints}
           loading={loadingHints}
           onOpen={fetchHints}
-          aiConfig={aiConfig}
+          visible={isLearning}
+          aiConfig={isLearning ? aiConfig : null}
           onAiHint={async () => {
             if (!problem || !aiConfig) throw new Error('Not configured');
             const hintsText = hints.length > 0
@@ -381,7 +418,7 @@ export default function PracticePage() {
               : 'No hints revealed yet.';
             return callAI(
               aiConfig,
-              `The student is working on this problem: ${problem.problem_text}.\nThey have seen the following hints:\n${hintsText}\nHelp them think through the problem without giving the answer directly. Use clear mathematical reasoning and guide them step by step.`,
+              `The student is working on this problem: ${problem.problem_text}.\nThey have seen the following hints:\n${hintsText}\nHelp them think through the problem without giving the answer directly.`,
               `Student's current attempt: ${answer || '(no attempt yet)'}`
             );
           }}

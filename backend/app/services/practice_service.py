@@ -171,6 +171,7 @@ def submit_practice_answer(
     answer: str,
     user_id: str,
     db: DBSession,
+    mode: str = "test",
 ) -> dict:
     """Process a practice answer. Returns feedback + mastery + next problem."""
     session = db.query(Session).filter(
@@ -192,13 +193,18 @@ def submit_practice_answer(
     seen_problems = state["seen_problems"]
 
     is_correct = check_answer(answer, problem.correct_answer, problem.answer_type)
-    posterior = _bkt_update(posterior, is_correct)
-    questions_asked += 1
-    if is_correct:
-        correct_count += 1
+    is_learning_mode = (mode == "learning")
+
+    # In learning mode: record answer but do NOT update BKT posterior or mastery
+    if not is_learning_mode:
+        posterior = _bkt_update(posterior, is_correct)
+        if is_correct:
+            correct_count += 1
+        questions_asked += 1
+
     seen_problems.append(str(problem.id))
 
-    # Log response
+    # Log response for analytics
     graph = get_active_graph(db)
     if graph:
         log = ResponseLog(
@@ -212,10 +218,10 @@ def submit_practice_answer(
         )
         db.add(log)
 
-    # Check termination
-    is_mastered = posterior >= MASTERY_THRESHOLD and questions_asked >= 3
-    soft_cap = questions_asked >= 10
-    low_posterior = posterior <= 0.15 and questions_asked >= 3
+    # Check termination (only in test mode)
+    is_mastered = (not is_learning_mode) and posterior >= MASTERY_THRESHOLD and questions_asked >= 3
+    soft_cap = (not is_learning_mode) and questions_asked >= 10
+    low_posterior = (not is_learning_mode) and posterior <= 0.15 and questions_asked >= 3
 
     state.update({
         "posterior": posterior,
