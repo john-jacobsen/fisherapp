@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
+from sqlalchemy import func
 
 from app.config import settings
 from app.models.content import Problem, Hint
@@ -98,12 +99,12 @@ def _check_prereqs(node_id: str, user_id: str, db: DBSession) -> bool:
 
 
 def _get_problem(node_id: str, exclude_ids: list[str], db: DBSession) -> Optional[Problem]:
-    """Get a problem for a node, excluding already-seen ones."""
+    """Get a random problem for a node, excluding already-seen ones."""
     exclude_uuids = [uuid.UUID(pid) for pid in exclude_ids if pid]
     return (
         db.query(Problem)
         .filter(Problem.node_id == node_id, ~Problem.id.in_(exclude_uuids))
-        .order_by(Problem.difficulty)
+        .order_by(func.random())
         .first()
     )
 
@@ -282,8 +283,9 @@ def submit_practice_answer(
                     "answer_type": np.answer_type,
                 }
             else:
-                # Recycle DB problems
-                np = _get_problem(node_id, [], db)
+                # Pool exhausted: reset seen DB problem IDs (keep ephemeral IDs) and shuffle
+                seen_problems = [pid for pid in seen_problems if pid in ephemeral_problems]
+                np = _get_problem(node_id, seen_problems, db)
                 if np:
                     next_problem = {
                         "id": str(np.id),
