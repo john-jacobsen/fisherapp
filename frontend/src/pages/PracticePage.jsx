@@ -98,9 +98,11 @@ export default function PracticePage() {
         message: isCorrect ? `Correct! The answer is ${d.correct_answer}.` : `Incorrect. Try again.`,
       });
 
-      if (isMastered) {
+      const updatedCorrect = [...correctAnswers, isCorrect];
+      if (isMastered || (!d.next_problem && !isMastered)) {
+        // Session complete: mastered, soft cap reached, or low posterior
         setTimeout(() => navigate(`/score/${nodeId}`, {
-          state: { mastery: newMastery, questionsAnswered: newQuestionsAnswered, correct: [...correctAnswers, isCorrect] }
+          state: { mastery: newMastery, questionsAnswered: newQuestionsAnswered, correct: updatedCorrect }
         }), 1500);
       } else if (d.next_problem) {
         setTimeout(() => {
@@ -247,10 +249,13 @@ export default function PracticePage() {
           aiConfig={aiConfig}
           onAiHint={async () => {
             if (!problem || !aiConfig) throw new Error('Not configured');
+            const hintsText = hints.length > 0
+              ? hints.map((h, i) => `Hint ${i + 1}: ${h.text}`).join('\n')
+              : 'No hints revealed yet.';
             return callAI(
               aiConfig,
-              `You are a math tutor helping a student with ${nodeTitle || 'algebra'}. Give a helpful hint without giving away the final answer. Be encouraging and concise.`,
-              `Problem: ${problem.problem_text}\nStudent's current attempt: ${answer || '(no attempt yet)'}`
+              `The student is working on this problem: ${problem.problem_text}.\nThey have seen the following hints:\n${hintsText}\nHelp them think through the problem without giving the answer directly. Use clear mathematical reasoning and guide them step by step.`,
+              `Student's current attempt: ${answer || '(no attempt yet)'}`
             );
           }}
         />
