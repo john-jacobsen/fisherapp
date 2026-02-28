@@ -19,7 +19,7 @@ Solution set handling:
 """
 import re
 import logging
-from typing import Literal, Optional
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -205,8 +205,11 @@ def _is_multi_value(s: str) -> bool:
     """
     stripped = s.strip()
 
-    # Check for LaTeX set braces \{ \} or plain { }
-    if re.search(r'[\{\}]', stripped):
+    # Check for set-brace notation: \{ (LaTeX explicit set brace) or a plain {
+    # that is NOT preceded by a letter or backslash (i.e., not a LaTeX command
+    # argument like \frac{3}{4}).  The regex (?<![a-zA-Z\\])\{ matches a `{`
+    # that is not immediately preceded by a letter or backslash.
+    if re.search(r'\\{', stripped) or re.search(r'(?<![a-zA-Z\\])\{', stripped):
         return True
 
     # Check for "and" used as a value separator (standalone word)
@@ -278,8 +281,8 @@ def _split_multi_value(s: str) -> list:
 
 def _parse_value_set(s: str):
     """
-    Parse a multi-value answer string into a frozenset of SymPy expressions.
-    Returns None if any value cannot be parsed.
+    Parse a multi-value answer string into a list of SymPy expressions.
+    Returns a list of SymPy expressions, or None if any value cannot be parsed.
     """
     tokens = _split_multi_value(s)
     sympy_values = []
@@ -428,11 +431,15 @@ def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerTy
             f"correct_multi={correct_is_multi}"
         )
 
-        # Parse both sides as value sets
+        # Parse both sides as value sets up front so we use a single result
+        # throughout this block (avoids calling _parse_value_set twice on the
+        # same string, which could return different list objects).
+        student_values = _parse_value_set(student) if student_is_multi else None
+        correct_values = _parse_value_set(correct) if correct_is_multi else None
+
         # If correct is multi but student is single, treat student as a 1-element set
         if correct_is_multi and not student_is_multi:
             # Partial answer — student only gave one value
-            correct_values = _parse_value_set(correct)
             if correct_values is not None and len(correct_values) > 1:
                 # More than one correct value required; single answer is wrong
                 logger.info(
@@ -441,9 +448,6 @@ def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerTy
                 )
                 return False
             # Correct set has only 1 value; fall through to single comparison below
-
-        student_values = _parse_value_set(student) if student_is_multi else None
-        correct_values = _parse_value_set(correct) if correct_is_multi else None
 
         # If student is multi-value
         if student_values is not None:
