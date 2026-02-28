@@ -95,9 +95,19 @@ export default function WorkedExamplesPage() {
                         <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
                           {steps.map((step, j) => {
                             const stepText = typeof step === 'string' ? step : (step.text || step.explanation || JSON.stringify(step));
+                            const stepResult = typeof step === 'object' ? (step.result || '') : '';
                             return (
-                              <li key={j} style={{ fontSize: 14, lineHeight: 1.7, color: theme.colors.text }}>
+                              <li key={j} style={{ fontSize: 14, lineHeight: 1.7, color: theme.colors.text, marginBottom: 4 }}>
                                 <MathDisplay content={stepText} />
+                                {stepResult && (
+                                  <div style={{
+                                    marginTop: 4, paddingLeft: 12,
+                                    borderLeft: `2px solid ${theme.colors.accent}`,
+                                    color: theme.colors.textSecondary, fontSize: 13,
+                                  }}>
+                                    <MathDisplay content={stepResult} />
+                                  </div>
+                                )}
                               </li>
                             );
                           })}

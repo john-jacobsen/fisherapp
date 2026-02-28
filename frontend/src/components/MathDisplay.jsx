@@ -8,7 +8,8 @@ import { useEffect, useRef } from 'react';
  *   - $$ ... $$ — converted to \[ ... \]
  *   - $ ... $ — converted to \( ... \)
  *   - "Label: raw_latex" — splits on ": " and wraps the math portion
- *   - Raw LaTeX starting at first \cmd or ^ — wraps from there to end
+ *   - Strings starting with only brackets/parens before LaTeX — wrap whole string
+ *   - Raw LaTeX starting at first \cmd or ^ — wraps from that point to end
  *
  * After this function MathJax will find \( ... \) and \[ ... \] and render them.
  */
@@ -16,7 +17,6 @@ function preprocessMath(text) {
   if (!text) return '';
 
   // If the string already has \( or \[ delimiters, MathJax can handle it directly.
-  // Don't double-wrap.
   if (/\\\(|\\\[/.test(text)) {
     return text;
   }
@@ -40,22 +40,30 @@ function preprocessMath(text) {
   }
 
   // Try to split "Label: math_expression" pattern.
-  // Match a plain-text prefix up to and including ": " (colon + whitespace).
+  // The label must contain at least one letter (not just brackets/spaces).
   const colonIdx = s.search(/:\s/);
   if (colonIdx !== -1) {
-    const label = s.slice(0, colonIdx + 2); // includes ": "
+    const label = s.slice(0, colonIdx + 2);
     const math = s.slice(colonIdx + 2).trim();
-    if (math) {
+    // Only use colon split if label has actual word characters (not just symbols)
+    if (/[a-zA-Z]/.test(label) && math) {
       return label + '\\(' + math + '\\)';
     }
   }
 
-  // No "label: " pattern — find first math character and wrap from there.
+  // No "label: " pattern. Find first LaTeX character.
   const idx = s.search(/\\[a-zA-Z{]|\^/);
   if (idx === -1) return s;
 
   const plain = s.slice(0, idx);
   const math = s.slice(idx);
+
+  // If the prefix is only whitespace, parentheses, or brackets,
+  // treat the whole string as math (handles CommonMark-escaped \( → ()
+  if (/^[\s()\[\]{]*$/.test(plain)) {
+    return '\\(' + s + '\\)';
+  }
+
   return plain + '\\(' + math + '\\)';
 }
 

@@ -9,6 +9,7 @@ Usage (from project root):
 from app.database import SessionLocal
 from app.models.content import Problem, Hint
 from app.models.knowledge import KnowledgeNode
+from app.models.progress import ResponseLog
 import app.models  # noqa
 
 PROBLEMS = [
@@ -519,6 +520,7 @@ def seed():
             # Remove existing problems for this node
             existing = db.query(Problem).filter(Problem.node_id == node_id).all()
             for p in existing:
+                db.query(ResponseLog).filter(ResponseLog.problem_id == p.id).delete()
                 db.query(Hint).filter(Hint.problem_id == p.id).delete()
                 db.delete(p)
             db.flush()
