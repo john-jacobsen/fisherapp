@@ -2,12 +2,21 @@ import { useState } from 'react';
 import { theme } from '../theme';
 import MathDisplay from './MathDisplay';
 
-export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, onAiHint = null }) {
+export default function HintPanel({
+  hints = [],
+  loading = false,
+  onOpen = null,
+  aiConfig = null,
+  onAiHint = null,
+  visible = true,
+}) {
   const [revealed, setRevealed] = useState(0);
   const [aiHint, setAiHint] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [open, setOpen] = useState(false);
   const [opened, setOpened] = useState(false);
+
+  if (!visible) return null;
 
   const toggleOpen = () => {
     const next = !open;
@@ -26,7 +35,7 @@ export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, 
     try {
       const result = await onAiHint();
       setAiHint(result);
-    } catch (e) {
+    } catch {
       setAiHint('Could not load AI hint. Check your API key in Settings.');
     } finally {
       setLoadingAi(false);
@@ -35,6 +44,16 @@ export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, 
 
   const totalHints = hints.length;
   const hasMore = revealed < totalHints;
+
+  // Determine status message when panel is open and no hints revealed
+  let emptyMessage = null;
+  if (totalHints === 0) {
+    if (loading) {
+      emptyMessage = 'Loading hints…';
+    } else {
+      emptyMessage = 'No hints available for this problem.';
+    }
+  }
 
   return (
     <div style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md, overflow: 'hidden', marginTop: 16 }}>
@@ -59,17 +78,28 @@ export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, 
               borderLeft: `3px solid ${theme.colors.accent}`,
               fontFamily: theme.fonts.sans, lineHeight: 1.6,
             }}>
-              <strong>Hint {i + 1}:</strong> <MathDisplay content={h.text || (typeof h === 'string' ? h : '')} />
+              <strong>Hint {i + 1}:</strong>{' '}
+              <MathDisplay content={h.text || (typeof h === 'string' ? h : '')} />
             </div>
           ))}
 
-          {hints.length === 0 && (
+          {emptyMessage && (
             <p style={{ margin: 0, fontSize: 13, color: theme.colors.textSecondary }}>
-              {onOpen ? 'Loading hints…' : 'No hints available.'}
+              {emptyMessage}
             </p>
           )}
 
-          {hints.length > 0 && hasMore && (
+          {totalHints > 0 && hints.slice(0, revealed).length === 0 && (
+            <button onClick={revealNext} style={{
+              padding: '8px 16px', background: theme.colors.surface,
+              border: `1px solid ${theme.colors.accent}`, borderRadius: theme.radius.sm,
+              cursor: 'pointer', color: theme.colors.accent, fontSize: 13, fontFamily: theme.fonts.sans,
+            }}>
+              Show first hint (1/{totalHints})
+            </button>
+          )}
+
+          {totalHints > 0 && revealed > 0 && hasMore && (
             <button onClick={revealNext} style={{
               padding: '8px 16px', background: theme.colors.surface,
               border: `1px solid ${theme.colors.accent}`, borderRadius: theme.radius.sm,

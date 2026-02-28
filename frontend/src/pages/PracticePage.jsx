@@ -52,8 +52,13 @@ export default function PracticePage() {
   const fetchHints = async () => {
     if (!problem || loadingHints) return;
     setLoadingHints(true);
+
+    // 5-second timeout fallback
+    const timeoutId = setTimeout(() => {
+      setLoadingHints(false);
+    }, 5000);
+
     try {
-      // Fetch level 1 first to find max_level, then fetch remaining
       const r1 = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: 1 } });
       const maxLevel = r1.data.max_level || 1;
       const allHints = [{ text: r1.data.hint_text }];
@@ -63,8 +68,10 @@ export default function PracticePage() {
       }
       setHints(allHints);
     } catch {
+      // No hints available or endpoint error — leave hints=[] so "No hints available" shows
       setHints([]);
     } finally {
+      clearTimeout(timeoutId);
       setLoadingHints(false);
     }
   };
@@ -245,6 +252,7 @@ export default function PracticePage() {
         {/* Hints */}
         <HintPanel
           hints={hints}
+          loading={loadingHints}
           onOpen={fetchHints}
           aiConfig={aiConfig}
           onAiHint={async () => {
