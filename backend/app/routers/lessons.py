@@ -6,7 +6,7 @@ from app.routers.auth import get_current_user
 from app.models.user import User
 from app.models.knowledge import KnowledgeNode, KnowledgeEdge
 from app.models.content import Lesson, WorkedExample
-from app.models.progress import StudentState
+from app.models.progress import StudentState, ReviewSchedule
 from app.kst.kst_engine import get_active_graph
 
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
@@ -55,12 +55,24 @@ def get_lesson(
 
     prereqs_met = _prereqs_met(node_id, db, str(current_user.id), graph.id)
 
+    # Compute mastery from StudentState
+    state = db.query(StudentState).filter(
+        StudentState.user_id == str(current_user.id),
+        StudentState.graph_id == graph.id,
+    ).first()
+    mastery = 0.0
+    if state:
+        if node_id in (state.mastered_nodes or []):
+            mastery = 1.0
+        elif node_id in (state.inner_fringe or []):
+            mastery = 0.6
+
     return {
         "node": {"id": node.id, "label": node.label, "topic": node.topic},
         "lesson": {
             "video_url": lesson.video_url if lesson else None,
             "content_markdown": lesson.content_markdown if lesson else f"# {node.label}\n\nLesson content coming soon.",
-        } if lesson else None,
+        } if lesson else {"video_url": None, "content_markdown": f"# {node.label}\n\nLesson content coming soon."},
         "worked_examples": [
             {
                 "id": str(e.id),
@@ -70,6 +82,7 @@ def get_lesson(
             for e in examples
         ],
         "is_prerequisites_met": prereqs_met,
+        "mastery": mastery,
     }
 
 

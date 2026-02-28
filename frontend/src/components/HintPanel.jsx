@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { theme } from '../theme';
+import MathDisplay from './MathDisplay';
 
 export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, onAiHint = null }) {
   const [revealed, setRevealed] = useState(0);
@@ -58,7 +59,7 @@ export default function HintPanel({ hints = [], onOpen = null, aiConfig = null, 
               borderLeft: `3px solid ${theme.colors.accent}`,
               fontFamily: theme.fonts.sans, lineHeight: 1.6,
             }}>
-              <strong>Hint {i + 1}:</strong> {h.text || h}
+              <strong>Hint {i + 1}:</strong> <MathDisplay content={h.text || (typeof h === 'string' ? h : '')} />
             </div>
           ))}
 

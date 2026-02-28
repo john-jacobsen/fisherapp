@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar.jsx'
 import MathInput from '../components/MathInput.jsx'
+import MathDisplay from '../components/MathDisplay.jsx'
 import api from '../api/client.js'
 import { theme } from '../theme.js'
 
@@ -119,7 +120,7 @@ export default function PlacementQuestion() {
 
           {/* Problem */}
           <div style={styles.problemBox}>
-            <p style={styles.problemText}>{question?.problem_text}</p>
+            <p style={styles.problemText}><MathDisplay content={question?.problem_text || ''} /></p>
           </div>
 
           {/* Feedback */}
@@ -135,7 +136,7 @@ export default function PlacementQuestion() {
                 fontWeight: 600,
                 color: feedback.is_correct ? theme.colors.primary : theme.colors.danger,
               }}>
-                {feedback.is_correct ? '✓ Correct!' : `✗ Incorrect — Answer: ${feedback.correct_answer}`}
+                {feedback.is_correct ? '✓ Correct!' : <><span>✗ Incorrect — Answer: </span><MathDisplay content={feedback.correct_answer} /></>}
               </span>
             </div>
           )}

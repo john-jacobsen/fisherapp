@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
+import MathDisplay from '../components/MathDisplay';
 import { theme } from '../theme';
 
 export default function WorkedExamplesPage() {
@@ -17,8 +18,11 @@ export default function WorkedExamplesPage() {
       api.get(`/lessons/${nodeId}`),
       api.get(`/lessons/${nodeId}/examples`),
     ]).then(([lessonRes, exRes]) => {
-      setTitle(lessonRes.data.title);
-      setExamples(exRes.data);
+      // lessonRes.data has { node, lesson, worked_examples, ... }
+      setTitle(lessonRes.data.node?.label || '');
+      // exRes.data has { worked_examples: [...] }
+      const exList = exRes.data.worked_examples || exRes.data || [];
+      setExamples(exList);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [nodeId]);
 
@@ -56,50 +60,55 @@ export default function WorkedExamplesPage() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {examples.map((ex, i) => (
-            <div key={ex.id} style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.sm }}>
-              <button
-                onClick={() => setOpenIdx(openIdx === i ? -1 : i)}
-                style={{
-                  width: '100%', padding: '16px 20px', background: openIdx === i ? theme.colors.primaryLight : theme.colors.surface,
-                  border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', fontFamily: theme.fonts.sans,
-                }}
-              >
-                <span style={{ fontWeight: 600, fontSize: 15, color: theme.colors.text }}>
-                  Example {i + 1}: {ex.title}
-                </span>
-                <span style={{ color: theme.colors.textSecondary }}>{openIdx === i ? '▲' : '▼'}</span>
-              </button>
+          {examples.map((ex, i) => {
+            // API returns { id, problem_text, steps }
+            // steps is a list (could be strings or objects)
+            const steps = Array.isArray(ex.steps) ? ex.steps : [];
+            return (
+              <div key={ex.id || i} style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.sm }}>
+                <button
+                  onClick={() => setOpenIdx(openIdx === i ? -1 : i)}
+                  style={{
+                    width: '100%', padding: '16px 20px', background: openIdx === i ? theme.colors.primaryLight : theme.colors.surface,
+                    border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', fontFamily: theme.fonts.sans,
+                  }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: 15, color: theme.colors.text }}>
+                    Example {i + 1}
+                  </span>
+                  <span style={{ color: theme.colors.textSecondary }}>{openIdx === i ? '▲' : '▼'}</span>
+                </button>
 
-              {openIdx === i && (
-                <div style={{ padding: '20px 24px', borderTop: `1px solid ${theme.colors.border}` }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <h4 style={{ margin: '0 0 8px', color: theme.colors.textSecondary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Problem</h4>
-                    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.colors.text }}>{ex.problem_statement}</p>
-                  </div>
-
-                  {ex.solution_steps && ex.solution_steps.length > 0 && (
+                {openIdx === i && (
+                  <div style={{ padding: '20px 24px', borderTop: `1px solid ${theme.colors.border}` }}>
                     <div style={{ marginBottom: 16 }}>
-                      <h4 style={{ margin: '0 0 8px', color: theme.colors.textSecondary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Steps</h4>
-                      <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {ex.solution_steps.map((step, j) => (
-                          <li key={j} style={{ fontSize: 14, lineHeight: 1.7, color: theme.colors.text }}>{step}</li>
-                        ))}
-                      </ol>
+                      <h4 style={{ margin: '0 0 8px', color: theme.colors.textSecondary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Problem</h4>
+                      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.colors.text }}>
+                        <MathDisplay content={ex.problem_text || ''} />
+                      </p>
                     </div>
-                  )}
 
-                  {ex.explanation && (
-                    <div style={{ padding: '12px 16px', background: theme.colors.accentLight, borderRadius: theme.radius.sm, borderLeft: `3px solid ${theme.colors.accent}` }}>
-                      <h4 style={{ margin: '0 0 6px', fontSize: 12, color: theme.colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 }}>Key Insight</h4>
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.colors.text }}>{ex.explanation}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                    {steps.length > 0 && (
+                      <div>
+                        <h4 style={{ margin: '0 0 8px', color: theme.colors.textSecondary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Steps</h4>
+                        <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {steps.map((step, j) => {
+                            const stepText = typeof step === 'string' ? step : (step.text || step.explanation || JSON.stringify(step));
+                            return (
+                              <li key={j} style={{ fontSize: 14, lineHeight: 1.7, color: theme.colors.text }}>
+                                <MathDisplay content={stepText} />
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div style={{ marginTop: 32, display: 'flex', gap: 12 }}>

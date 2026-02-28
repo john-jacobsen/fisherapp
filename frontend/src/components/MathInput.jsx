@@ -1,40 +1,72 @@
-import { theme } from '../theme.js'
+import { useEffect, useRef } from 'react';
+import 'mathlive';
+import { theme } from '../theme.js';
 
-export default function MathInput({ value, onChange, onSubmit, placeholder = "Type your answer", disabled = false }) {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && onSubmit) {
-      e.preventDefault()
-      onSubmit()
+/**
+ * MathInput wraps the MathLive <math-field> web component.
+ * Exposes a value (LaTeX string) via onChange, and calls onSubmit on Enter.
+ */
+export default function MathInput({ value, onChange, onSubmit, placeholder = 'Enter your answer', disabled = false }) {
+  const mathFieldRef = useRef(null);
+
+  useEffect(() => {
+    const mf = mathFieldRef.current;
+    if (!mf) return;
+
+    // Configure MathLive options
+    mf.smartFence = true;
+    mf.virtualKeyboardMode = 'onfocus';
+    if (placeholder) mf.placeholder = placeholder;
+
+    const handleInput = () => {
+      if (onChange) onChange(mf.value);
+    };
+
+    const handleKeyDown = (evt) => {
+      if (evt.key === 'Enter' && !evt.shiftKey && onSubmit) {
+        evt.preventDefault();
+        onSubmit();
+      }
+    };
+
+    mf.addEventListener('input', handleInput);
+    mf.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      mf.removeEventListener('input', handleInput);
+      mf.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onChange, onSubmit, placeholder]);
+
+  // Sync disabled state
+  useEffect(() => {
+    const mf = mathFieldRef.current;
+    if (mf) mf.disabled = disabled;
+  }, [disabled]);
+
+  // Clear the field when value is reset to empty
+  useEffect(() => {
+    const mf = mathFieldRef.current;
+    if (mf && value === '') {
+      mf.value = '';
     }
-  }
+  }, [value]);
 
   return (
-    <div style={{ position: 'relative' }}>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={disabled}
+    <div>
+      <math-field
+        ref={mathFieldRef}
         style={{
+          display: 'block',
           width: '100%',
-          padding: '12px 16px',
+          padding: '8px 12px',
           border: `2px solid ${theme.colors.border}`,
           borderRadius: theme.radius.md,
-          fontFamily: theme.fonts.sans,
-          fontSize: '18px',
+          fontSize: '20px',
+          minHeight: '52px',
           background: disabled ? '#F5F4F2' : theme.colors.card,
-          color: theme.colors.text,
-          outline: 'none',
           boxSizing: 'border-box',
-          transition: 'border-color 0.15s ease',
         }}
-        onFocus={(e) => { e.target.style.borderColor = theme.colors.primary }}
-        onBlur={(e) => { e.target.style.borderColor = theme.colors.border }}
-        autoComplete="off"
-        autoCorrect="off"
-        spellCheck="false"
       />
       <div style={{
         marginTop: '4px',
@@ -42,8 +74,8 @@ export default function MathInput({ value, onChange, onSubmit, placeholder = "Ty
         color: theme.colors.textMuted,
         fontFamily: theme.fonts.sans,
       }}>
-        Enter your answer (e.g. "3/4", "x**2", "12"). Press Enter to submit.
+        Click to enter math. Press Enter to submit.
       </div>
     </div>
-  )
+  );
 }

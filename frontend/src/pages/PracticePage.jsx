@@ -6,6 +6,7 @@ import MasteryMeter from '../components/MasteryMeter';
 import HintPanel from '../components/HintPanel';
 import ProgressSteps from '../components/ProgressSteps';
 import MathInput from '../components/MathInput';
+import MathDisplay from '../components/MathDisplay';
 import { useAI, callAI } from '../contexts/AIContext';
 import { theme } from '../theme';
 
@@ -33,15 +34,16 @@ export default function PracticePage() {
     initialized.current = true;
 
     // Get node title
-    api.get(`/lessons/${nodeId}`).then(r => setNodeTitle(r.data.title)).catch(() => {});
+    api.get(`/lessons/${nodeId}`).then(r => setNodeTitle(r.data.node?.label || '')).catch(() => {});
 
     // Start practice session
     api.post(`/practice/${nodeId}/start`).then(r => {
       const d = r.data;
       setSessionId(d.session_id);
       setProblem(d.problem);
-      setMastery(d.mastery);
-      setQuestionsAnswered(d.questions_answered || 0);
+      // d.mastery is an object { current_posterior, threshold, ... }
+      setMastery(d.mastery?.current_posterior ?? 0);
+      setQuestionsAnswered(0);
     }).catch(() => {
       setError('Could not start practice session.');
     }).finally(() => setLoading(false));
@@ -51,8 +53,15 @@ export default function PracticePage() {
     if (!problem || loadingHints) return;
     setLoadingHints(true);
     try {
-      const r = await api.get(`/practice/${nodeId}/hints/${problem.id}`);
-      setHints(r.data);
+      // Fetch level 1 first to find max_level, then fetch remaining
+      const r1 = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: 1 } });
+      const maxLevel = r1.data.max_level || 1;
+      const allHints = [{ text: r1.data.hint_text }];
+      for (let l = 2; l <= maxLevel; l++) {
+        const rl = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: l } });
+        allHints.push({ text: rl.data.hint_text });
+      }
+      setHints(allHints);
     } catch {
       setHints([]);
     } finally {
@@ -76,13 +85,23 @@ export default function PracticePage() {
         answer: answer.trim(),
       });
       const d = r.data;
-      setMastery(d.mastery);
-      setQuestionsAnswered(d.questions_answered);
-      setCorrectAnswers(prev => [...prev, d.correct]);
-      setFeedback({ correct: d.correct, message: d.feedback || (d.correct ? 'Correct!' : 'Incorrect, try again.') });
+      const newMastery = d.mastery?.current_posterior ?? mastery;
+      const newQuestionsAnswered = d.mastery?.questions_answered ?? questionsAnswered + 1;
+      const isCorrect = d.is_correct;
+      const isMastered = d.mastery?.is_mastered ?? false;
 
-      if (d.is_complete) {
-        setTimeout(() => navigate(`/score/${nodeId}`, { state: { mastery: d.mastery, questionsAnswered: d.questions_answered, correct: [...correctAnswers, d.correct] } }), 1500);
+      setMastery(newMastery);
+      setQuestionsAnswered(newQuestionsAnswered);
+      setCorrectAnswers(prev => [...prev, isCorrect]);
+      setFeedback({
+        correct: isCorrect,
+        message: isCorrect ? `Correct! The answer is ${d.correct_answer}.` : `Incorrect. Try again.`,
+      });
+
+      if (isMastered) {
+        setTimeout(() => navigate(`/score/${nodeId}`, {
+          state: { mastery: newMastery, questionsAnswered: newQuestionsAnswered, correct: [...correctAnswers, isCorrect] }
+        }), 1500);
       } else if (d.next_problem) {
         setTimeout(() => {
           setProblem(d.next_problem);
@@ -97,14 +116,10 @@ export default function PracticePage() {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) submit();
-  };
-
   const endSession = async () => {
     try {
       const r = await api.post(`/practice/${nodeId}/complete`, { session_id: sessionId });
-      navigate(`/score/${nodeId}`, { state: { mastery: r.data.mastery, questionsAnswered: r.data.questions_answered, correct: correctAnswers } });
+      navigate(`/score/${nodeId}`, { state: { mastery: r.data.summary?.mastery_posterior ?? mastery, questionsAnswered: r.data.summary?.questions ?? questionsAnswered, correct: correctAnswers } });
     } catch {
       navigate(`/score/${nodeId}`, { state: { mastery, questionsAnswered, correct: correctAnswers } });
     }
@@ -151,7 +166,7 @@ export default function PracticePage() {
             border: `1px solid ${theme.colors.border}`, marginBottom: 20,
           }}>
             <p style={{ margin: '0 0 24px', fontSize: 16, lineHeight: 1.8, color: theme.colors.text }}>
-              {problem.statement}
+              <MathDisplay content={problem.problem_text} />
             </p>
 
             {/* Multiple choice */}
@@ -183,23 +198,22 @@ export default function PracticePage() {
                 onChange={setAnswer}
                 onSubmit={submit}
                 placeholder={problem.answer_type === 'numeric' ? 'Enter a number…' : 'Enter your answer…'}
-                style={{ marginBottom: 16 }}
               />
             )}
 
             {/* Feedback banner */}
             {feedback && (
               <div style={{
-                padding: '12px 16px', borderRadius: theme.radius.md, marginBottom: 16,
+                padding: '12px 16px', borderRadius: theme.radius.md, marginTop: 12, marginBottom: 8,
                 background: feedback.correct ? theme.colors.successLight : theme.colors.errorLight,
                 color: feedback.correct ? theme.colors.success : theme.colors.error,
                 fontSize: 14, fontWeight: 500, border: `1px solid ${feedback.correct ? theme.colors.success : theme.colors.error}`,
               }}>
-                {feedback.correct ? '✓ ' : '✗ '}{feedback.message}
+                {feedback.correct ? '✓ ' : '✗ '}<MathDisplay content={feedback.message} />
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 16 }}>
               <button
                 onClick={submit}
                 disabled={!answer.trim() || submitting}
@@ -236,7 +250,7 @@ export default function PracticePage() {
             return callAI(
               aiConfig,
               `You are a math tutor helping a student with ${nodeTitle || 'algebra'}. Give a helpful hint without giving away the final answer. Be encouraging and concise.`,
-              `Problem: ${problem.statement}\nStudent's current attempt: ${answer || '(no attempt yet)'}`
+              `Problem: ${problem.problem_text}\nStudent's current attempt: ${answer || '(no attempt yet)'}`
             );
           }}
         />
