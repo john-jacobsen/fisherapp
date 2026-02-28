@@ -9,7 +9,7 @@ from app.models.progress import StudentState, ReviewSchedule, Session as Session
 from app.models.knowledge import KnowledgeGraph
 from app.services.auth_service import hash_password, verify_password
 
-router = APIRouter(prefix="/settings", tags=["settings"])
+router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 
 class ProfileUpdate(BaseModel):

@@ -12,7 +12,7 @@ from app.services.review_service import (
     submit_review,
 )
 
-router = APIRouter(prefix="/review", tags=["review"])
+router = APIRouter(prefix="/api/review", tags=["review"])
 
 
 class ReviewSubmit(BaseModel):
