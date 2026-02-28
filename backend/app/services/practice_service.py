@@ -9,6 +9,7 @@ Flow:
 """
 import uuid
 import logging
+import traceback
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
@@ -227,8 +228,65 @@ def submit_practice_answer(
         answer_type_str = problem.answer_type
         log_problem_id = problem.id
 
-    is_correct = check_answer(answer, correct_answer_str, answer_type_str)
+    try:
+        is_correct = check_answer(answer, correct_answer_str, answer_type_str)
+        answer_check_error = False
+    except Exception:
+        logger.error(
+            "check_answer raised an exception for node=%s problem=%s "
+            "student_answer=%r correct_answer=%r answer_type=%r\n%s",
+            node_id, problem_id, answer, correct_answer_str, answer_type_str,
+            traceback.format_exc(),
+        )
+        is_correct = False
+        answer_check_error = True
+
     is_learning_mode = (mode == "learning")
+
+    # On answer checker error: skip BKT/mastery updates and return immediately
+    # so the student can proceed without being penalised.
+    if answer_check_error:
+        # Still need a next_problem so the student can continue.
+        next_problem = None
+        generated = generate_problem(node_id)
+        if generated:
+            next_ephemeral_id = str(uuid.uuid4())
+            ephemeral_problems[next_ephemeral_id] = {
+                "correct_answer": generated["correct_answer"],
+                "answer_type": generated["answer_type"],
+            }
+            next_problem = {
+                "id": next_ephemeral_id,
+                "problem_text": generated["problem_text"],
+                "answer_type": generated["answer_type"],
+            }
+        else:
+            np = _get_problem(node_id, seen_problems, db)
+            if np:
+                next_problem = {
+                    "id": str(np.id),
+                    "problem_text": np.problem_text,
+                    "answer_type": np.answer_type,
+                }
+
+        # Persist session state unchanged (no BKT update)
+        state["ephemeral_problems"] = ephemeral_problems
+        session.state_snapshot = state
+        db.commit()
+
+        return {
+            "is_correct": False,
+            "error": True,
+            "message": "Could not evaluate your answer. Please try a different format.",
+            "correct_answer": correct_answer_str,
+            "mastery": {
+                "current_posterior": round(posterior, 3),
+                "questions_answered": questions_asked,
+                "is_mastered": False,
+            },
+            "next_problem": next_problem,
+            "suggest_review_lesson": False,
+        }
 
     # In learning mode: record answer but do NOT update BKT posterior or mastery
     if not is_learning_mode:

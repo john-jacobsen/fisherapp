@@ -8,6 +8,7 @@ Flow:
 """
 import uuid
 import logging
+import traceback
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
@@ -160,7 +161,52 @@ def submit_answer(
     graph_id = state["graph_id"]
 
     # Check answer
-    is_correct = check_answer(answer, problem.correct_answer, problem.answer_type)
+    try:
+        is_correct = check_answer(answer, problem.correct_answer, problem.answer_type)
+        answer_check_error = False
+    except Exception:
+        logger.error(
+            "check_answer raised an exception for placement session=%s problem=%s "
+            "student_answer=%r correct_answer=%r answer_type=%r\n%s",
+            session_id, problem_id, answer, problem.correct_answer, problem.answer_type,
+            traceback.format_exc(),
+        )
+        is_correct = False
+        answer_check_error = True
+
+    # On answer checker error: skip BLIM update, return error response so student can proceed
+    if answer_check_error:
+        # Select a next question without updating the distribution
+        next_question = None
+        next_item_id = select_next_assessment_item(db, graph_id, distribution, asked_items)
+        if next_item_id:
+            next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
+            if next_problem:
+                node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
+                next_question = {
+                    "problem_id": str(next_problem.id),
+                    "node_id": next_item_id,
+                    "problem_text": next_problem.problem_text,
+                    "topic": node.topic if node else "",
+                }
+
+        # Persist session state unchanged (no BLIM update, no count increment)
+        session.state_snapshot = state
+        db.commit()
+
+        return {
+            "is_correct": False,
+            "error": True,
+            "message": "Could not evaluate your answer. Please try a different format.",
+            "correct_answer": problem.correct_answer,
+            "next_question": next_question,
+            "progress": {
+                "questions_answered": questions_answered,
+                "estimated_remaining": max(0, 15 - questions_answered),
+            },
+            "is_complete": False,
+        }
+
     if is_correct:
         correct_count += 1
 

@@ -95,6 +95,25 @@ export default function PracticePage() {
         mode,
       });
       const d = r.data;
+
+      // Handle structured error from answer checker (200 response but error:true)
+      if (d.error === true) {
+        setFeedback({
+          isCorrect: false,
+          correctAnswer: d.correct_answer ?? null,
+          studentAnswer: answer.trim(),
+          error: true,
+          errorMessage: d.message ?? 'Could not evaluate your answer. Please try a different format.',
+        });
+        // Allow student to proceed to next problem but do NOT update mastery
+        if (d.next_problem) {
+          setNextProblemData(d.next_problem);
+        } else {
+          setNextProblemData(null);
+        }
+        return;
+      }
+
       const newMastery = d.mastery?.current_posterior ?? mastery;
       const newQuestionsAnswered = d.mastery?.questions_answered ?? questionsAnswered + 1;
       const isCorrect = d.is_correct;
@@ -368,12 +387,49 @@ export default function PracticePage() {
             )}
 
             {hasFeedback && feedback.error && (
-              <div style={{
-                padding: '12px 16px', borderRadius: theme.radius.md, marginTop: 12,
-                background: theme.colors.errorLight, color: theme.colors.error,
-                fontSize: 14, border: `1px solid ${theme.colors.error}`,
-              }}>
-                Submission error. Please try again.
+              <div style={{ marginTop: 16 }}>
+                <div style={{
+                  padding: '14px 16px', borderRadius: theme.radius.md, marginBottom: 12,
+                  background: '#FFF8EE', color: '#B86A00',
+                  fontSize: 15, fontWeight: 600,
+                  border: '1px solid #E8961A',
+                }}>
+                  {feedback.errorMessage || 'Could not evaluate your answer. Please try a different format.'}
+                </div>
+
+                {feedback.correctAnswer != null && (
+                  <div style={{
+                    padding: '12px 16px', borderRadius: theme.radius.md, marginBottom: 12,
+                    background: theme.colors.surfaceAlt, border: `1px solid ${theme.colors.border}`,
+                    fontSize: 14, color: theme.colors.text,
+                  }}>
+                    <div style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 4 }}>Correct answer:</div>
+                    <div style={{ fontWeight: 600, color: theme.colors.success }}>
+                      <MathDisplay content={feedback.correctAnswer} />
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+                  <button
+                    onClick={advance}
+                    style={{
+                      padding: '11px 28px',
+                      background: theme.colors.primary,
+                      color: '#fff', border: 'none', borderRadius: theme.radius.md,
+                      cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
+                    }}
+                  >
+                    Next Problem →
+                  </button>
+                  <button onClick={endSession} style={{
+                    padding: '11px 20px', background: 'transparent',
+                    border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                    cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.fonts.sans,
+                  }}>
+                    Finish session
+                  </button>
+                </div>
               </div>
             )}
 
