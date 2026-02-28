@@ -12,6 +12,8 @@ export default function PlacementQuestion() {
   const [question, setQuestion] = useState(null)      // { problem_id, node_id, problem_text, topic }
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState(null)      // { is_correct, correct_answer }
+  const [nextQuestion, setNextQuestion] = useState(null) // stored next question, advance on button click
+  const [isComplete, setIsComplete] = useState(false)   // placement test finished
   const [errorMessage, setErrorMessage] = useState(null) // structured error from answer checker
   const [errorNextQuestion, setErrorNextQuestion] = useState(null) // next_question when error occurred
   const [progress, setProgress] = useState({ questions_answered: 0, estimated_remaining: 15 })
@@ -64,21 +66,25 @@ export default function PlacementQuestion() {
 
       setFeedback({ is_correct: data.is_correct, correct_answer: data.correct_answer })
       setProgress(data.progress)
-
-      if (data.is_complete) {
-        setTimeout(() => navigate('/placement/results'), 1800)
-      } else {
-        setTimeout(() => {
-          setQuestion(data.next_question)
-          setAnswer('')
-          setFeedback(null)
-          setSubmitting(false)
-        }, 1200)
-        return
-      }
+      setNextQuestion(data.next_question || null)
+      setIsComplete(!!data.is_complete)
+      setSubmitting(false)
     } catch (err) {
       setError(err.response?.data?.detail || 'Submission failed')
+      setSubmitting(false)
     }
+  }
+
+  const handleAdvance = () => {
+    if (isComplete) {
+      navigate('/placement/results')
+      return
+    }
+    setQuestion(nextQuestion)
+    setAnswer('')
+    setFeedback(null)
+    setNextQuestion(null)
+    setIsComplete(false)
     setSubmitting(false)
   }
 
@@ -159,9 +165,23 @@ export default function PlacementQuestion() {
                 fontSize: '15px',
                 fontWeight: 600,
                 color: feedback.is_correct ? theme.colors.primary : theme.colors.danger,
+                display: 'block',
+                marginBottom: '12px',
               }}>
-                {feedback.is_correct ? '✓ Correct!' : <><span>✗ Incorrect — Answer: </span><MathDisplay content={feedback.correct_answer} /></>}
+                {feedback.is_correct ? '✓ Correct' : '✗ Incorrect'}
               </span>
+              <button
+                onClick={handleAdvance}
+                style={{
+                  ...styles.submitBtn,
+                  background: theme.colors.primary,
+                  width: 'auto',
+                  padding: '10px 24px',
+                  cursor: 'pointer',
+                }}
+              >
+                {isComplete ? 'See Results →' : 'Next Question →'}
+              </button>
             </div>
           )}
 
