@@ -93,6 +93,13 @@ TEST_CASES = [
 
     (r'Expr (frac/var): student="\frac{x}{2}", correct="x/2"',
      r'\frac{x}{2}', 'x/2', True),
+
+    # ── Plain-text sqrt / log ─────────────────────────────────────────────────
+    ('Sqrt: student="sqrt(4)", correct="2"',
+     'sqrt(4)', '2', True),
+
+    ('Log2: student="log2(8)", correct="3"',
+     'log2(8)', '3', True),
 ]
 
 

@@ -80,6 +80,11 @@ def latex_to_sympy_str(latex: str) -> str:
     s = re.sub(r'\\sqrt\[([^\]]+)\]\{([^}]+)\}', r'((\2)**(1/(\1)))', s)
     s = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', s)
 
+    # Plain-text log base: log2(x), log10(x), log_2(x), log_10(x)
+    # e.g. log2(8) → log(8, 2), log_2(8) → log(8, 2)
+    s = re.sub(r'\blog_?([0-9]+)\s*\(([^)]+)\)', r'log(\2, \1)', s)
+    s = re.sub(r'\blog_?([0-9]+)\s+([a-zA-Z0-9]+)', r'log(\2, \1)', s)
+
     # \log_{b}(x) → log(x, b); various forms
     # IMPORTANT: these must run BEFORE the general subscript-removal step so
     # that the base (e.g. the "2" in \log_{2}) is not stripped prematurely.
@@ -486,6 +491,14 @@ def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerTy
                 return True
         except Exception as e:
             logger.debug(f"  simplify failed: {e}")
+
+        # .equals() comparison
+        try:
+            if s_expr.equals(c_expr):
+                logger.info("  symbolic .equals(): match")
+                return True
+        except Exception as e:
+            logger.debug(f"  .equals() failed: {e}")
 
         # Numeric evaluation backup
         try:
