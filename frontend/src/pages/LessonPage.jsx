@@ -16,6 +16,7 @@ export default function LessonPage() {
   const [lessonData, setLessonData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [videoFailed, setVideoFailed] = useState(false);
 
   useEffect(() => {
     api.get(`/lessons/${nodeId}`)
@@ -58,6 +59,9 @@ export default function LessonPage() {
     ? videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
     : null;
 
+  const searchQuery = encodeURIComponent(`how to ${title.toLowerCase()} algebra`);
+  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
   return (
     <>
       <NavBar />
@@ -80,8 +84,8 @@ export default function LessonPage() {
           <MasteryMeter mastery={mastery} size={80} />
         </div>
 
-        {/* YouTube embed */}
-        {embedUrl && (
+        {/* YouTube embed or fallback */}
+        {embedUrl && !videoFailed ? (
           <div style={{ marginBottom: 32, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.md }}>
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
               <iframe
@@ -89,9 +93,33 @@ export default function LessonPage() {
                 title={title}
                 frameBorder="0"
                 allowFullScreen
+                onError={() => setVideoFailed(true)}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
               />
             </div>
+          </div>
+        ) : (
+          <div style={{
+            marginBottom: 32, borderRadius: theme.radius.lg, boxShadow: theme.shadow.sm,
+            background: theme.colors.surfaceAlt, border: `1px solid ${theme.colors.border}`,
+            padding: '40px 32px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>▶</div>
+            <p style={{ margin: '0 0 16px', color: theme.colors.textSecondary, fontSize: 15 }}>
+              No video available for this topic yet.
+            </p>
+            <a
+              href={youtubeSearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block', padding: '10px 20px',
+                background: '#FF0000', color: '#fff', borderRadius: theme.radius.md,
+                textDecoration: 'none', fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
+              }}
+            >
+              Search YouTube →
+            </a>
           </div>
         )}
 
