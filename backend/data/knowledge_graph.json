@@ -1,12 +1,87 @@
 {
   "metadata": {
     "domain_name": "Algebra for Statistics — UC Berkeley STAT 20",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "created_at": "2026-02-25T00:00:00Z",
     "provenance": {
       "methodology": "Expert-defined prerequisite structure for UC Berkeley statistics prerequisite algebra skills"
     }
   },
+  "subjects": [
+    {
+      "id": "algebra",
+      "name": "Algebra",
+      "description": "Foundation algebra skills for UC Berkeley STAT 20",
+      "hasContent": true,
+      "prerequisites": [],
+      "topics": [
+        {
+          "id": "fraction-arithmetic",
+          "name": "Fraction Arithmetic",
+          "nodeIds": ["frac-simplify", "frac-add-like", "frac-common-denom", "frac-add-unlike", "frac-multiply", "frac-divide"],
+          "display_x": 20, "display_y": 20
+        },
+        {
+          "id": "order-of-operations",
+          "name": "Order of Operations",
+          "nodeIds": ["order-pemdas", "order-nested"],
+          "display_x": 200, "display_y": 20
+        },
+        {
+          "id": "exponent-rules",
+          "name": "Exponent Rules",
+          "nodeIds": ["exp-product", "exp-power", "exp-negative", "exp-combined"],
+          "display_x": 380, "display_y": 20
+        },
+        {
+          "id": "solving-equations",
+          "name": "Solving Equations",
+          "nodeIds": ["eq-one-step", "eq-two-step", "eq-fractions", "eq-distribution", "eq-quadratic"],
+          "display_x": 110, "display_y": 180
+        },
+        {
+          "id": "logarithms",
+          "name": "Logarithms",
+          "nodeIds": ["log-exponential", "log-definition", "log-rules", "log-equations"],
+          "display_x": 380, "display_y": 180
+        },
+        {
+          "id": "summation-notation",
+          "name": "Summation Notation",
+          "nodeIds": ["sum-sigma", "sum-arithmetic", "sum-nested"],
+          "display_x": 20, "display_y": 340
+        },
+        {
+          "id": "combinatorics",
+          "name": "Combinatorics",
+          "nodeIds": ["comb-counting", "comb-permutations", "comb-combinations"],
+          "display_x": 200, "display_y": 340
+        },
+        {
+          "id": "geometric-series",
+          "name": "Geometric Series",
+          "nodeIds": ["geo-sequences", "geo-finite", "geo-infinite"],
+          "display_x": 380, "display_y": 340
+        }
+      ]
+    },
+    {
+      "id": "calculus-1",
+      "name": "Calculus I",
+      "description": "Limits, derivatives, and integrals",
+      "hasContent": false,
+      "prerequisites": ["algebra"],
+      "topics": []
+    },
+    {
+      "id": "probability",
+      "name": "Probability",
+      "description": "Probability theory and distributions",
+      "hasContent": false,
+      "prerequisites": ["algebra"],
+      "topics": []
+    }
+  ],
   "items": [
     {
       "id": "frac-simplify",
