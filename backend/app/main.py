@@ -1,7 +1,14 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import auth, dashboard, placement, lessons, practice, review, settings as settings_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s %(name)s: %(message)s",
+)
+logging.getLogger("app.services.answer_checker").setLevel(logging.INFO)
 
 app = FastAPI(title="Fisher App API", version="3.0.0")
 
