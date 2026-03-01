@@ -169,7 +169,8 @@ export default function PracticePage() {
 
   const advance = () => {
     if (sessionDone) {
-      navigate(`/score/${nodeId}`, { state: { mastery, questionsAnswered, correct: correctAnswers } });
+      // Call /complete so mastery is recorded, review is scheduled, and fringes update
+      endSession();
       return;
     }
     if (nextProblemData) {
