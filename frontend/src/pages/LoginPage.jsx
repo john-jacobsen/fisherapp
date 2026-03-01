@@ -18,7 +18,8 @@ export default function LoginPage() {
       await login(form.email, form.password)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed')
+      setError(err.response?.data?.detail || 'Incorrect email or password. Please try again.')
+      setForm(f => ({ ...f, password: '' }))
     } finally {
       setLoading(false)
     }
