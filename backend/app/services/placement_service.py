@@ -12,6 +12,7 @@ import traceback
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.services.problem_generator import generate_problem
 from app.kst.kst_engine import (
@@ -184,7 +185,6 @@ def submit_answer(
         correct_answer_str = ephemeral["correct_answer"]
         answer_type_str = ephemeral["answer_type"]
         problem_node_id = ephemeral["node_id"]
-        problem_db_id = None
     else:
         try:
             problem_uuid = uuid.UUID(problem_id)
@@ -196,7 +196,6 @@ def submit_answer(
         correct_answer_str = problem.correct_answer
         answer_type_str = problem.answer_type
         problem_node_id = str(problem.node_id)
-        problem_db_id = problem.id
 
     # Check answer
     try:
@@ -234,7 +233,9 @@ def submit_answer(
                     "topic": next_node.topic if next_node else "",
                 }
             else:
-                next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
+                logger.debug(f"No generator for {next_item_id}, falling back to DB problem")
+                db_asked = [pid for pid in asked_problems if pid not in ephemeral_answers]
+                next_problem = _get_problem_for_node(db, next_item_id, db_asked)
                 if next_problem:
                     next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
                     next_question = {
@@ -251,6 +252,7 @@ def submit_answer(
 
         # Persist session state (no BLIM update, no count increment)
         session.state_snapshot = state
+        flag_modified(session, 'state_snapshot')
         db.commit()
 
         return {
@@ -309,7 +311,9 @@ def submit_answer(
                     "topic": next_node.topic if next_node else "",
                 }
             else:
-                next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
+                logger.debug(f"No generator for {next_item_id}, falling back to DB problem")
+                db_asked = [pid for pid in asked_problems if pid not in ephemeral_answers]
+                next_problem = _get_problem_for_node(db, next_item_id, db_asked)
                 if next_problem:
                     next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
                     next_question = {
@@ -342,6 +346,7 @@ def submit_answer(
     else:
         session.state_snapshot = state
 
+    flag_modified(session, 'state_snapshot')
     db.commit()
 
     return {
