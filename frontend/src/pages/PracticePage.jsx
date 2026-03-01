@@ -62,14 +62,23 @@ export default function PracticePage() {
 
   const fetchHints = async () => {
     if (!problem || loadingHints) return;
+    // If hints were returned inline with the problem, use them directly
+    if (problem.hints && problem.hints.length > 0) {
+      setHints(problem.hints.map(h => ({ text: h.text })));
+      return;
+    }
     setLoadingHints(true);
     const timeoutId = setTimeout(() => setLoadingHints(false), 5000);
     try {
-      const r1 = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: 1 } });
+      const params1 = { level: 1 };
+      if (sessionId) params1.session_id = sessionId;
+      const r1 = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: params1 });
       const maxLevel = r1.data.max_level || 1;
       const allHints = [{ text: r1.data.hint_text }];
       for (let l = 2; l <= maxLevel; l++) {
-        const rl = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: { level: l } });
+        const paramsL = { level: l };
+        if (sessionId) paramsL.session_id = sessionId;
+        const rl = await api.get(`/practice/${nodeId}/hints/${problem.id}`, { params: paramsL });
         allHints.push({ text: rl.data.hint_text });
       }
       setHints(allHints);
@@ -82,7 +91,13 @@ export default function PracticePage() {
   };
 
   useEffect(() => {
-    setHints([]);
+    // If the new problem already has inline hints, pre-populate them;
+    // otherwise clear so they can be fetched on demand.
+    if (problem?.hints && problem.hints.length > 0) {
+      setHints(problem.hints.map(h => ({ text: h.text })));
+    } else {
+      setHints([]);
+    }
   }, [problem?.id]);
 
   const submit = async () => {

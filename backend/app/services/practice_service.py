@@ -137,11 +137,13 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
         ephemeral_problems[ephemeral_id] = {
             "correct_answer": generated["correct_answer"],
             "answer_type": generated["answer_type"],
+            "hints": generated.get("hints", []),
         }
         first_problem = {
             "id": ephemeral_id,
             "problem_text": generated["problem_text"],
             "answer_type": generated["answer_type"],
+            "hints": generated.get("hints", []),
         }
     else:
         # Fall back to DB
@@ -254,11 +256,13 @@ def submit_practice_answer(
             ephemeral_problems[next_ephemeral_id] = {
                 "correct_answer": generated["correct_answer"],
                 "answer_type": generated["answer_type"],
+                "hints": generated.get("hints", []),
             }
             next_problem = {
                 "id": next_ephemeral_id,
                 "problem_text": generated["problem_text"],
                 "answer_type": generated["answer_type"],
+                "hints": generated.get("hints", []),
             }
         else:
             np = _get_problem(node_id, seen_problems, db)
@@ -329,11 +333,13 @@ def submit_practice_answer(
             ephemeral_problems[next_ephemeral_id] = {
                 "correct_answer": generated["correct_answer"],
                 "answer_type": generated["answer_type"],
+                "hints": generated.get("hints", []),
             }
             next_problem = {
                 "id": next_ephemeral_id,
                 "problem_text": generated["problem_text"],
                 "answer_type": generated["answer_type"],
+                "hints": generated.get("hints", []),
             }
         else:
             # Fall back to DB
@@ -379,23 +385,44 @@ def submit_practice_answer(
     }
 
 
-def get_hint(node_id: str, problem_id: str, level: int, db: DBSession) -> dict:
-    """Return hint at the requested level for a problem."""
-    hint = db.query(Hint).filter(
-        Hint.problem_id == problem_id,
-        Hint.level == level,
-    ).first()
+def get_hint(node_id: str, problem_id: str, level: int, db: DBSession, session_id: str = None) -> dict:
+    """Return hint at the requested level for a problem.
 
-    if not hint:
-        raise ValueError(f"No hint at level {level} for this problem")
+    Checks the session's ephemeral hints cache first (for on-the-fly generated problems),
+    then falls back to the DB. Returns a generic fallback if no hint is found anywhere.
+    """
+    # Check ephemeral hints from session state first
+    if session_id:
+        try:
+            session = db.query(Session).filter(
+                Session.id == session_id,
+                Session.is_active == True,
+            ).first()
+            if session:
+                ephemeral = session.state_snapshot.get("ephemeral_problems", {}).get(problem_id, {})
+                hints = ephemeral.get("hints", [])
+                if hints:
+                    hint = next((h for h in hints if h["level"] == level), None)
+                    if hint:
+                        return {"hint_text": hint["text"], "level": level, "max_level": len(hints)}
+        except Exception:
+            pass  # Fall through to DB lookup
 
-    max_level = db.query(Hint).filter(Hint.problem_id == problem_id).count()
+    # Fall back to DB
+    try:
+        problem_uuid = uuid.UUID(problem_id)
+        hint = db.query(Hint).filter(
+            Hint.problem_id == problem_uuid,
+            Hint.level == level,
+        ).first()
+        if hint:
+            max_level = db.query(Hint).filter(Hint.problem_id == problem_uuid).count()
+            return {"hint_text": hint.hint_text, "level": level, "max_level": max_level}
+    except Exception:
+        pass
 
-    return {
-        "hint_text": hint.hint_text,
-        "level": level,
-        "max_level": max_level,
-    }
+    # Generic fallback — never raise 404 for hints
+    return {"hint_text": "Try breaking the problem into smaller steps.", "level": level, "max_level": 1}
 
 
 def complete_practice(
