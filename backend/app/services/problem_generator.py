@@ -29,6 +29,7 @@ def _gen_frac_simplify():
     while a == b:
         b = random.randint(2, 10) * factor
     f = Fraction(a, b)
+    actual_gcf = gcd(a, b)
     return {
         "problem_text": f"Simplify: \\(\\frac{{{a}}}{{{b}}}\\)",
         "correct_answer": f"{f.numerator}/{f.denominator}",
@@ -37,7 +38,7 @@ def _gen_frac_simplify():
         "hints": [
             {"level": 1, "text": "To simplify a fraction, find a number that divides both the numerator and denominator evenly."},
             {"level": 2, "text": f"Find the greatest common factor (GCF) of {a} and {b}."},
-            {"level": 3, "text": f"The GCF of {a} and {b} is {factor}. Divide both by {factor}: \\(\\frac{{{a} \\div {factor}}}{{{b} \\div {factor}}} = \\frac{{{f.numerator}}}{{{f.denominator}}}\\)"},
+            {"level": 3, "text": f"The GCF of {a} and {b} is {actual_gcf}. Divide both by {actual_gcf}: \\(\\frac{{{a} \\div {actual_gcf}}}{{{b} \\div {actual_gcf}}} = \\frac{{{f.numerator}}}{{{f.denominator}}}\\)"},
         ],
     }
 
@@ -68,6 +69,8 @@ def _gen_frac_common_denom():
     pairs = [(2, 3), (3, 4), (4, 6), (2, 5), (3, 5), (4, 5), (6, 9), (2, 7), (3, 8)]
     a, b = random.choice(pairs)
     lcd = a * b // gcd(a, b)
+    a_mults = list(range(a, lcd + 1, a))
+    b_mults = list(range(b, lcd + 1, b))
     return {
         "problem_text": f"Find the LCD of \\(\\frac{{1}}{{{a}}}\\) and \\(\\frac{{1}}{{{b}}}\\).",
         "correct_answer": str(lcd),
@@ -76,7 +79,11 @@ def _gen_frac_common_denom():
         "hints": [
             {"level": 1, "text": "The LCD is the smallest number that is a multiple of both denominators."},
             {"level": 2, "text": f"Find the LCM of {a} and {b}. Think about what multiples they share."},
-            {"level": 3, "text": f"Multiples of {a}: {a}, {2*a}, {3*a}... Multiples of {b}: {b}, {2*b}... The LCD is {lcd}."},
+            {"level": 3, "text": (
+                f"Multiples of {a}: {', '.join(map(str, a_mults))}. "
+                f"Multiples of {b}: {', '.join(map(str, b_mults))}. "
+                f"The LCD is {lcd}."
+            )},
         ],
     }
 
@@ -92,6 +99,9 @@ def _gen_frac_add_unlike():
         op = '+' if op == '-' else '-'
         result = abs(result)
         a, b = b, a
+    lcd = a.denominator * b.denominator // gcd(a.denominator, b.denominator)
+    a_new_num = a.numerator * (lcd // a.denominator)
+    b_new_num = b.numerator * (lcd // b.denominator)
     return {
         "problem_text": f"Calculate: \\(\\frac{{{a.numerator}}}{{{a.denominator}}} {op} \\frac{{{b.numerator}}}{{{b.denominator}}}\\)",
         "correct_answer": f"{result.numerator}/{result.denominator}",
@@ -100,7 +110,11 @@ def _gen_frac_add_unlike():
         "hints": [
             {"level": 1, "text": "To add fractions with different denominators, first find a common denominator."},
             {"level": 2, "text": f"Find the LCD of {a.denominator} and {b.denominator}. Then rewrite both fractions with that denominator."},
-            {"level": 3, "text": f"Convert to the LCD and {'add' if op == '+' else 'subtract'}: the answer is \\(\\frac{{{result.numerator}}}{{{result.denominator}}}\\)"},
+            {"level": 3, "text": (
+                f"LCD({a.denominator}, {b.denominator}) = {lcd}. "
+                f"Rewrite: \\(\\frac{{{a_new_num}}}{{{lcd}}} {op} \\frac{{{b_new_num}}}{{{lcd}}} "
+                f"= \\frac{{{result.numerator}}}{{{result.denominator}}}\\)"
+            )},
         ],
     }
 
@@ -387,7 +401,7 @@ def _gen_log_definition():
 
 
 def _gen_log_rules():
-    combos = [(2, 4, 8, 5), (3, 9, 27, 5), (2, 8, 4, 5), (2, 4, 16, 6)]
+    combos = [(2, 4, 8, 5), (3, 9, 27, 5), (2, 4, 4, 4), (2, 4, 16, 6)]
     base, a, b, result = random.choice(combos)
     return {
         "problem_text": f"Simplify: \\(\\log_{{{base}}}({a}) + \\log_{{{base}}}({b})\\)",

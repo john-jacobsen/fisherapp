@@ -60,10 +60,7 @@ def get_hint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return practice_service.get_hint(node_id, problem_id, level, db, session_id=session_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    return practice_service.get_hint(node_id, problem_id, level, db, session_id=session_id)
 
 
 @router.post("/{node_id}/complete")
