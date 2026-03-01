@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { useAI } from '../contexts/AIContext';
 import { theme } from '../theme';
 
 function Section({ title, children }) {
@@ -39,6 +40,7 @@ const inputStyle = {
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { aiConfig, clearConfig } = useAI();
 
   // Profile
   const [name, setName] = useState('');
@@ -177,6 +179,57 @@ export default function SettingsPage() {
             Update Password
           </Btn>
           <Msg msg={passwordMsg} />
+        </Section>
+
+        {/* AI Hints */}
+        <Section title="AI Hints">
+          {aiConfig ? (
+            <div>
+              <div style={{ padding: '12px 14px', background: theme.colors.successLight, borderRadius: theme.radius.md, marginBottom: 16, border: `1px solid ${theme.colors.success}`, fontSize: 13, color: theme.colors.success }}>
+                ✓ AI hints enabled — {aiConfig.provider} ({aiConfig.model})
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link
+                  to="/ai-setup"
+                  style={{
+                    padding: '10px 20px', background: theme.colors.surfaceAlt,
+                    border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                    cursor: 'pointer', fontSize: 14, fontFamily: theme.fonts.sans,
+                    color: theme.colors.text, textDecoration: 'none', display: 'inline-block',
+                  }}
+                >
+                  Change AI Settings
+                </Link>
+                <button
+                  onClick={() => clearConfig()}
+                  style={{
+                    padding: '10px 20px', background: theme.colors.errorLight,
+                    border: `1px solid ${theme.colors.error}`, borderRadius: theme.radius.md,
+                    cursor: 'pointer', fontSize: 14, fontFamily: theme.fonts.sans, color: theme.colors.error,
+                  }}
+                >
+                  Remove Key
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ margin: '0 0 14px', fontSize: 14, color: theme.colors.textSecondary, lineHeight: 1.6 }}>
+                Add an AI API key to get personalized hints when you're stuck. Your key is stored only in your browser — never sent to our servers.
+              </p>
+              <Link
+                to="/ai-setup"
+                style={{
+                  display: 'inline-block', padding: '10px 22px',
+                  background: theme.colors.primary, color: '#fff',
+                  borderRadius: theme.radius.md, textDecoration: 'none',
+                  fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
+                }}
+              >
+                Set Up AI Hints →
+              </Link>
+            </div>
+          )}
         </Section>
 
         {/* Danger zone */}
