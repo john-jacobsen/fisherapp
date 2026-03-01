@@ -13,6 +13,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
 
+from app.services.problem_generator import generate_problem
 from app.kst.kst_engine import (
     get_active_graph,
     get_or_build_cache,
@@ -71,6 +72,7 @@ def start_placement(user_id: str, db: DBSession) -> dict:
         "distribution": distribution,
         "asked_items": [],
         "asked_problems": [],
+        "ephemeral_answers": {},
         "initial_entropy": initial_entropy,
         "questions_answered": 0,
         "correct_count": 0,
@@ -91,20 +93,39 @@ def start_placement(user_id: str, db: DBSession) -> dict:
     if not item_id:
         raise ValueError("Could not select first assessment item")
 
-    # Get a problem for that item
-    problem = _get_problem_for_node(db, item_id, [])
-    if not problem:
-        # Try another item
-        cache = get_or_build_cache(db, graph_id)
-        for alt_item in cache["items"]:
-            if alt_item != item_id:
-                problem = _get_problem_for_node(db, alt_item, [])
-                if problem:
-                    item_id = alt_item
-                    break
+    # Try on-the-fly generation first; fall back to DB
+    ephemeral_answers = {}
+    generated = generate_problem(item_id)
+    if generated:
+        ephemeral_id = str(uuid.uuid4())
+        ephemeral_answers[ephemeral_id] = {
+            "correct_answer": generated["correct_answer"],
+            "answer_type": generated["answer_type"],
+            "node_id": item_id,
+        }
+        first_problem_id = ephemeral_id
+        first_problem_text = generated["problem_text"]
+    else:
+        problem = _get_problem_for_node(db, item_id, [])
+        if not problem:
+            # Try another item
+            cache = get_or_build_cache(db, graph_id)
+            for alt_item in cache["items"]:
+                if alt_item != item_id:
+                    problem = _get_problem_for_node(db, alt_item, [])
+                    if problem:
+                        item_id = alt_item
+                        break
 
-    if not problem:
-        raise ValueError("No problems found. Run seed_problems.py first.")
+        if not problem:
+            raise ValueError("No problems found. Run seed_problems.py first.")
+
+        first_problem_id = str(problem.id)
+        first_problem_text = problem.problem_text
+
+    # Persist ephemeral_answers into the session state
+    session_state["ephemeral_answers"] = ephemeral_answers
+    session.state_snapshot = session_state
 
     # Get topic
     node = db.query(KnowledgeNode).filter(KnowledgeNode.id == item_id).first()
@@ -114,9 +135,9 @@ def start_placement(user_id: str, db: DBSession) -> dict:
     return {
         "session_id": str(session.id),
         "first_question": {
-            "problem_id": str(problem.id),
+            "problem_id": first_problem_id,
             "node_id": item_id,
-            "problem_text": problem.problem_text,
+            "problem_text": first_problem_text,
             "topic": node.topic if node else "",
         },
     }
@@ -147,28 +168,45 @@ def submit_answer(
     if not session:
         raise ValueError("Session not found or already completed")
 
-    problem = db.query(Problem).filter(Problem.id == problem_id).first()
-    if not problem:
-        raise ValueError("Problem not found")
-
     state = session.state_snapshot.copy()
     distribution = state["distribution"]
     asked_items = state["asked_items"]
     asked_problems = state["asked_problems"]
+    ephemeral_answers = state.get("ephemeral_answers", {})
     initial_entropy = state["initial_entropy"]
     questions_answered = state["questions_answered"]
     correct_count = state["correct_count"]
     graph_id = state["graph_id"]
 
+    # Resolve correct answer — check ephemeral cache first, then DB
+    ephemeral = ephemeral_answers.get(problem_id)
+    if ephemeral:
+        correct_answer_str = ephemeral["correct_answer"]
+        answer_type_str = ephemeral["answer_type"]
+        problem_node_id = ephemeral["node_id"]
+        problem_db_id = None
+    else:
+        try:
+            problem_uuid = uuid.UUID(problem_id)
+        except ValueError:
+            raise ValueError("Invalid problem ID")
+        problem = db.query(Problem).filter(Problem.id == problem_uuid).first()
+        if not problem:
+            raise ValueError("Problem not found")
+        correct_answer_str = problem.correct_answer
+        answer_type_str = problem.answer_type
+        problem_node_id = str(problem.node_id)
+        problem_db_id = problem.id
+
     # Check answer
     try:
-        is_correct = check_answer(answer, problem.correct_answer, problem.answer_type)
+        is_correct = check_answer(answer, correct_answer_str, answer_type_str)
         answer_check_error = False
     except Exception:
         logger.error(
             "check_answer raised an exception for placement session=%s problem=%s "
             "student_answer=%r correct_answer=%r answer_type=%r\n%s",
-            session_id, problem_id, answer, problem.correct_answer, problem.answer_type,
+            session_id, problem_id, answer, correct_answer_str, answer_type_str,
             traceback.format_exc(),
         )
         is_correct = False
@@ -180,19 +218,36 @@ def submit_answer(
         next_question = None
         next_item_id = select_next_assessment_item(db, graph_id, distribution, asked_items)
         if next_item_id:
-            next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
-            if next_problem:
-                node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
-                next_question = {
-                    "problem_id": str(next_problem.id),
+            next_generated = generate_problem(next_item_id)
+            if next_generated:
+                next_ephemeral_id = str(uuid.uuid4())
+                ephemeral_answers[next_ephemeral_id] = {
+                    "correct_answer": next_generated["correct_answer"],
+                    "answer_type": next_generated["answer_type"],
                     "node_id": next_item_id,
-                    "problem_text": next_problem.problem_text,
-                    "topic": node.topic if node else "",
                 }
+                next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
+                next_question = {
+                    "problem_id": next_ephemeral_id,
+                    "node_id": next_item_id,
+                    "problem_text": next_generated["problem_text"],
+                    "topic": next_node.topic if next_node else "",
+                }
+            else:
+                next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
+                if next_problem:
+                    next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
+                    next_question = {
+                        "problem_id": str(next_problem.id),
+                        "node_id": next_item_id,
+                        "problem_text": next_problem.problem_text,
+                        "topic": next_node.topic if next_node else "",
+                    }
 
         # Track the failing problem so it won't be shown again
         # (Do not modify asked_items — that would corrupt BLIM integrity)
-        state["asked_problems"] = asked_problems + [str(problem.id)]
+        state["asked_problems"] = asked_problems + [problem_id]
+        state["ephemeral_answers"] = ephemeral_answers
 
         # Persist session state (no BLIM update, no count increment)
         session.state_snapshot = state
@@ -202,7 +257,7 @@ def submit_answer(
             "is_correct": False,
             "error": True,
             "message": "Could not evaluate your answer. Please try a different format.",
-            "correct_answer": problem.correct_answer,
+            "correct_answer": correct_answer_str,
             "next_question": next_question,
             "progress": {
                 "questions_answered": questions_answered,
@@ -216,12 +271,12 @@ def submit_answer(
 
     # BLIM update
     distribution = run_blim_update(
-        db, graph_id, distribution, problem.node_id, is_correct
+        db, graph_id, distribution, problem_node_id, is_correct
     )
 
     # Track progress
-    asked_items.append(problem.node_id)
-    asked_problems.append(str(problem.id))
+    asked_items.append(problem_node_id)
+    asked_problems.append(problem_id)
     questions_answered += 1
 
     # Check termination conditions
@@ -238,18 +293,34 @@ def submit_answer(
         # Select next item
         next_item_id = select_next_assessment_item(db, graph_id, distribution, asked_items)
         if next_item_id:
-            next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
-            if next_problem:
-                node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
-                next_question = {
-                    "problem_id": str(next_problem.id),
+            next_generated = generate_problem(next_item_id)
+            if next_generated:
+                next_ephemeral_id = str(uuid.uuid4())
+                ephemeral_answers[next_ephemeral_id] = {
+                    "correct_answer": next_generated["correct_answer"],
+                    "answer_type": next_generated["answer_type"],
                     "node_id": next_item_id,
-                    "problem_text": next_problem.problem_text,
-                    "topic": node.topic if node else "",
+                }
+                next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
+                next_question = {
+                    "problem_id": next_ephemeral_id,
+                    "node_id": next_item_id,
+                    "problem_text": next_generated["problem_text"],
+                    "topic": next_node.topic if next_node else "",
                 }
             else:
-                # No problem for next item, try to complete
-                is_complete = True
+                next_problem = _get_problem_for_node(db, next_item_id, asked_problems)
+                if next_problem:
+                    next_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == next_item_id).first()
+                    next_question = {
+                        "problem_id": str(next_problem.id),
+                        "node_id": next_item_id,
+                        "problem_text": next_problem.problem_text,
+                        "topic": next_node.topic if next_node else "",
+                    }
+                else:
+                    # No problem for next item, try to complete
+                    is_complete = True
         else:
             is_complete = True
 
@@ -258,6 +329,7 @@ def submit_answer(
         "distribution": distribution,
         "asked_items": asked_items,
         "asked_problems": asked_problems,
+        "ephemeral_answers": ephemeral_answers,
         "questions_answered": questions_answered,
         "correct_count": correct_count,
     })
@@ -274,7 +346,7 @@ def submit_answer(
 
     return {
         "is_correct": is_correct,
-        "correct_answer": problem.correct_answer,
+        "correct_answer": correct_answer_str,
         "next_question": next_question,
         "progress": {
             "questions_answered": questions_answered,
