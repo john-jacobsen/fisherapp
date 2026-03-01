@@ -556,6 +556,99 @@ def _gen_geo_finite():
     }
 
 
+# ─── Missing nodes: eq-quadratic, log-equations, geo-infinite ─────────────────
+
+def _format_factor(r: int) -> str:
+    """Return '(x - r)' or '(x + |r|)' for a root r."""
+    if r > 0:
+        return f"(x - {r})"
+    elif r < 0:
+        return f"(x + {abs(r)})"
+    return "x"
+
+
+def _gen_eq_quadratic():
+    # Predefined root pairs that produce clean integer-coefficient problems
+    pool = [(1, 2), (1, 3), (1, 4), (2, 3), (2, 5), (3, 4), (3, 5),
+            (-1, 2), (-1, 3), (-2, 3), (-1, 4), (-2, 5), (-3, 4), (-1, 5)]
+    r1, r2 = random.choice(pool)
+    b = -(r1 + r2)   # coefficient of x in x^2 + bx + c
+    c = r1 * r2       # constant term
+
+    # Build LaTeX equation string
+    parts = ["x^2"]
+    if b > 0:
+        parts.append(f"+ {b}x")
+    elif b < 0:
+        parts.append(f"- {abs(b)}x")
+    if c > 0:
+        parts.append(f"+ {c}")
+    elif c < 0:
+        parts.append(f"- {abs(c)}")
+    eq_str = " ".join(parts)
+
+    roots = sorted([r1, r2])
+    answer = f"{roots[0]}, {roots[1]}"
+
+    return {
+        "problem_text": f"Solve: \\({eq_str} = 0\\)",
+        "correct_answer": answer,
+        "answer_type": "expression",
+        "difficulty": 0.7,
+        "hints": [
+            {"level": 1, "text": "Factor the quadratic: find two numbers that multiply to the constant term and add to the coefficient of x."},
+            {"level": 2, "text": f"Find two numbers that multiply to {c} and add to {b}."},
+            {"level": 3, "text": f"The numbers are {r1} and {r2}. Factored: {_format_factor(r1)}{_format_factor(r2)} = 0, so x = {r1} or x = {r2}."},
+        ],
+    }
+
+
+def _gen_log_equations():
+    # Solve log_b(x) = n → x = b^n
+    pairs = [(2, 3, 8), (2, 4, 16), (2, 5, 32), (3, 2, 9), (3, 3, 27),
+             (10, 2, 100), (5, 2, 25), (4, 2, 16), (2, 6, 64)]
+    base, exp, val = random.choice(pairs)
+    return {
+        "problem_text": f"Solve for \\(x\\): \\(\\log_{{{base}}}(x) = {exp}\\)",
+        "correct_answer": str(val),
+        "answer_type": "numeric",
+        "difficulty": 0.6,
+        "hints": [
+            {"level": 1, "text": "To solve log_b(x) = n, rewrite in exponential form: b^n = x."},
+            {"level": 2, "text": f"Rewrite: {base}^{exp} = x."},
+            {"level": 3, "text": f"{base}^{exp} = {val}, so x = {val}"},
+        ],
+    }
+
+
+def _gen_geo_infinite():
+    # Infinite geometric series S = a/(1-r), |r| < 1; all produce integer sums
+    options = [
+        (1, 1, 2, 2),   # a=1, r=1/2, S=2
+        (2, 1, 2, 4),   # a=2, r=1/2, S=4
+        (3, 1, 2, 6),   # a=3, r=1/2, S=6
+        (2, 1, 3, 3),   # a=2, r=1/3, S=3
+        (4, 1, 3, 6),   # a=4, r=1/3, S=6
+        (3, 1, 4, 4),   # a=3, r=1/4, S=4
+        (1, 2, 3, 3),   # a=1, r=2/3, S=3
+        (2, 2, 3, 6),   # a=2, r=2/3, S=6
+    ]
+    a, r_num, r_den, total = random.choice(options)
+    r_str = f"\\frac{{{r_num}}}{{{r_den}}}"
+    denom_diff = r_den - r_num
+    return {
+        "problem_text": f"Find the sum of the infinite geometric series with \\(a={a}\\) and \\(r={r_str}\\).",
+        "correct_answer": str(total),
+        "answer_type": "numeric",
+        "difficulty": 0.7,
+        "hints": [
+            {"level": 1, "text": "An infinite geometric series with |r| < 1 converges to S = a / (1 \u2212 r)."},
+            {"level": 2, "text": f"Apply the formula: S = {a} / (1 \u2212 {r_num}/{r_den})."},
+            {"level": 3, "text": f"1 \u2212 {r_num}/{r_den} = {denom_diff}/{r_den}, so S = {a} \u00f7 ({denom_diff}/{r_den}) = {a}\u00d7{r_den}/{denom_diff} = {total}"},
+        ],
+    }
+
+
 # ─── Node → generator mapping ─────────────────────────────────────────────────
 
 GENERATORS = {
@@ -575,9 +668,11 @@ GENERATORS = {
     "eq-two-step":       _gen_eq_two_step,
     "eq-fractions":      _gen_eq_fractions,
     "eq-distribution":   _gen_eq_distribution,
+    "eq-quadratic":      _gen_eq_quadratic,
     "log-exponential":   _gen_log_exponential,
     "log-definition":    _gen_log_definition,
     "log-rules":         _gen_log_rules,
+    "log-equations":     _gen_log_equations,
     "sum-sigma":         _gen_sum_sigma,
     "sum-arithmetic":    _gen_sum_arithmetic,
     "sum-nested":        _gen_sum_nested,
@@ -586,6 +681,7 @@ GENERATORS = {
     "comb-combinations": _gen_comb_combinations,
     "geo-sequences":     _gen_geo_sequences,
     "geo-finite":        _gen_geo_finite,
+    "geo-infinite":      _gen_geo_infinite,
 }
 
 
