@@ -54,13 +54,11 @@ export default function LessonPage() {
   const videoUrl = lesson?.video_url || null;
   const contentMarkdown = lesson?.content_markdown || '';
 
-  // Convert YouTube watch URL to embed URL
-  const embedUrl = videoUrl
-    ? videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
-    : null;
+  // Extract YouTube video ID — returns null if URL has no valid ID
+  const videoId = extractYouTubeId(videoUrl);
+  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 
-  const searchQuery = encodeURIComponent(`how to ${title.toLowerCase()} algebra`);
-  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} algebra tutorial`)}`;
 
   return (
     <>
@@ -106,7 +104,7 @@ export default function LessonPage() {
           }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>▶</div>
             <p style={{ margin: '0 0 16px', color: theme.colors.textSecondary, fontSize: 15 }}>
-              No video available for this topic yet.
+              No video available for this topic.
             </p>
             <a
               href={youtubeSearchUrl}
@@ -118,7 +116,7 @@ export default function LessonPage() {
                 textDecoration: 'none', fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
               }}
             >
-              Search YouTube →
+              Search YouTube for this topic →
             </a>
           </div>
         )}
@@ -199,6 +197,19 @@ export default function LessonPage() {
       </div>
     </>
   );
+}
+
+// Extract YouTube video ID from watch, youtu.be, or embed URLs.
+// Returns null if the URL is null/empty/placeholder (no valid 11-char ID).
+function extractYouTubeId(url) {
+  if (!url) return null;
+  // youtu.be/VIDEO_ID
+  let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/watch?v=VIDEO_ID or youtube.com/embed/VIDEO_ID
+  m = url.match(/[?&/](?:v=|embed\/)([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  return null;
 }
 
 // Helper: if a child is a string containing LaTeX, wrap it in MathDisplay
