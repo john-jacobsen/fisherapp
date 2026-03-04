@@ -1,0 +1,183 @@
+DIAGNOSTIC-FRACTION-BUG.txt
+Generated: 2026-03-03
+Session: Diagnos.md diagnostic run
+
+==============================================================================
+TASK 1: LOGGING ADDED TO SUBMIT ENDPOINT
+==============================================================================
+
+Files modified:
+  backend/app/routers/practice.py   — added DIAG log lines for raw request + repr(answer)
+  backend/app/services/practice_service.py — added DIAG log lines for repr(correct_answer)
+  backend/app/main.py               — set answer_checker, practice_service, and practice
+                                      router loggers to DEBUG so all comparison steps print
+
+Sample log output (from docker compose logs backend):
+
+  INFO app.routers.practice: DIAG submit | node=frac-simplify | session_id='...' | problem_id='...' | mode='learning'
+  INFO app.routers.practice: DIAG raw student_answer repr: '\\frac{5}{8}'
+  INFO app.services.practice_service: DIAG correct_answer repr: '5/8'
+  INFO app.services.practice_service: DIAG student_answer repr (service): '\\frac{5}{8}'
+  INFO app.services.practice_service: DIAG answer_type: 'symbolic'
+  INFO app.services.answer_checker: check_answer | type='symbolic' | student='\\frac{5}{8}' | correct='5/8'
+  DEBUG app.services.answer_checker:   latex_to_sympy_str('\\frac{5}{8}') → '(5)/(8)'
+  DEBUG app.services.answer_checker:   parsed('(5)/(8)') → 5/8
+  ...
+  INFO app.services.answer_checker:   symbolic simplify: match (diff=0)
+
+The log format uses Python repr() so escape characters and exact bytes are visible.
+
+
+==============================================================================
+TASK 2: CURL SIMULATION RESULTS
+==============================================================================
+
+IMPORTANT — TEST ARTIFACT DISCOVERED:
+  curl -d '{"answer":"\\frac{5}{8}"}' sends JSON with \\frac (two bytes: \\ + f).
+  JSON parser sees \\ → single backslash, so backend gets \frac{5}{8}. CORRECT.
+
+  BUT: curl -d '{"answer":"\frac{5}{8}"}' sends JSON with \f — which is the
+  JSON form-feed escape sequence (U+000C). The backend receives chr(0x0C) + "rac{5}{8}",
+  NOT a backslash. This is INVALID JSON but FastAPI / Python's json module parses
+  \f as form feed per the JSON spec (RFC 8259 §7).
+
+  Several initial curl test attempts used this incorrect encoding and produced
+  misleading "is_correct: false" results. These were TEST ARTIFACTS, not real bugs.
+
+CORRECT SIMULATION (using Python urllib inside Docker, proper json.dumps encoding):
+
+  Problem: Simplify \frac{21}{35}, correct_answer stored as '3/5' (plain text)
+
+  answer='3/5'              (plain text)     → is_correct=True   ✓
+  answer='\frac{3}{5}'      (real backslash) → is_correct=True   ✓
+
+  Problem: Simplify \frac{35}{15}, correct_answer stored as '7/3' (plain text)
+
+  answer='7/3'              (plain text)     → is_correct=True   ✓
+  answer='\frac{7}{3}'      (real backslash) → is_correct=True   ✓
+
+Diagnos.md specified test values — run against answer checker directly (no HTTP):
+
+  student='\frac{5}{6}'  correct='5/6'           → CORRECT  (LaTeX frac vs plain)
+  student='5/6'          correct='\frac{5}{6}'   → CORRECT  (plain vs LaTeX frac)
+  student='\frac{1}{2}'  correct='1/2'            → CORRECT  (LaTeX frac vs plain)
+  student='1/2'          correct='0.5'            → CORRECT  (plain vs decimal)
+  student='\frac{5}{9}'  correct='5/9'            → CORRECT  (LaTeX frac vs plain — would be correct IF the answer matched)
+  student='\frac{5}{6}'  correct='5/6'            → CORRECT
+
+Result: All Diagnos.md test cases PASS. See full 20-case test run below.
+
+
+==============================================================================
+TASK 3: WHAT MATHLIVE ACTUALLY OUTPUTS
+==============================================================================
+
+File: frontend/src/components/MathInput.jsx, line 22:
+
+    const handleInput = () => {
+      if (onChange) onChange(mf.value);   ← THIS IS THE EXACT CODE PATH
+    };
+
+mf.value (MathLive's .value property):
+  - Returns the content of the math field as a LaTeX STRING
+  - Contains ACTUAL backslash characters (U+005C), not escaped sequences
+  - Example: student types a fraction → mf.value = "\frac{3}{5}" (with real \)
+
+Chain from browser to backend:
+  1. Student types fraction in MathLive
+  2. MathLive internal state stores LaTeX with real backslashes
+  3. handleInput fires, calls onChange(mf.value)
+  4. React state `answer` is set to e.g. "\frac{3}{5}" (JS string with real backslash)
+  5. submit() calls:
+       api.post(`/practice/${nodeId}/submit`, { answer: answer.trim(), ... })
+  6. Axios (api client) serializes this with JSON.stringify:
+       {"answer":"\\frac{3}{5}"}   ← backslash doubled to \\ in JSON text
+  7. Backend (FastAPI / Pydantic) parses JSON:
+       req.answer = "\frac{3}{5}"  ← real backslash restored from \\
+  8. check_answer("\frac{3}{5}", "3/5") → True ✓
+
+CONCLUSION: MathLive sends properly encoded LaTeX. The end-to-end path is correct.
+
+
+==============================================================================
+FULL 20-CASE TEST SUITE (all passed)
+==============================================================================
+
+Run inside Docker container (python3 with real backslash via chr(92)):
+
+  [PASS] LaTeX frac vs plain: student='\frac{5}{6}'  correct='5/6'           → True
+  [PASS] plain vs LaTeX frac: student='5/6'           correct='\frac{5}{6}'  → True
+  [PASS] LaTeX frac 1/2:      student='\frac{1}{2}'  correct='1/2'           → True
+  [PASS] plain vs decimal:    student='1/2'           correct='0.5'           → True
+  [PASS] x^{12} vs x^12:     student='x^{12}'        correct='x^12'          → True
+  [PASS] x^12 vs x^{12}:     student='x^12'          correct='x^{12}'        → True
+  [PASS] integer match:       student='20'            correct='20'            → True
+  [PASS] integer mismatch:    student='21'            correct='20'            → False (correct)
+  [PASS] negative integer:    student='-7'            correct='-7'            → True
+  [PASS] log result plain:    student='3'             correct='3'             → True
+  [PASS] log LaTeX vs 3:      student='\log_{2}(8)'  correct='3'             → True
+  [PASS] solution set ordered:student='2, 3'          correct='2, 3'         → True
+  [PASS] solution set reversed:student='3, 2'         correct='2, 3'         → True
+  [PASS] solution set x=:     student='x = 2, 3'     correct='2, 3'         → True
+  [PASS] solution set x=2,x=3:student='x=2, x=3'    correct='2, 3'         → True
+  [PASS] solution set braces: student='{2, 3}'        correct='2, 3'         → True
+  [PASS] partial set wrong:   student='2'             correct='2, 3'         → False (correct)
+  [PASS] wrong set:           student='2, 4'          correct='2, 3'         → False (correct)
+  [PASS] commutative exprs:   student='2x + 3'        correct='3 + 2x'       → True
+  [PASS] LaTeX x/2 vs plain:  student='\frac{x}{2}'  correct='x/2'          → True
+
+  Total: 20 passed, 0 failed
+
+
+==============================================================================
+GENERATOR CORRECT_ANSWER FORMATS (by node)
+==============================================================================
+
+  frac-simplify   → plain fraction: '7/5', '1/2', '3/5'         answer_type: symbolic
+  exp-product     → sympy notation: 'x**5', 'x**8'               answer_type: symbolic
+  sum-sigma       → plain integer:  '6', '15', '28'              answer_type: numeric
+  eq-quadratic    → comma set:      '-1, 5', '1, 3'              answer_type: expression*
+
+  * 'expression' is not one of the three types (symbolic/numeric/multiple_choice).
+    It falls through to the symbolic branch in check_answer — which works correctly
+    because symbolic mode handles comma-separated solution sets. No bug here.
+
+exp-product answer check:
+  student='x^5'    correct='x**5'  → True   ✓ (caret notation works)
+  student='x^{5}'  correct='x**5'  → True   ✓ (curly brace notation works)
+  student='x**5'   correct='x**5'  → True   ✓ (sympy notation works)
+  student='\x^{5}' correct='x**5'  → False  ✗ (backslash before x — unusual, unlikely from MathLive)
+
+
+==============================================================================
+SUMMARY AND REMAINING QUESTIONS
+==============================================================================
+
+STATUS: The answer checker is working correctly. The FIXES-3 Item 1 implementation
+(answer_checker.py) handles all tested formats correctly.
+
+WHAT THE CURL TESTS REVEALED:
+  The bug was in the TESTS, not the code. Shell escaping caused \f (form feed)
+  to be sent instead of real LaTeX backslashes. This fooled early test results
+  into showing false negatives.
+
+ARE THERE STILL ANSWER-CHECKING BUGS?
+  - For fraction problems: No. Both LaTeX and plain text formats work.
+  - For exponent problems: No. x^5, x^{5}, x**5 all match x**5.
+  - For solution sets: No. All solution set formats pass.
+  - For log problems: No. \log_{2}(8) correctly evaluates to 3.
+
+EDGE CASES TO WATCH:
+  1. MathLive may output unusual forms for complex expressions (e.g., nested fractions,
+     products with \cdot). These should be tested manually in the browser.
+  2. The answer_type 'expression' used by eq-quadratic is not in the official type
+     enum — consider changing to 'symbolic' in the generator.
+  3. sum-sigma uses answer_type='numeric' which means answers are compared as floats.
+     This is correct for the evaluated summation format (answer is always an integer).
+
+NEXT STEPS (if further bugs are found):
+  - Use the logging added in Task 1 to observe real student submissions via
+    `docker compose logs backend | grep DIAG`
+  - Compare the repr() of student and correct answers in the logs
+  - The most likely remaining bug sources are: unusual MathLive output for
+    specific expressions, or DB-stored problems with legacy format correct_answers.

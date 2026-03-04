@@ -230,6 +230,11 @@ def submit_practice_answer(
         answer_type_str = problem.answer_type
         log_problem_id = problem.id
 
+    # ── DIAGNOSTIC LOGGING (Task 1) ──────────────────────────────────────────
+    logger.info("DIAG correct_answer repr: %r", correct_answer_str)
+    logger.info("DIAG student_answer repr (service): %r", answer)
+    logger.info("DIAG answer_type: %r", answer_type_str)
+    # ─────────────────────────────────────────────────────────────────────────
     try:
         is_correct = check_answer(answer, correct_answer_str, answer_type_str)
         answer_check_error = False

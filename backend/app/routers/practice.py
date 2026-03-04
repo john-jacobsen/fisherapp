@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -8,6 +10,7 @@ from app.models.user import User
 from app.services import practice_service
 
 router = APIRouter(prefix="/api/practice", tags=["practice"])
+logger = logging.getLogger(__name__)
 
 
 class SubmitRequest(BaseModel):
@@ -42,6 +45,13 @@ def submit_answer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # ── DIAGNOSTIC LOGGING (Task 1) ──────────────────────────────────────────
+    logger.info(
+        "DIAG submit | node=%s | session_id=%r | problem_id=%r | mode=%r",
+        node_id, req.session_id, req.problem_id, req.mode,
+    )
+    logger.info("DIAG raw student_answer repr: %r", req.answer)
+    # ─────────────────────────────────────────────────────────────────────────
     try:
         return practice_service.submit_practice_answer(
             node_id, req.session_id, req.problem_id, req.answer, str(current_user.id), db,
