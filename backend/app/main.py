@@ -8,10 +8,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s %(name)s: %(message)s",
 )
-# DIAGNOSTIC: set to DEBUG so every comparison step in the answer checker is visible
-logging.getLogger("app.services.answer_checker").setLevel(logging.DEBUG)
-logging.getLogger("app.services.practice_service").setLevel(logging.DEBUG)
-logging.getLogger("app.routers.practice").setLevel(logging.DEBUG)
 
 app = FastAPI(title="Fisher App API", version="3.0.0")
 

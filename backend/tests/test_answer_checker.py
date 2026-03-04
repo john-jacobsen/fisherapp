@@ -100,6 +100,45 @@ TEST_CASES = [
 
     ('Log2: student="log2(8)", correct="3"',
      'log2(8)', '3', True),
+
+    # ── MathLive shorthand — FIXES-4 ─────────────────────────────────────────
+    # MathLive shorthand (no braces)
+    (r'MathLive shorthand: student="\frac12", correct="1/2"',
+     r'\frac12', '1/2', True),
+
+    (r'MathLive shorthand: student="\frac56", correct="5/6"',
+     r'\frac56', '5/6', True),
+
+    (r'MathLive shorthand: student="\frac23", correct="2/3"',
+     r'\frac23', '2/3', True),
+
+    # MathLive with braces (should still work)
+    (r'MathLive braces: student="\frac{1}{2}", correct="1/2"',
+     r'\frac{1}{2}', '1/2', True),
+
+    (r'MathLive braces: student="\frac{5}{6}", correct="5/6"',
+     r'\frac{5}{6}', '5/6', True),
+
+    # Mixed: shorthand vs braces
+    (r'Mixed: student="\frac12", correct="\frac{1}{2}"',
+     r'\frac12', r'\frac{1}{2}', True),
+
+    (r'Mixed: student="\frac{1}{2}", correct="\frac12"',
+     r'\frac{1}{2}', r'\frac12', True),
+
+    # Plain text still works
+    ('Plain: student="1/2", correct="1/2"',
+     '1/2', '1/2', True),
+
+    (r'Plain vs LaTeX: student="5/6", correct="\frac{5}{6}"',
+     '5/6', r'\frac{5}{6}', True),
+
+    # Multi-digit fractions (already working, must not break)
+    (r'Multi-digit: student="\frac{15}{24}", correct="5/8"',
+     r'\frac{15}{24}', '5/8', True),
+
+    (r'Multi-digit: student="\frac{10}{18}", correct="5/9"',
+     r'\frac{10}{18}', '5/9', True),
 ]
 
 

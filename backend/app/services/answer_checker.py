@@ -64,6 +64,14 @@ def latex_to_sympy_str(latex: str) -> str:
     s = re.sub(r'\\\{', '{', s)
     s = re.sub(r'\\\}', '}', s)
 
+    # Normalize MathLive shorthand (single-char arguments without braces)
+    # \frac12 → \frac{1}{2}  (MathLive omits braces for single-digit numerator/denominator)
+    s = re.sub(r'\\frac([^{])([^{])', r'\\frac{\1}{\2}', s)
+    # \sqrt2 → \sqrt{2}
+    s = re.sub(r'\\sqrt([^{\\[\s])', r'\\sqrt{\1}', s)
+    # \log_2 → \log_{2}
+    s = re.sub(r'\\log_([^{])', r'\\log_{\1}', s)
+
     # \frac{a}{b} → (a)/(b) — handle nested (apply multiple times)
     def replace_frac(m):
         return f'({m.group(1)})/({m.group(2)})'
