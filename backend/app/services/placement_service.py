@@ -6,6 +6,7 @@ Flow:
 2. submit_answer() — BLIM update, check termination, return next problem or completion
 3. get_results() — return categorized node statuses
 """
+import copy
 import uuid
 import logging
 import traceback
@@ -131,6 +132,7 @@ def start_placement(user_id: str, db: DBSession) -> dict:
     # Get topic
     node = db.query(KnowledgeNode).filter(KnowledgeNode.id == item_id).first()
 
+    flag_modified(session, "state_snapshot")
     db.commit()
 
     return {
@@ -169,7 +171,7 @@ def submit_answer(
     if not session:
         raise ValueError("Session not found or already completed")
 
-    state = session.state_snapshot.copy()
+    state = copy.deepcopy(session.state_snapshot)
     distribution = state["distribution"]
     asked_items = state["asked_items"]
     asked_problems = state["asked_problems"]

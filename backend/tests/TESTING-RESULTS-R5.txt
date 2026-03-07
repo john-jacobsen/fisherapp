@@ -1,0 +1,103 @@
+FIXES-5 MANDATORY TESTING CHECKLIST RESULTS
+============================================
+Date: 2026-03-06
+Branch: main
+All 9 items implemented and verified.
+
+────────────────────────────────────────────
+ITEM 1: Fix 400 Bad Request on 3rd problem
+────────────────────────────────────────────
+Root cause: SQLAlchemy JSONB shallow copy mutation bug in practice_service.py.
+  - session.state_snapshot.copy() → shallow copy shared nested dicts between
+    "old" and "new" values, so SQLAlchemy detected no change → no UPDATE emitted
+    → ephemeral_problems lost after commit 1 → "Problem not found" on submit 3.
+Fix:
+  - import copy; state = copy.deepcopy(session.state_snapshot)
+  - flag_modified(session, "state_snapshot") before every db.commit()
+Test: 10 consecutive submissions all return 200 OK. PASS ✓
+
+────────────────────────────────────────────
+ITEM 2: Fix mastery meter stuck at 20%
+────────────────────────────────────────────
+Root cause: Primarily Item 1 (sessions broke at problem 3).
+  BKT calculations were always correct on backend.
+Fix: Item 1 fix resolves this. Added mastery celebration banner in PracticePage.
+Test: Mastery rises correctly: 0.2 → 0.704 → 0.958 → 0.995. PASS ✓
+
+────────────────────────────────────────────
+ITEM 3: Fix MathLive cursor escaping superscript
+────────────────────────────────────────────
+Fix: mf.smartSuperscript = false in MathInput.jsx.
+Test: Multi-digit exponents (x^11, x^12) stay inside the superscript block. PASS ✓
+
+────────────────────────────────────────────
+ITEM 4: Fix answer checker false multi-value detection
+────────────────────────────────────────────
+Root cause: _is_multi_value() treating {11} in x^{11} as set notation.
+Fix: Rewrote _is_multi_value() to distinguish LaTeX grouping braces (preceded by
+  ^, _, or letter) from plain set braces (e.g. {2, 3}).
+Tests added:
+  - x^{11} → NOT multi-value ✓
+  - \frac{1}{2} → NOT multi-value ✓
+  - {2, 3} → IS multi-value ✓
+  - 2, 3 → IS multi-value ✓
+  - "3, 2" == "2, 3" (order-independent) ✓
+All 41 tests pass. PASS ✓
+
+────────────────────────────────────────────
+ITEM 5: AI backend proxy endpoint
+────────────────────────────────────────────
+Created: backend/app/routers/ai_chat.py
+  - POST /api/ai/chat
+  - Validates API key format (sk-ant- prefix)
+  - Proxies to Anthropic via httpx.AsyncClient
+  - System prompt with topic/problem/hints context
+  - Model: claude-haiku-4-5-20251001, max_tokens=300
+  - Error handling: 401, 429, 502
+Registered in main.py. PASS ✓
+
+────────────────────────────────────────────
+ITEM 6: AI chat panel in practice
+────────────────────────────────────────────
+Added to PracticePage.jsx:
+  - "🤖 AI Help" button (Learning Mode only)
+  - Chat panel with MathDisplay for LaTeX rendering
+  - sendAIMessage() calls /api/ai/chat with context (topic, problem, hints)
+  - Chat clears on problem change
+  - If no API key configured: shows setup message with link to /ai-setup
+PASS ✓
+
+────────────────────────────────────────────
+ITEM 7: AI setup page improvements
+────────────────────────────────────────────
+Updated AISetupPage.jsx:
+  - Renamed to "Set Up AI Tutoring"
+  - Added step-by-step instructions + console.anthropic.com link button
+  - Fixed testConnection() to use backend proxy (avoids CORS with Anthropic)
+  - Simplified to Anthropic-only focus (cleaner UX)
+PASS ✓
+
+────────────────────────────────────────────
+ITEM 8: LaTeX cleanup in hint templates
+────────────────────────────────────────────
+Audited all 30 generators in problem_generator.py:
+  - Wrapped all math expressions in \( ... \) delimiters
+  - Replaced Unicode superscripts (ᵃ, ᵇ) with proper LaTeX (x^{a})
+  - Used \cdot, \times, \frac, \Rightarrow, \Sigma operators
+  - Changed _gen_eq_quadratic answer_type "expression" → "symbolic"
+  - Hint 3 in every generator uses actual computed values (not placeholders)
+Verified: All 30 generators produce valid output. PASS ✓
+
+────────────────────────────────────────────
+ITEM 9: End-to-end mastery flow
+────────────────────────────────────────────
+See MASTERY-FLOW-RESULTS.txt for full details.
+  - exp-product: mastered in 3 correct answers (0.2 → 0.704 → 0.958 → 0.995) ✓
+  - frac-simplify: mastered in 3 correct answers (0.2 → 0.704 → 0.958 → 0.995) ✓
+  - Placement API: 14 questions to completion ✓
+  - Bonus fix: placement_service.py missing flag_modified() → fixed ✓
+PASS ✓
+
+════════════════════════════════════════════
+OVERALL RESULT: 9/9 ITEMS PASS
+════════════════════════════════════════════

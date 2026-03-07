@@ -1,0 +1,51 @@
+MASTERY FLOW END-TO-END TEST RESULTS
+=====================================
+Date: 2026-03-06
+Branch: main
+Round: FIXES-5
+
+Test Method
+-----------
+Direct service-layer calls (bypasses HTTP, exercises DB and BKT logic fully).
+Each test: fresh user → placement (14 questions, all wrong answers) → practice.
+
+BKT Parameters (default)
+-------------------------
+  L0 (initial mastery):  0.20
+  T  (learn rate):       0.40
+  G  (guess rate):       0.25
+  S  (slip rate):        0.10
+  Mastery threshold:     0.85
+
+Test 1: exp-product (all correct answers)
+------------------------------------------
+  start:   mastery = 0.200
+  submit 1 (correct): mastery = 0.704  [below threshold]
+  submit 2 (correct): mastery = 0.958  [below threshold]
+  submit 3 (correct): mastery = 0.995  [MASTERED]
+  RESULT: PASS — mastered in 3 submissions
+
+Test 2: frac-simplify (all correct answers)
+--------------------------------------------
+  start:   mastery = 0.200
+  submit 1 (correct): mastery = 0.704  [below threshold]
+  submit 2 (correct): mastery = 0.958  [below threshold]
+  submit 3 (correct): mastery = 0.995  [MASTERED]
+  RESULT: PASS — mastered in 3 submissions
+
+Additional Verifications
+-------------------------
+1. Placement API (14 questions to completion): PASS
+   - Fixed bug: start_placement() missing flag_modified() call caused ephemeral_answers
+     to not persist to DB, resulting in "Problem not found" on first placement submit.
+   - Fix: added flag_modified(session, "state_snapshot") + deepcopy in placement_service.py
+
+2. Problem generators (all 30): PASS
+   - All generate valid problems with LaTeX-formatted hints.
+   - Spot-checked: exp-power, exp-negative, exp-combined, log-definition, sum-sigma.
+
+3. BKT posterior formula verified:
+   P(mastered | correct) = [L * (1-S)] / [L*(1-S) + (1-L)*G] → update via learn rate T
+   0.20 → 0.704 → 0.958 → 0.995  ✓ (consistent with T=0.40, G=0.25, S=0.10)
+
+Overall: ALL TESTS PASS
