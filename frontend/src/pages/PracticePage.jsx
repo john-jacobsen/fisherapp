@@ -34,6 +34,7 @@ export default function PracticePage() {
   const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer, studentAnswer }
   const [nextProblemData, setNextProblemData] = useState(null);
   const [sessionDone, setSessionDone] = useState(false);
+  const [masteryAchieved, setMasteryAchieved] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
   // Hints
@@ -149,6 +150,9 @@ export default function PracticePage() {
         studentAnswer: answer.trim(),
       });
 
+      if (mode === 'test' && isMastered) {
+        setMasteryAchieved(true);
+      }
       if (mode === 'test' && (isMastered || (!d.next_problem && !isMastered))) {
         setSessionDone(true);
         setNextProblemData(null);
@@ -238,6 +242,24 @@ export default function PracticePage() {
     <>
       <NavBar />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px', fontFamily: theme.fonts.sans }}>
+
+        {/* Mastery celebration banner */}
+        {masteryAchieved && (
+          <div style={{
+            padding: '16px 20px', borderRadius: theme.radius.md, marginBottom: 16,
+            background: 'linear-gradient(135deg, #d4edda, #c3e6cb)',
+            border: '2px solid #28a745',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 4 }}>🏆</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#155724', marginBottom: 4 }}>
+              Topic Mastered!
+            </div>
+            <div style={{ fontSize: 14, color: '#155724' }}>
+              You've demonstrated mastery of this topic. It's been added to your review schedule.
+            </div>
+          </div>
+        )}
 
         {/* Mode banner */}
         <div style={{
