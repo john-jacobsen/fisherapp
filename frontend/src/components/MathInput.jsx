@@ -15,6 +15,10 @@ export default function MathInput({ value, onChange, onSubmit, placeholder = 'En
 
     // Configure MathLive options
     mf.smartFence = true;
+    // Disable smartSuperscript so multi-digit exponents stay in the superscript.
+    // With smartSuperscript=true (default), typing x^12 produces (x^1)2 because
+    // MathLive exits the superscript after the first digit.
+    mf.smartSuperscript = false;
     mf.virtualKeyboardMode = 'onfocus';
     if (placeholder) mf.placeholder = placeholder;
 
@@ -74,7 +78,7 @@ export default function MathInput({ value, onChange, onSubmit, placeholder = 'En
         color: theme.colors.textMuted,
         fontFamily: theme.fonts.sans,
       }}>
-        Click to enter math. Press Enter to submit.
+        Click to enter math. Press Enter to submit. For exponents, type all digits then press → to exit.
       </div>
     </div>
   );
