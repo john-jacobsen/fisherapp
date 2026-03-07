@@ -7,6 +7,7 @@ Flow:
 3. get_hints() — return hint at requested level
 4. complete_practice() — if mastered, update global state; return summary
 """
+import copy
 import uuid
 import logging
 import traceback
@@ -14,6 +15,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.config import settings
 from app.models.content import Problem, Hint
@@ -205,7 +207,7 @@ def submit_practice_answer(
     if not session:
         raise ValueError("Session not found or already completed")
 
-    state = session.state_snapshot.copy()
+    state = copy.deepcopy(session.state_snapshot)
     posterior = state["posterior"]
     questions_asked = state["questions_asked"]
     correct_count = state["correct_count"]
@@ -280,6 +282,7 @@ def submit_practice_answer(
         # Persist session state (no BKT update, but seen_problems updated)
         state["ephemeral_problems"] = ephemeral_problems
         session.state_snapshot = state
+        flag_modified(session, "state_snapshot")
         db.commit()
 
         return {
@@ -370,6 +373,7 @@ def submit_practice_answer(
         "ephemeral_problems": ephemeral_problems,
     })
     session.state_snapshot = state
+    flag_modified(session, "state_snapshot")
     db.commit()
 
     return {
