@@ -139,6 +139,27 @@ TEST_CASES = [
 
     (r'Multi-digit: student="\frac{10}{18}", correct="5/9"',
      r'\frac{10}{18}', '5/9', True),
+
+    # ── FIXES-5 Item 4: LaTeX grouping braces NOT treated as set notation ────
+    # x^{11} should NOT be detected as multi-value (the {11} is LaTeX grouping)
+    ('FIXES-5: student="x^{11}", correct="x**11" — NOT multi-value',
+     'x^{11}', 'x**11', True),
+
+    ('FIXES-5: student="x^{12}", correct="x^12" — NOT multi-value',
+     'x^{12}', 'x^12', True),
+
+    (r'FIXES-5: student="\frac{1}{2}", correct="1/2" — NOT multi-value',
+     r'\frac{1}{2}', '1/2', True),
+
+    # Solution sets WITH commas INSIDE braces ARE multi-value
+    ('FIXES-5: student="{2, 3}", correct="2, 3" — IS multi-value',
+     '{2, 3}', '2, 3', True),
+
+    ('FIXES-5: student="2, 3", correct="2, 3" — IS multi-value',
+     '2, 3', '2, 3', True),
+
+    ('FIXES-5: student="3, 2", correct="2, 3" — IS multi-value (order-independent)',
+     '3, 2', '2, 3', True),
 ]
 
 

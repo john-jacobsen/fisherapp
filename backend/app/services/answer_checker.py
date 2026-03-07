@@ -205,36 +205,66 @@ def _is_multi_value(s: str) -> bool:
 
     A string is multi-value if it contains:
       - a comma not inside parentheses, or
-      - the word "and" (as a separator), or
-      - set-brace notation { ... }
+      - a comma inside braces that are NOT preceded by a LaTeX command char
+        (i.e., plain {2, 3} IS multi-value, but x^{11} is NOT because {11}
+        is a LaTeX grouping brace with no comma), or
+      - explicit LaTeX set braces \{..., ...\}, or
+      - the word "and" used as a value separator
 
-    We deliberately exclude single expressions like "2x + 3" which contain
-    no comma and no "and" as a separator between values.
+    Key rule: a '{' is a set-brace (multi-value indicator) ONLY if it
+    contains a comma. Pure grouping braces like x^{11} have no comma.
+    So we check: is there any comma inside a plain '{...}' that is NOT
+    a LaTeX command brace? We determine this by checking if the '{' that
+    contains a comma is NOT preceded by '^', '_', or a LaTeX command char.
     """
     stripped = s.strip()
 
-    # Check for set-brace notation: \{ (LaTeX explicit set brace) or a plain {
-    # that is NOT preceded by a letter or backslash (i.e., not a LaTeX command
-    # argument like \frac{3}{4}).  The regex (?<![a-zA-Z\\])\{ matches a `{`
-    # that is not immediately preceded by a letter or backslash.
-    if re.search(r'\\{', stripped) or re.search(r'(?<![a-zA-Z\\])\{', stripped):
-        return True
-
     # Check for "and" used as a value separator (standalone word)
-    # e.g. "x=2 and x=3"  but NOT "sin and cos" (but that won't appear here)
     if re.search(r'\band\b', stripped, re.IGNORECASE):
         return True
 
-    # Check for a comma that is not inside parentheses
-    # We scan character by character tracking parenthesis depth
-    depth = 0
-    for ch in stripped:
+    # Check for a comma that is not inside parentheses.
+    # Also detect plain {a, b} style set notation where braces contain commas,
+    # BUT only treat braces as set-notation if the brace is NOT a LaTeX
+    # command argument (not preceded by ^, _, or a LaTeX command letter).
+    paren_depth = 0
+    i = 0
+    while i < len(stripped):
+        ch = stripped[i]
+        if ch == '\\' and i + 1 < len(stripped):
+            # Skip over a backslash-letter command, then continue
+            j = i + 1
+            while j < len(stripped) and stripped[j].isalpha():
+                j += 1
+            i = j
+            continue
         if ch == '(':
-            depth += 1
+            paren_depth += 1
         elif ch == ')':
-            depth -= 1
-        elif ch == ',' and depth == 0:
+            paren_depth -= 1
+        elif ch == '{':
+            # Look ahead to find if this brace contains a comma.
+            # Also check if the preceding char makes this a LaTeX grouping brace.
+            prev_char = stripped[i - 1] if i > 0 else ''
+            is_latex_grouping = prev_char in ('^', '_') or prev_char.isalpha()
+            if not is_latex_grouping:
+                # This is a plain '{' — scan ahead to find if it has a comma
+                depth = 1
+                j = i + 1
+                while j < len(stripped) and depth > 0:
+                    if stripped[j] == '{':
+                        depth += 1
+                    elif stripped[j] == '}':
+                        depth -= 1
+                    elif stripped[j] == ',' and depth == 1:
+                        # Comma directly inside this plain brace → set notation
+                        if paren_depth == 0:
+                            return True
+                    j += 1
+        elif ch == ',' and paren_depth == 0:
+            # Comma at top level (not inside any braces or parens)
             return True
+        i += 1
 
     return False
 
