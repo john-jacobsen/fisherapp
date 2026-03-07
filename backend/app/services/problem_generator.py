@@ -166,8 +166,8 @@ def _gen_order_pemdas():
             "difficulty": 0.4,
             "hints": [
                 {"level": 1, "text": "Remember PEMDAS: multiplication comes before addition."},
-                {"level": 2, "text": f"Multiply first: {b} \u00d7 {c} = {b*c}. Then add {a}."},
-                {"level": 3, "text": f"{a} + {b} \u00d7 {c} = {a} + {b*c} = {a + b*c}"},
+                {"level": 2, "text": f"Multiply first: \\({b} \\times {c} = {b*c}\\). Then add {a}."},
+                {"level": 3, "text": f"\\({a} + {b} \\times {c} = {a} + {b*c} = {a + b*c}\\)"},
             ],
         }
     elif choice == 1:
@@ -181,7 +181,7 @@ def _gen_order_pemdas():
             "hints": [
                 {"level": 1, "text": "Division is straightforward \u2014 divide the numerator by the denominator."},
                 {"level": 2, "text": f"Divide {a} by {b}."},
-                {"level": 3, "text": f"{a} \u00f7 {b} = {a // b}"},
+                {"level": 3, "text": f"\\({a} \\div {b} = {a // b}\\)"},
             ],
         }
     else:
@@ -193,8 +193,8 @@ def _gen_order_pemdas():
             "difficulty": 0.4,
             "hints": [
                 {"level": 1, "text": "Evaluate exponents before addition (PEMDAS: E before A)."},
-                {"level": 2, "text": f"Calculate {a}\u00b2 first, then add {b}."},
-                {"level": 3, "text": f"{a}\u00b2 + {b} = {a**2} + {b} = {a**2 + b}"},
+                {"level": 2, "text": f"Calculate \\({a}^2\\) first, then add {b}."},
+                {"level": 3, "text": f"\\({a}^2 + {b} = {a**2} + {b} = {a**2 + b}\\)"},
             ],
         }
 
@@ -208,8 +208,8 @@ def _gen_order_nested():
         "difficulty": 0.5,
         "hints": [
             {"level": 1, "text": "Evaluate what's inside parentheses first."},
-            {"level": 2, "text": f"Add {a} + {b} = {a+b} first (inside parentheses), then multiply."},
-            {"level": 3, "text": f"({a} + {b}) \u00d7 {c} = {a+b} \u00d7 {c} = {(a+b)*c}"},
+            {"level": 2, "text": f"Add \\({a} + {b} = {a+b}\\) first (inside parentheses), then multiply."},
+            {"level": 3, "text": f"\\(({a} + {b}) \\times {c} = {a+b} \\times {c} = {(a+b)*c}\\)"},
         ],
     }
 
@@ -224,9 +224,9 @@ def _gen_exp_product():
         "answer_type": "symbolic",
         "difficulty": 0.4,
         "hints": [
-            {"level": 1, "text": "Product rule: x\u1d43 \u00b7 x\u1d47 = x^(a+b). Add the exponents."},
-            {"level": 2, "text": f"Add the exponents: {a} + {b} = {a+b}."},
-            {"level": 3, "text": f"x^{a} \u00b7 x^{b} = x^({a}+{b}) = x^{a+b}"},
+            {"level": 1, "text": "Product rule: \\(x^a \\cdot x^b = x^{a+b}\\). Add the exponents."},
+            {"level": 2, "text": f"Add the exponents: \\({a} + {b} = {a+b}\\)."},
+            {"level": 3, "text": f"\\(x^{{{a}}} \\cdot x^{{{b}}} = x^{{{a}+{b}}} = x^{{{a+b}}}\\)"},
         ],
     }
 
@@ -239,9 +239,9 @@ def _gen_exp_power():
         "answer_type": "symbolic",
         "difficulty": 0.4,
         "hints": [
-            {"level": 1, "text": "Power rule: (x\u1d43)\u1d47 = x^(a\u00b7b). Multiply the exponents."},
-            {"level": 2, "text": f"Multiply the exponents: {a} \u00d7 {b} = {a*b}."},
-            {"level": 3, "text": f"(x^{a})^{b} = x^({a}\u00d7{b}) = x^{a*b}"},
+            {"level": 1, "text": "Power rule: \\((x^a)^b = x^{a \\cdot b}\\). Multiply the exponents."},
+            {"level": 2, "text": f"Multiply the exponents: \\({a} \\times {b} = {a*b}\\)."},
+            {"level": 3, "text": f"\\((x^{{{a}}})^{{{b}}} = x^{{{a} \\cdot {b}}} = x^{{{a*b}}}\\)"},
         ],
     }
 
@@ -256,9 +256,9 @@ def _gen_exp_negative():
         "answer_type": "symbolic",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "Negative exponent rule: x^(-n) = 1/x^n."},
-            {"level": 2, "text": f"Apply: {base}^(-{exp}) = 1/{base}^{exp} = 1/{base**exp}."},
-            {"level": 3, "text": f"{base}^(-{exp}) = 1/{base}^{exp} = 1/{base**exp} = {result.numerator}/{result.denominator}"},
+            {"level": 1, "text": "Negative exponent rule: \\(x^{-n} = \\frac{1}{x^n}\\)."},
+            {"level": 2, "text": f"Apply: \\({base}^{{-{exp}}} = \\frac{{1}}{{{base}^{{{exp}}}}} = \\frac{{1}}{{{base**exp}}}\\)."},
+            {"level": 3, "text": f"\\({base}^{{-{exp}}} = \\frac{{1}}{{{base}^{{{exp}}}}} = \\frac{{{result.numerator}}}{{{result.denominator}}}\\)"},
         ],
     }
 
@@ -273,9 +273,9 @@ def _gen_exp_combined():
         "answer_type": "symbolic",
         "difficulty": 0.6,
         "hints": [
-            {"level": 1, "text": "Quotient rule: x\u1d43 / x\u1d47 = x^(a-b). Subtract the exponents."},
-            {"level": 2, "text": f"Subtract: {a} - {b} = {net}."},
-            {"level": 3, "text": f"x^{a} / x^{b} = x^({a}-{b}) = x^{net}"},
+            {"level": 1, "text": "Quotient rule: \\(\\frac{x^a}{x^b} = x^{a-b}\\). Subtract the exponents."},
+            {"level": 2, "text": f"Subtract the exponents: \\({a} - {b} = {net}\\)."},
+            {"level": 3, "text": f"\\(\\frac{{x^{{{a}}}}}{{x^{{{b}}}}} = x^{{{a}-{b}}} = x^{{{net}}}\\)"},
         ],
     }
 
@@ -294,7 +294,7 @@ def _gen_eq_one_step():
             "hints": [
                 {"level": 1, "text": "To solve for x, perform the inverse operation on both sides."},
                 {"level": 2, "text": f"Subtract {b} from both sides."},
-                {"level": 3, "text": f"x + {b} = {x+b} \u2192 x = {x+b} - {b} = {x}"},
+                {"level": 3, "text": f"\\(x + {b} = {x+b} \\Rightarrow x = {x+b} - {b} = {x}\\)"},
             ],
         }
     else:
@@ -307,7 +307,7 @@ def _gen_eq_one_step():
             "hints": [
                 {"level": 1, "text": "To solve for x, divide both sides by the coefficient."},
                 {"level": 2, "text": f"Divide both sides by {a}."},
-                {"level": 3, "text": f"{a}x = {a*x} \u2192 x = {a*x}/{a} = {x}"},
+                {"level": 3, "text": f"\\({a}x = {a*x} \\Rightarrow x = \\frac{{{a*x}}}{{{a}}} = {x}\\)"},
             ],
         }
 
@@ -325,7 +325,7 @@ def _gen_eq_two_step():
         "hints": [
             {"level": 1, "text": "Use two steps: first undo addition/subtraction, then undo multiplication/division."},
             {"level": 2, "text": f"Step 1: Subtract {b} from both sides. Step 2: Divide by {a}."},
-            {"level": 3, "text": f"{a}x + {b} = {c} \u2192 {a}x = {c-b} \u2192 x = {x}"},
+            {"level": 3, "text": f"\\({a}x + {b} = {c} \\Rightarrow {a}x = {c-b} \\Rightarrow x = {x}\\)"},
         ],
     }
 
@@ -341,7 +341,7 @@ def _gen_eq_fractions():
         "hints": [
             {"level": 1, "text": "If both sides have the same denominator, the numerators must be equal."},
             {"level": 2, "text": f"Since both sides are over {a}, just set the numerators equal."},
-            {"level": 3, "text": f"{a}x/{a} = {x} \u2192 x = {x}"},
+            {"level": 3, "text": f"\\(\\frac{{{a}x}}{{{a}}} = {x} \\Rightarrow x = {x}\\)"},
         ],
     }
 
@@ -358,8 +358,8 @@ def _gen_eq_distribution():
         "difficulty": 0.6,
         "hints": [
             {"level": 1, "text": "First distribute (multiply through the parentheses), then solve like a normal equation."},
-            {"level": 2, "text": f"Distribute: {a}(x + {b}) = {a}x + {a*b}. Then solve."},
-            {"level": 3, "text": f"{a}(x + {b}) = {c} \u2192 {a}x + {a*b} = {c} \u2192 {a}x = {c - a*b} \u2192 x = {x}"},
+            {"level": 2, "text": f"Distribute: \\({a}(x + {b}) = {a}x + {a*b}\\). Then solve."},
+            {"level": 3, "text": f"\\({a}(x + {b}) = {c} \\Rightarrow {a}x + {a*b} = {c} \\Rightarrow {a}x = {c - a*b} \\Rightarrow x = {x}\\)"},
         ],
     }
 
@@ -369,7 +369,7 @@ def _gen_eq_distribution():
 def _gen_log_exponential():
     base = random.randint(2, 5)
     exp = random.randint(2, 4)
-    multiplication_str = " \u00d7 ".join([str(base)] * exp)
+    multiplication_str = " \\cdot ".join([str(base)] * exp)
     return {
         "problem_text": f"Evaluate: \\({base}^{{{exp}}}\\)",
         "correct_answer": str(base ** exp),
@@ -378,7 +378,7 @@ def _gen_log_exponential():
         "hints": [
             {"level": 1, "text": "To evaluate an exponential, multiply the base by itself the number of times shown by the exponent."},
             {"level": 2, "text": f"Multiply {base} by itself {exp} times."},
-            {"level": 3, "text": f"{base}^{exp} = {multiplication_str} = {base**exp}"},
+            {"level": 3, "text": f"\\({base}^{{{exp}}} = {multiplication_str} = {base**exp}\\)"},
         ],
     }
 
@@ -393,9 +393,9 @@ def _gen_log_definition():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": f"log_b(x) = n means b^n = x. Use this definition."},
+            {"level": 1, "text": "\\(\\log_b(x) = n\\) means \\(b^n = x\\). Use this definition."},
             {"level": 2, "text": f"Ask: what power of {base} gives {val}?"},
-            {"level": 3, "text": f"{base}^{result} = {val}, so log_{base}({val}) = {result}"},
+            {"level": 3, "text": f"\\({base}^{{{result}}} = {val}\\), so \\(\\log_{{{base}}}({val}) = {result}\\)"},
         ],
     }
 
@@ -409,9 +409,9 @@ def _gen_log_rules():
         "answer_type": "numeric",
         "difficulty": 0.6,
         "hints": [
-            {"level": 1, "text": "Product rule for logarithms: log(a) + log(b) = log(a\u00b7b)."},
-            {"level": 2, "text": f"Combine: log_{base}({a}) + log_{base}({b}) = log_{base}({a}\u00b7{b}) = log_{base}({a*b})."},
-            {"level": 3, "text": f"log_{base}({a}\u00b7{b}) = log_{base}({a*b}) = {result} (since {base}^{result} = {a*b})"},
+            {"level": 1, "text": "Product rule for logarithms: \\(\\log(a) + \\log(b) = \\log(a \\cdot b)\\)."},
+            {"level": 2, "text": f"Combine: \\(\\log_{{{base}}}({a}) + \\log_{{{base}}}({b}) = \\log_{{{base}}}({a} \\cdot {b}) = \\log_{{{base}}}({a*b})\\)."},
+            {"level": 3, "text": f"\\(\\log_{{{base}}}({a*b}) = {result}\\) since \\({base}^{{{result}}} = {a*b}\\)"},
         ],
     }
 
@@ -427,9 +427,9 @@ def _gen_sum_sigma():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "\u03a3 notation means add up all values of the expression as the index goes from bottom to top."},
-            {"level": 2, "text": f"Add the integers from 1 to {n}: 1 + 2 + 3 + ... + {n}."},
-            {"level": 3, "text": f"Use the formula n(n+1)/2: {n}({n+1})/2 = {total}"},
+            {"level": 1, "text": "\\(\\Sigma\\) notation means add up all values of the expression as the index goes from bottom to top."},
+            {"level": 2, "text": f"Add the integers from 1 to {n}: \\(1 + 2 + 3 + \\cdots + {n}\\)."},
+            {"level": 3, "text": f"Use the formula \\(\\frac{{n(n+1)}}{{2}}\\): \\(\\frac{{{n} \\cdot {n+1}}}{{2}} = {total}\\)"},
         ],
     }
 
@@ -443,9 +443,9 @@ def _gen_sum_arithmetic():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "The sum of integers from 1 to n is n(n+1)/2."},
-            {"level": 2, "text": f"Apply the formula with n = {n}."},
-            {"level": 3, "text": f"{n}\u00d7{n+1}/2 = {n*(n+1)}/2 = {total}"},
+            {"level": 1, "text": "The sum of integers from 1 to n is \\(\\frac{n(n+1)}{2}\\)."},
+            {"level": 2, "text": f"Apply the formula with \\(n = {n}\\)."},
+            {"level": 3, "text": f"\\(\\frac{{{n} \\times {n+1}}}{{2}} = \\frac{{{n*(n+1)}}}{{2}} = {total}\\)"},
         ],
     }
 
@@ -461,8 +461,8 @@ def _gen_sum_nested():
         "difficulty": 0.7,
         "hints": [
             {"level": 1, "text": "For double sums, evaluate the inner sum first, then the outer sum."},
-            {"level": 2, "text": f"Inner sum \u03a3j=1 to {n} of j = {n*(n+1)//2}. Outer sum \u03a3i=1 to {m}."},
-            {"level": 3, "text": f"Inner sum = {n*(n+1)//2}. Outer: {m*(m+1)//2} \u00d7 {n*(n+1)//2} = {total}"},
+            {"level": 2, "text": f"Inner sum \\(\\sum_{{j=1}}^{{{n}}} j = {n*(n+1)//2}\\). Then outer sum \\(\\sum_{{i=1}}^{{{m}}}\\)."},
+            {"level": 3, "text": f"Inner sum \\(= {n*(n+1)//2}\\). Outer: \\({m*(m+1)//2} \\times {n*(n+1)//2} = {total}\\)"},
         ],
     }
 
@@ -479,7 +479,7 @@ def _gen_comb_counting():
         "hints": [
             {"level": 1, "text": "Fundamental counting principle: multiply the number of choices for each decision."},
             {"level": 2, "text": f"Multiply: {a} colors \u00d7 {b} sizes."},
-            {"level": 3, "text": f"{a} \u00d7 {b} = {a*b} combinations"},
+            {"level": 3, "text": f"\\({a} \\times {b} = {a*b}\\) combinations"},
         ],
     }
 
@@ -494,9 +494,9 @@ def _gen_comb_permutations():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "P(n,r) = n!/(n-r)! \u2014 count ordered arrangements."},
-            {"level": 2, "text": f"P({n},{r}) = {n}!/{n-r}! = {n}\u00d7{n-1}\u00d7...\u00d7{n-r+1}."},
-            {"level": 3, "text": f"P({n},{r}) = {result}"},
+            {"level": 1, "text": "\\(P(n,r) = \\frac{n!}{(n-r)!}\\) \u2014 count ordered arrangements."},
+            {"level": 2, "text": f"\\(P({n},{r}) = \\frac{{{n}!}}{{{n-r}!}} = {n} \\times {n-1} \\times \\cdots \\times {n-r+1}\\)."},
+            {"level": 3, "text": f"\\(P({n},{r}) = {result}\\)"},
         ],
     }
 
@@ -511,9 +511,9 @@ def _gen_comb_combinations():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "C(n,r) = n!/(r!(n-r)!) \u2014 count unordered selections."},
-            {"level": 2, "text": f"C({n},{r}) = {n}!/({r}!\u00d7{n-r}!)."},
-            {"level": 3, "text": f"C({n},{r}) = {result}"},
+            {"level": 1, "text": "\\(C(n,r) = \\frac{n!}{r!(n-r)!}\\) \u2014 count unordered selections."},
+            {"level": 2, "text": f"\\(C({n},{r}) = \\frac{{{n}!}}{{{r}! \\times {n-r}!}}\\)."},
+            {"level": 3, "text": f"\\(C({n},{r}) = {result}\\)"},
         ],
     }
 
@@ -531,9 +531,9 @@ def _gen_geo_sequences():
         "answer_type": "numeric",
         "difficulty": 0.5,
         "hints": [
-            {"level": 1, "text": "In a geometric sequence, the nth term is a\u00b7r^(n-1)."},
-            {"level": 2, "text": f"Apply: a = {a}, r = {r}, n = {n}. Compute {a}\u00b7{r}^{n-1}."},
-            {"level": 3, "text": f"{a}\u00b7{r}^{n-1} = {a}\u00b7{r**(n-1)} = {term}"},
+            {"level": 1, "text": "In a geometric sequence, the nth term is \\(a \\cdot r^{n-1}\\)."},
+            {"level": 2, "text": f"Apply: \\(a = {a}\\), \\(r = {r}\\), \\(n = {n}\\). Compute \\({a} \\cdot {r}^{{{n-1}}}\\)."},
+            {"level": 3, "text": f"\\({a} \\cdot {r}^{{{n-1}}} = {a} \\cdot {r**(n-1)} = {term}\\)"},
         ],
     }
 
@@ -549,9 +549,9 @@ def _gen_geo_finite():
         "answer_type": "numeric",
         "difficulty": 0.6,
         "hints": [
-            {"level": 1, "text": "The sum of a finite geometric series is S = a(r^n - 1)/(r - 1)."},
-            {"level": 2, "text": f"Apply: a = {a}, r = {r}, n = {n}."},
-            {"level": 3, "text": f"S = {a}({r}^{n} - 1)/({r} - 1) = {a}({r**n}-1)/{r-1} = {total}"},
+            {"level": 1, "text": "The sum of a finite geometric series is \\(S = \\frac{a(r^n - 1)}{r - 1}\\)."},
+            {"level": 2, "text": f"Apply: \\(a = {a}\\), \\(r = {r}\\), \\(n = {n}\\)."},
+            {"level": 3, "text": f"\\(S = \\frac{{{a}({r}^{{{n}}} - 1)}}{{{r} - 1}} = \\frac{{{a}({r**n}-1)}}{{{r-1}}} = {total}\\)"},
         ],
     }
 
@@ -593,12 +593,12 @@ def _gen_eq_quadratic():
     return {
         "problem_text": f"Solve: \\({eq_str} = 0\\)",
         "correct_answer": answer,
-        "answer_type": "expression",
+        "answer_type": "symbolic",
         "difficulty": 0.7,
         "hints": [
             {"level": 1, "text": "Factor the quadratic: find two numbers that multiply to the constant term and add to the coefficient of x."},
             {"level": 2, "text": f"Find two numbers that multiply to {c} and add to {b}."},
-            {"level": 3, "text": f"The numbers are {r1} and {r2}. Factored: {_format_factor(r1)}{_format_factor(r2)} = 0, so x = {r1} or x = {r2}."},
+            {"level": 3, "text": f"The numbers are {r1} and {r2}. Factored: \\({_format_factor(r1)}{_format_factor(r2)} = 0\\), so \\(x = {r1}\\) or \\(x = {r2}\\)."},
         ],
     }
 
@@ -614,9 +614,9 @@ def _gen_log_equations():
         "answer_type": "numeric",
         "difficulty": 0.6,
         "hints": [
-            {"level": 1, "text": "To solve log_b(x) = n, rewrite in exponential form: b^n = x."},
-            {"level": 2, "text": f"Rewrite: {base}^{exp} = x."},
-            {"level": 3, "text": f"{base}^{exp} = {val}, so x = {val}"},
+            {"level": 1, "text": "To solve \\(\\log_b(x) = n\\), rewrite in exponential form: \\(b^n = x\\)."},
+            {"level": 2, "text": f"Rewrite: \\({base}^{{{exp}}} = x\\)."},
+            {"level": 3, "text": f"\\({base}^{{{exp}}} = {val}\\), so \\(x = {val}\\)"},
         ],
     }
 
@@ -642,9 +642,9 @@ def _gen_geo_infinite():
         "answer_type": "numeric",
         "difficulty": 0.7,
         "hints": [
-            {"level": 1, "text": "An infinite geometric series with |r| < 1 converges to S = a / (1 \u2212 r)."},
-            {"level": 2, "text": f"Apply the formula: S = {a} / (1 \u2212 {r_num}/{r_den})."},
-            {"level": 3, "text": f"1 \u2212 {r_num}/{r_den} = {denom_diff}/{r_den}, so S = {a} \u00f7 ({denom_diff}/{r_den}) = {a}\u00d7{r_den}/{denom_diff} = {total}"},
+            {"level": 1, "text": "An infinite geometric series with \\(|r| < 1\\) converges to \\(S = \\frac{a}{1 - r}\\)."},
+            {"level": 2, "text": f"Apply the formula: \\(S = \\frac{{{a}}}{{1 - \\frac{{{r_num}}}{{{r_den}}}}}\\)."},
+            {"level": 3, "text": f"\\(1 - \\frac{{{r_num}}}{{{r_den}}} = \\frac{{{denom_diff}}}{{{r_den}}}\\), so \\(S = {a} \\div \\frac{{{denom_diff}}}{{{r_den}}} = {a} \\cdot \\frac{{{r_den}}}{{{denom_diff}}} = {total}\\)"},
         ],
     }
 
