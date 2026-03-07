@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { useAI, callAI } from '../contexts/AIContext';
+import api from '../api/client';
 import { theme } from '../theme';
 
 const PROVIDERS = [
@@ -47,11 +48,27 @@ export default function AISetupPage() {
     setTesting(true);
     setTestResult(null);
     try {
-      const config = { provider, apiKey: apiKey.trim(), model: selectedProvider.defaultModel };
-      await callAI(config, 'You are a helpful math tutor.', 'Say "Connection successful!" and nothing else.');
-      setTestResult({ ok: true, message: 'Connection successful! AI hints are ready.' });
+      if (provider === 'anthropic') {
+        // Use backend proxy to avoid CORS issues with Anthropic
+        const r = await api.post('/ai/chat', {
+          api_key: apiKey.trim(),
+          messages: [{ role: 'user', content: 'Say hello' }],
+          context: { topic: 'test', problem_text: '', hints: [] },
+        });
+        if (r.data.response) {
+          setTestResult({ ok: true, message: '✓ Connected! AI tutoring is ready to use.' });
+        } else {
+          setTestResult({ ok: false, message: 'Unexpected response from AI service.' });
+        }
+      } else {
+        // For other providers, call directly from browser
+        const config = { provider, apiKey: apiKey.trim(), model: selectedProvider.defaultModel };
+        await callAI(config, 'You are a helpful math tutor.', 'Say "Connection successful!" and nothing else.');
+        setTestResult({ ok: true, message: '✓ Connected! AI tutoring is ready to use.' });
+      }
     } catch (e) {
-      setTestResult({ ok: false, message: `Connection failed: ${e.message}. Check your API key.` });
+      const detail = e.response?.data?.detail || e.message;
+      setTestResult({ ok: false, message: `Connection failed: ${detail}. Check your API key.` });
     } finally {
       setTesting(false);
     }
@@ -67,16 +84,46 @@ export default function AISetupPage() {
     <>
       <NavBar />
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px', fontFamily: theme.fonts.sans }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 26, fontWeight: 700, color: theme.colors.text }}>
-          AI Hint Setup
+        <h1 style={{ margin: '0 0 16px', fontSize: 26, fontWeight: 700, color: theme.colors.text }}>
+          Set Up AI Tutoring
         </h1>
-        <p style={{ margin: '0 0 32px', color: theme.colors.textSecondary, lineHeight: 1.6 }}>
-          Get AI-powered explanations when you're stuck. Your API key is stored only in your browser — it's never sent to our servers.
-        </p>
+
+        {/* Main explainer */}
+        <div style={{
+          padding: '20px 20px', background: theme.colors.surfaceAlt,
+          borderRadius: theme.radius.md, marginBottom: 24,
+          border: `1px solid ${theme.colors.border}`, lineHeight: 1.7, fontSize: 14,
+          color: theme.colors.text,
+        }}>
+          <p style={{ margin: '0 0 12px' }}>
+            Fisher App can connect to an AI tutor that gives you personalized help when you're stuck on a problem.
+            The AI tutor is powered by <strong>Claude</strong>, made by Anthropic.
+          </p>
+          <p style={{ margin: '0 0 12px', fontWeight: 600 }}>To use this feature, you'll need an Anthropic API key:</p>
+          <ol style={{ margin: '0 0 12px', paddingLeft: 20 }}>
+            <li>Go to <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" style={{ color: theme.colors.primary }}>console.anthropic.com</a> and create a free account</li>
+            <li>Navigate to <strong>API Keys</strong> in your dashboard</li>
+            <li>Click <strong>Create Key</strong> and copy the key</li>
+            <li>Paste it below and click <strong>Test Connection</strong></li>
+          </ol>
+          <a
+            href="https://console.anthropic.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block', padding: '8px 16px',
+              background: theme.colors.primary, color: '#fff',
+              borderRadius: theme.radius.sm, fontSize: 13, fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            Get your API key at console.anthropic.com →
+          </a>
+        </div>
 
         {/* Privacy notice */}
-        <div style={{ padding: '14px 16px', background: theme.colors.primaryLight, borderRadius: theme.radius.md, marginBottom: 28, border: `1px solid ${theme.colors.primary}`, fontSize: 13, color: theme.colors.primary, lineHeight: 1.6 }}>
-          🔒 <strong>Privacy:</strong> Your API key is stored only in localStorage on your device. When you ask for an AI hint, your browser calls the AI provider directly. Fisher App never sees your key or your AI conversations.
+        <div style={{ padding: '12px 16px', background: theme.colors.primaryLight, borderRadius: theme.radius.md, marginBottom: 28, border: `1px solid ${theme.colors.primary}`, fontSize: 13, color: theme.colors.primary, lineHeight: 1.6 }}>
+          🔒 <strong>Privacy:</strong> Your API key is stored only in your browser — it is never sent to or stored on our servers. You can remove it at any time below.
         </div>
 
         {/* Provider selection */}
