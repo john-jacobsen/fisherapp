@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
 import MasteryMeter from '../components/MasteryMeter';
@@ -40,6 +41,13 @@ export default function PracticePage() {
   // Hints
   const [hints, setHints] = useState([]);
   const [loadingHints, setLoadingHints] = useState(false);
+
+  // AI Chat panel
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiMessages, setAiMessages] = useState([]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const aiBottomRef = useRef(null);
 
   const initialized = useRef(false);
 
@@ -99,6 +107,9 @@ export default function PracticePage() {
     } else {
       setHints([]);
     }
+    // Clear AI chat history when moving to a new problem
+    setAiMessages([]);
+    setAiInput('');
   }, [problem?.id]);
 
   const submit = async () => {
@@ -194,6 +205,37 @@ export default function PracticePage() {
   const switchToLearning = () => {
     setMode('learning');
     setFeedback(null);
+  };
+
+  const sendAIMessage = async () => {
+    const text = aiInput.trim();
+    if (!text || aiLoading || !aiConfig?.apiKey) return;
+
+    const userMsg = { role: 'user', content: text };
+    const nextMessages = [...aiMessages, userMsg];
+    setAiMessages(nextMessages);
+    setAiInput('');
+    setAiLoading(true);
+
+    try {
+      const hintsText = hints.map((h, i) => `Hint ${i + 1}: ${h.text}`);
+      const r = await api.post('/ai/chat', {
+        api_key: aiConfig.apiKey,
+        messages: nextMessages,
+        context: {
+          topic: nodeTitle || nodeId,
+          problem_text: problem?.problem_text || '',
+          hints: hintsText,
+        },
+      });
+      setAiMessages(prev => [...prev, { role: 'assistant', content: r.data.response }]);
+    } catch (err) {
+      const detail = err.response?.data?.detail || 'Could not reach AI. Check your API key.';
+      setAiMessages(prev => [...prev, { role: 'assistant', content: `Error: ${detail}`, error: true }]);
+    } finally {
+      setAiLoading(false);
+      setTimeout(() => aiBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    }
   };
 
   const endSession = async () => {
@@ -527,7 +569,7 @@ export default function PracticePage() {
           </div>
         )}
 
-        {/* Hints — only visible in Learning Mode */}
+        {/* Hints + AI Help — only visible in Learning Mode */}
         <HintPanel
           hints={hints}
           loading={loadingHints}
@@ -546,6 +588,129 @@ export default function PracticePage() {
             );
           }}
         />
+
+        {/* AI Help button and chat panel — Learning Mode only */}
+        {isLearning && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => {
+                if (!aiConfig?.apiKey) {
+                  setShowAIChat('no-key');
+                } else {
+                  setShowAIChat(v => v === 'open' ? false : 'open');
+                }
+              }}
+              style={{
+                padding: '10px 16px', width: '100%', background: theme.colors.primaryLight,
+                border: `1px solid ${theme.colors.primary}`, borderRadius: theme.radius.md,
+                cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', fontSize: 14, color: theme.colors.primary,
+                fontFamily: theme.fonts.sans, fontWeight: 600,
+              }}
+            >
+              <span>🤖 AI Help</span>
+              <span>{showAIChat === 'open' ? '▲' : '▼'}</span>
+            </button>
+
+            {showAIChat === 'no-key' && (
+              <div style={{
+                padding: '12px 16px', marginTop: 4,
+                background: '#FFF8EE', border: '1px solid #E8961A',
+                borderRadius: theme.radius.md, fontSize: 14, color: '#B86A00',
+                fontFamily: theme.fonts.sans,
+              }}>
+                To use AI help, add your Anthropic API key in{' '}
+                <Link to="/ai-setup" style={{ color: theme.colors.primary, fontWeight: 600 }}>
+                  Settings → AI Hints
+                </Link>
+                .
+              </div>
+            )}
+
+            {showAIChat === 'open' && (
+              <div style={{
+                marginTop: 4, border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radius.md, overflow: 'hidden',
+              }}>
+                {/* Chat messages */}
+                <div style={{
+                  maxHeight: 400, overflowY: 'auto', padding: 12,
+                  display: 'flex', flexDirection: 'column', gap: 10,
+                  background: theme.colors.surface,
+                }}>
+                  {aiMessages.length === 0 && (
+                    <p style={{ margin: 0, fontSize: 13, color: theme.colors.textSecondary, textAlign: 'center', padding: '16px 0' }}>
+                      Ask me anything about this problem!
+                    </p>
+                  )}
+                  {aiMessages.map((m, i) => (
+                    <div key={i} style={{
+                      maxWidth: '85%',
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                      padding: '9px 13px', borderRadius: theme.radius.md,
+                      fontSize: 13, lineHeight: 1.6,
+                      background: m.role === 'user'
+                        ? theme.colors.primary
+                        : (m.error ? theme.colors.errorLight : '#F1F3F5'),
+                      color: m.role === 'user' ? '#fff' : (m.error ? theme.colors.error : theme.colors.text),
+                      fontFamily: theme.fonts.sans,
+                    }}>
+                      {m.role === 'assistant'
+                        ? <MathDisplay content={m.content} />
+                        : m.content}
+                    </div>
+                  ))}
+                  {aiLoading && (
+                    <div style={{
+                      alignSelf: 'flex-start', padding: '9px 13px',
+                      borderRadius: theme.radius.md, background: '#F1F3F5',
+                      fontSize: 13, color: theme.colors.textSecondary,
+                    }}>
+                      Thinking…
+                    </div>
+                  )}
+                  <div ref={aiBottomRef} />
+                </div>
+
+                {/* Input area */}
+                <div style={{
+                  padding: '10px 12px',
+                  borderTop: `1px solid ${theme.colors.border}`,
+                  display: 'flex', gap: 8,
+                  background: theme.colors.surfaceAlt,
+                }}>
+                  <input
+                    value={aiInput}
+                    onChange={e => setAiInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); } }}
+                    placeholder="Ask a question…"
+                    style={{
+                      flex: 1, padding: '8px 12px', fontSize: 13,
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: theme.radius.sm,
+                      background: theme.colors.surface,
+                      color: theme.colors.text,
+                      fontFamily: theme.fonts.sans, outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={sendAIMessage}
+                    disabled={!aiInput.trim() || aiLoading}
+                    style={{
+                      padding: '8px 16px', background: theme.colors.primary,
+                      color: '#fff', border: 'none', borderRadius: theme.radius.sm,
+                      cursor: !aiInput.trim() || aiLoading ? 'not-allowed' : 'pointer',
+                      fontSize: 13, fontFamily: theme.fonts.sans,
+                      opacity: !aiInput.trim() || aiLoading ? 0.6 : 1,
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
