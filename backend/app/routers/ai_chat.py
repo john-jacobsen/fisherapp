@@ -88,7 +88,7 @@ async def ai_chat(req: AIChatRequest):
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(ANTHROPIC_API_URL, headers=headers, json=body)
     except httpx.ConnectError:
-        raise HTTPException(status_code=502, detail="Could not reach AI service")
+        raise HTTPException(status_code=502, detail="Could not reach Anthropic API. Check your internet connection.")
     except httpx.TimeoutException:
         raise HTTPException(status_code=502, detail="AI service timed out")
     except Exception as e:
@@ -96,9 +96,25 @@ async def ai_chat(req: AIChatRequest):
         raise HTTPException(status_code=502, detail="AI service unavailable")
 
     if response.status_code == 401:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(status_code=401, detail="Invalid API key. Check that your key is correct.")
     if response.status_code == 429:
-        raise HTTPException(status_code=429, detail="Rate limited, try again")
+        raise HTTPException(status_code=429, detail="Rate limited. Please wait a moment and try again.")
+    if response.status_code == 400:
+        try:
+            err_body = response.json()
+            err_msg = err_body.get("error", {}).get("message", "")
+        except Exception:
+            err_msg = ""
+        logger.error("Anthropic API 400 error: %s", err_msg or response.text[:200])
+        if "credit balance" in err_msg.lower():
+            raise HTTPException(
+                status_code=402,
+                detail="Your Anthropic API credit balance is too low. Add credits at console.anthropic.com/settings/billing",
+            )
+        raise HTTPException(status_code=400, detail=err_msg or "Bad request to Anthropic API.")
+    if response.status_code >= 500:
+        logger.error("Anthropic API error %s: %s", response.status_code, response.text[:200])
+        raise HTTPException(status_code=502, detail="Anthropic API is temporarily unavailable. Try again later.")
     if response.status_code != 200:
         logger.error("Anthropic API error %s: %s", response.status_code, response.text[:200])
         raise HTTPException(status_code=502, detail="AI service unavailable")

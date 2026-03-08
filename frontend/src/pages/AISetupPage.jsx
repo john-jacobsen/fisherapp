@@ -67,8 +67,13 @@ export default function AISetupPage() {
         setTestResult({ ok: true, message: '✓ Connected! AI tutoring is ready to use.' });
       }
     } catch (e) {
+      const status = e.response?.status;
       const detail = e.response?.data?.detail || e.message;
-      setTestResult({ ok: false, message: `Connection failed: ${detail}. Check your API key.` });
+      if (status === 402) {
+        setTestResult({ ok: false, message: detail, billingLink: true });
+      } else {
+        setTestResult({ ok: false, message: `Connection failed: ${detail}` });
+      }
     } finally {
       setTesting(false);
     }
@@ -196,6 +201,14 @@ export default function AISetupPage() {
             fontSize: 14, border: `1px solid ${testResult.ok ? theme.colors.success : theme.colors.error}`,
           }}>
             {testResult.ok ? '✓ ' : '✗ '}{testResult.message}
+            {testResult.billingLink && (
+              <span> <a
+                href="https://console.anthropic.com/settings/billing"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: theme.colors.error, fontWeight: 600 }}
+              >Add credits →</a></span>
+            )}
           </div>
         )}
 
