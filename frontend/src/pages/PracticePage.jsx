@@ -518,27 +518,50 @@ export default function PracticePage() {
             )}
 
             {!hasFeedback && (
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 16 }}>
-                <button
-                  onClick={submit}
-                  disabled={!answer.trim() || submitting}
-                  style={{
-                    padding: '11px 28px', background: theme.colors.primary, color: '#fff',
-                    border: 'none', borderRadius: theme.radius.md,
-                    cursor: !answer.trim() || submitting ? 'not-allowed' : 'pointer',
-                    fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
-                    opacity: !answer.trim() || submitting ? 0.6 : 1,
-                  }}
-                >
-                  {submitting ? 'Checking…' : 'Submit'}
-                </button>
-                <button onClick={endSession} style={{
-                  padding: '11px 20px', background: 'transparent',
-                  border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
-                  cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.fonts.sans,
-                }}>
-                  Finish session
-                </button>
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={submit}
+                    disabled={!answer.trim() || submitting}
+                    style={{
+                      padding: '11px 28px', background: theme.colors.primary, color: '#fff',
+                      border: 'none', borderRadius: theme.radius.md,
+                      cursor: !answer.trim() || submitting ? 'not-allowed' : 'pointer',
+                      fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
+                      opacity: !answer.trim() || submitting ? 0.6 : 1,
+                    }}
+                  >
+                    {submitting ? 'Checking…' : 'Submit'}
+                  </button>
+                  {isLearning && (
+                    <button onClick={switchToTest} style={{
+                      padding: '11px 20px', background: 'transparent',
+                      border: `2px solid #E8961A`, borderRadius: theme.radius.md,
+                      cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                      color: '#B86A00', fontFamily: theme.fonts.sans,
+                    }}>
+                      Switch to Test Mode →
+                    </button>
+                  )}
+                  <button onClick={endSession} style={{
+                    padding: '11px 20px', background: 'transparent',
+                    border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                    cursor: 'pointer', fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.fonts.sans,
+                  }}>
+                    Finish session
+                  </button>
+                </div>
+                {!isLearning && (
+                  <div style={{ marginTop: 8 }}>
+                    <button onClick={switchToLearning} style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 13, color: theme.colors.primary, fontFamily: theme.fonts.sans,
+                      textDecoration: 'underline', padding: 0,
+                    }}>
+                      ← Back to Learning
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
