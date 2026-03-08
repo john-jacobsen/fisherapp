@@ -1,3 +1,6 @@
+import json
+import os
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -10,6 +13,17 @@ from app.models.progress import StudentState, ReviewSchedule
 from app.kst.kst_engine import get_active_graph
 
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
+
+_VIDEOS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "lesson_videos.json")
+
+
+def _load_videos() -> dict:
+    """Load lesson_videos.json fresh each call so edits take effect without restart."""
+    try:
+        with open(_VIDEOS_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 
 def _prereqs_met(node_id: str, db: Session, user_id: str, graph_id) -> bool:
@@ -106,3 +120,14 @@ def get_examples(
             for e in examples
         ]
     }
+
+
+@router.get("/{node_id}/videos")
+def get_videos(
+    node_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Return curated videos for a node from lesson_videos.json."""
+    data = _load_videos()
+    entry = data.get(node_id, {})
+    return {"videos": entry.get("videos", [])}

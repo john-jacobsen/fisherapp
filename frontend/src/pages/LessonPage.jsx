@@ -17,12 +17,23 @@ export default function LessonPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [curatedVideos, setCuratedVideos] = useState(null); // null = loading, [] = no videos
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     api.get(`/lessons/${nodeId}`)
-      .then(r => setLessonData(r.data))
+      .then(r => {
+        setLessonData(r.data);
+        const title = r.data.node?.label || '';
+        setSearchQuery(`${title} algebra tutorial`);
+      })
       .catch(() => setError('Could not load lesson.'))
       .finally(() => setLoading(false));
+
+    api.get(`/lessons/${nodeId}/videos`)
+      .then(r => setCuratedVideos(r.data.videos || []))
+      .catch(() => setCuratedVideos([])); // fallback to Tier 2 if endpoint unavailable
   }, [nodeId]);
 
   if (loading) return (
@@ -51,14 +62,15 @@ export default function LessonPage() {
   const mastery = lessonData.mastery ?? 0;
   const title = node.label || '';
   const topic = node.topic || '';
-  const videoUrl = lesson?.video_url || null;
   const contentMarkdown = lesson?.content_markdown || '';
 
-  // Extract YouTube video ID — returns null if URL has no valid ID
-  const videoId = extractYouTubeId(videoUrl);
-  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  // Tier 1: curated video from lesson_videos.json (via backend endpoint)
+  const activeVideo = curatedVideos && curatedVideos.length > 0 ? curatedVideos[activeVideoIndex] : null;
+  const activeVideoId = activeVideo ? extractYouTubeId(activeVideo.url) : null;
+  const activeEmbedUrl = activeVideoId ? `https://www.youtube.com/embed/${activeVideoId}` : null;
 
-  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} algebra tutorial`)}`;
+  // Tier 2: YouTube search fallback
+  const encodedQuery = encodeURIComponent(searchQuery);
 
   return (
     <>
@@ -82,42 +94,111 @@ export default function LessonPage() {
           <MasteryMeter mastery={mastery} size={80} />
         </div>
 
-        {/* YouTube embed or fallback */}
-        {embedUrl && !videoFailed ? (
-          <div style={{ marginBottom: 32, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.md }}>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-              <iframe
-                src={embedUrl}
-                title={title}
-                frameBorder="0"
-                allowFullScreen
-                onError={() => setVideoFailed(true)}
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              />
+        {/* Tier 1: curated video player */}
+        {activeEmbedUrl && !videoFailed ? (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.md }}>
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                <iframe
+                  src={activeEmbedUrl}
+                  title={activeVideo?.title || title}
+                  frameBorder="0"
+                  allowFullScreen
+                  onError={() => setVideoFailed(true)}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
             </div>
+            {activeVideo?.source && (
+              <div style={{ marginTop: 6, fontSize: 12, color: theme.colors.textSecondary }}>
+                Source: {activeVideo.source}
+              </div>
+            )}
+            {/* Video selector when multiple videos exist */}
+            {curatedVideos.length > 1 && (
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: theme.colors.textSecondary }}>More videos:</div>
+                {curatedVideos.map((v, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setActiveVideoIndex(i); setVideoFailed(false); }}
+                    style={{
+                      padding: '8px 14px', textAlign: 'left',
+                      background: i === activeVideoIndex ? theme.colors.primaryLight : theme.colors.surfaceAlt,
+                      border: `1px solid ${i === activeVideoIndex ? theme.colors.primary : theme.colors.border}`,
+                      borderRadius: theme.radius.sm, cursor: 'pointer',
+                      fontSize: 13, color: theme.colors.text, fontFamily: theme.fonts.sans,
+                    }}
+                  >
+                    {v.title || `Video ${i + 1}`}
+                    {v.source && <span style={{ color: theme.colors.textSecondary }}> — {v.source}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
+          /* Tier 2: YouTube search fallback */
           <div style={{
             marginBottom: 32, borderRadius: theme.radius.lg, boxShadow: theme.shadow.sm,
             background: theme.colors.surfaceAlt, border: `1px solid ${theme.colors.border}`,
-            padding: '40px 32px', textAlign: 'center',
+            padding: '32px 28px',
           }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>▶</div>
-            <p style={{ margin: '0 0 16px', color: theme.colors.textSecondary, fontSize: 15 }}>
-              No video available for this topic.
+            <div style={{ fontSize: 32, marginBottom: 10, textAlign: 'center' }}>▶</div>
+            <p style={{ margin: '0 0 16px', color: theme.colors.textSecondary, fontSize: 14, textAlign: 'center' }}>
+              No curated video available for this topic yet.
             </p>
-            <a
-              href={youtubeSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-block', padding: '10px 20px',
-                background: '#FF0000', color: '#fff', borderRadius: theme.radius.md,
-                textDecoration: 'none', fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
-              }}
-            >
-              Search YouTube for this topic →
-            </a>
+
+            {/* Search bar */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search query…"
+                style={{
+                  flex: 1, padding: '9px 12px', fontSize: 14,
+                  border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                  background: theme.colors.surface, color: theme.colors.text,
+                  fontFamily: theme.fonts.sans, outline: 'none',
+                }}
+              />
+              <a
+                href={`https://www.youtube.com/results?search_query=${encodedQuery}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '9px 18px', background: '#FF0000', color: '#fff',
+                  borderRadius: theme.radius.md, textDecoration: 'none',
+                  fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
+                  whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center',
+                }}
+              >
+                Search YouTube →
+              </a>
+            </div>
+
+            {/* Suggested resource links */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: theme.colors.textSecondary }}>Suggested resources:</div>
+              {[
+                { label: 'Khan Academy', query: `khan academy ${title}` },
+                { label: 'The Organic Chemistry Tutor', query: `organic chemistry tutor ${title}` },
+                { label: 'Professor Leonard', query: `professor leonard ${title}` },
+              ].map(({ label, query }) => (
+                <a
+                  key={label}
+                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: 13, color: theme.colors.primary,
+                    textDecoration: 'none', display: 'inline-block',
+                  }}
+                >
+                  Search {label}: {title} →
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
