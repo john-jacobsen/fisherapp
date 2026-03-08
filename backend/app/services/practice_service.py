@@ -482,6 +482,10 @@ def complete_practice(
             student_state.mastered_nodes = list(mastered_set)
             student_state.outer_fringe = outer
             student_state.inner_fringe = inner
+            # JSONB fields require flag_modified to guarantee SQLAlchemy tracks the mutation
+            flag_modified(student_state, "mastered_nodes")
+            flag_modified(student_state, "outer_fringe")
+            flag_modified(student_state, "inner_fringe")
         else:
             new_state = StudentState(
                 user_id=user_id,
