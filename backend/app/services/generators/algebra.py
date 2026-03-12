@@ -12,6 +12,26 @@ from fractions import Fraction
 from math import gcd
 
 
+# ─── Display helpers ──────────────────────────────────────────────────────────
+
+def _coeff(n, var="x"):
+    """Format a coefficient for display: 1x→x, -1x→-x, 0x→''."""
+    if n == 0:
+        return ""
+    if n == 1:
+        return var
+    if n == -1:
+        return f"-{var}"
+    return f"{n}{var}"
+
+
+def _const(n):
+    """Format a constant term as ' + n', ' - |n|', or '' (includes leading space)."""
+    if n == 0:
+        return ""
+    return f" + {n}" if n > 0 else f" - {abs(n)}"
+
+
 # ─── alg-linear-graphs ────────────────────────────────────────────────────────
 
 def _gen_alg_linear_graphs():
@@ -20,11 +40,11 @@ def _gen_alg_linear_graphs():
     b = random.randint(-5, 5)
     x = random.randint(-3, 3)
     y = m * x + b
-    b_str = f"+ {b}" if b >= 0 else f"- {abs(b)}"
+    b_str = _const(b)
     m_str = str(m) if m != 1 and m != -1 else ("-" if m == -1 else "")
     return {
         "problem_text": (
-            f"The line \\(y = {m_str}x {b_str}\\) passes through the point "
+            f"The line \\(y = {m_str}x{b_str}\\) passes through the point "
             f"\\((x, y)\\) when \\(x = {x}\\). What is \\(y\\)?"
         ),
         "correct_answer": str(y),
@@ -32,7 +52,7 @@ def _gen_alg_linear_graphs():
         "difficulty": 0.4,
         "hints": [
             {"level": 1, "text": "To find a point on a line, substitute the x-value into the equation and evaluate."},
-            {"level": 2, "text": f"Substitute \\(x = {x}\\) into \\(y = {m_str}x {b_str}\\)."},
+            {"level": 2, "text": f"Substitute \\(x = {x}\\) into \\(y = {m_str}x{b_str}\\)."},
             {"level": 3, "text": f"\\(y = {m}({x}) + ({b}) = {m*x} + ({b}) = {y}\\)"},
         ],
     }
@@ -67,10 +87,10 @@ def _gen_alg_slope():
         # Identify slope from y = mx + b
         m = random.choice([-3, -2, -1, 1, 2, 3])
         b = random.randint(-6, 6)
-        b_str = f"+ {b}" if b >= 0 else f"- {abs(b)}"
+        b_str = _const(b)
         m_str = str(m) if abs(m) != 1 else ("-" if m == -1 else "")
         return {
-            "problem_text": f"What is the slope of the line \\(y = {m_str}x {b_str}\\)?",
+            "problem_text": f"What is the slope of the line \\(y = {m_str}x{b_str}\\)?",
             "correct_answer": str(m),
             "answer_type": "numeric",
             "difficulty": 0.3,
@@ -92,12 +112,13 @@ def _gen_alg_systems_sub():
     b = random.randint(1, 3)
     c1 = y - a * x
     c2 = b * x + y
-    c1_str = f"+ {c1}" if c1 >= 0 else f"- {abs(c1)}"
+    c1_str = _const(c1)
     a_str = str(a) if a != 1 else ""
+    b_str = _coeff(b, "x")
     return {
         "problem_text": (
             f"Solve the system by substitution: "
-            f"\\(y = {a_str}x {c1_str}\\) and \\({b}x + y = {c2}\\). "
+            f"\\(y = {a_str}x{c1_str}\\) and \\({b_str} + y = {c2}\\). "
             f"Enter the value of \\(x\\)."
         ),
         "correct_answer": str(x),
@@ -105,10 +126,10 @@ def _gen_alg_systems_sub():
         "difficulty": 0.6,
         "hints": [
             {"level": 1, "text": "Substitution: the first equation already gives y in terms of x — plug it into the second."},
-            {"level": 2, "text": f"Replace \\(y\\) in the second equation with \\({a}x {c1_str}\\), then solve for \\(x\\)."},
+            {"level": 2, "text": f"Replace \\(y\\) in the second equation with \\({a_str}x{c1_str}\\), then solve for \\(x\\)."},
             {"level": 3, "text": (
-                f"\\({b}x + ({a}x {c1_str}) = {c2} "
-                f"\\Rightarrow {a+b}x {c1_str} = {c2} "
+                f"\\({b_str} + ({a_str}x{c1_str}) = {c2} "
+                f"\\Rightarrow {a+b}x{c1_str} = {c2} "
                 f"\\Rightarrow {a+b}x = {c2 - c1} "
                 f"\\Rightarrow x = {x}\\)"
             )},
@@ -132,10 +153,12 @@ def _gen_alg_systems_elim():
         b2 = random.randint(1, 3)
     c1 = a1 * x + b1 * y
     c2 = a2 * x + b2 * y
+    eq1 = f"{_coeff(a1, 'x')} + {_coeff(b1, 'y')} = {c1}"
+    eq2 = f"{_coeff(a2, 'x')} + {_coeff(b2, 'y')} = {c2}"
     return {
         "problem_text": (
-            f"Solve by elimination: \\({a1}x + {b1}y = {c1}\\) and "
-            f"\\({a2}x + {b2}y = {c2}\\). Enter the value of \\(x\\)."
+            f"Solve by elimination: \\({eq1}\\) and "
+            f"\\({eq2}\\). Enter the value of \\(x\\)."
         ),
         "correct_answer": str(x),
         "answer_type": "numeric",
@@ -144,7 +167,7 @@ def _gen_alg_systems_elim():
             {"level": 1, "text": "Elimination: multiply one or both equations so a variable's coefficients match, then subtract to cancel it."},
             {"level": 2, "text": f"Multiply the first equation by {a2} and the second by {a1} to make the \\(x\\)-coefficients equal, then subtract."},
             {"level": 3, "text": (
-                f"\\({a2}({a1}x + {b1}y) - {a1}({a2}x + {b2}y) = {a2*c1} - {a1*c2}\\) "
+                f"\\({a2}({eq1}) - {a1}({eq2}) = 0\\) "
                 f"\\(\\Rightarrow {a2*b1 - a1*b2}y = {a2*c1 - a1*c2}\\) "
                 f"\\(\\Rightarrow y = {y}\\), then back-substitute to get \\(x = {x}\\)."
             )},
@@ -194,12 +217,12 @@ def _gen_alg_poly_ops():
         coeff_x = a1 - a2
         const = b1 - b2
 
-    b1_str = f"+ {b1}" if b1 >= 0 else f"- {abs(b1)}"
-    b2_str = f"+ {b2}" if b2 >= 0 else f"- {abs(b2)}"
+    b1_str = _const(b1)
+    b2_str = _const(b2)
     const_str = f"+ {const}" if const >= 0 else f"- {abs(const)}"
     return {
         "problem_text": (
-            f"Simplify \\(({a1}x {b1_str}) {op} ({a2}x {b2_str})\\). "
+            f"Simplify \\(({_coeff(a1, 'x')}{b1_str}) {op} ({_coeff(a2, 'x')}{b2_str})\\). "
             f"What is the coefficient of \\(x\\)?"
         ),
         "correct_answer": str(coeff_x),
@@ -250,7 +273,17 @@ def _gen_alg_factoring_quad():
     c = r1 * r2
     roots = sorted([r1, r2])
 
-    b_str = f"+ {b}x" if b > 0 else (f"- {abs(b)}x" if b < 0 else "")
+    if b == 0:
+        b_str = ""
+    elif b == 1:
+        b_str = "+ x"
+    elif b == -1:
+        b_str = "- x"
+    elif b > 0:
+        b_str = f"+ {b}x"
+    else:
+        b_str = f"- {abs(b)}x"
+
     c_str = f"+ {c}" if c > 0 else (f"- {abs(c)}" if c < 0 else "")
     return {
         "problem_text": f"Factor \\(x^2 {b_str} {c_str}\\). Enter the two roots as \\(r_1, r_2\\) (smaller first).",
@@ -307,14 +340,14 @@ def _gen_alg_rational_expr():
     return {
         "problem_text": (
             f"For what value of \\(x\\) is the expression "
-            f"\\(\\frac{{(x - {r})({a}x + {b})}}{{(x - {r})({c}x + {d})}}\\) undefined?"
+            f"\\(\\frac{{(x - {r})({_coeff(a, 'x')} + {b})}}{{(x - {r})({_coeff(c, 'x')} + {d})}}\\) undefined?"
         ),
         "correct_answer": str(r),
         "answer_type": "numeric",
         "difficulty": 0.6,
         "hints": [
             {"level": 1, "text": "A rational expression is undefined when its denominator equals zero."},
-            {"level": 2, "text": f"Set the denominator equal to zero: \\((x - {r})({c}x + {d}) = 0\\)."},
+            {"level": 2, "text": f"Set the denominator equal to zero: \\((x - {r})({_coeff(c, 'x')} + {d}) = 0\\)."},
             {"level": 3, "text": f"\\(x - {r} = 0 \\Rightarrow x = {r}\\) (or \\(x = -\\frac{{{d}}}{{{c}}}\\)). The expression is undefined at \\(x = {r}\\) because that factor cannot be cancelled before evaluating."},
         ],
     }
@@ -350,7 +383,8 @@ def _gen_alg_radical_equations():
     x = random.randint(1, 8)
     b = c ** 2 - a * x
     b_str = f"+ {b}" if b > 0 else (f"- {abs(b)}" if b < 0 else "")
-    inner = f"{a}x {b_str}".strip() if b != 0 else f"{a}x"
+    ax_str = _coeff(a, "x")
+    inner = f"{ax_str} {b_str}".strip() if b != 0 else ax_str
     return {
         "problem_text": f"Solve: \\(\\sqrt{{{inner}}} = {c}\\)",
         "correct_answer": str(x),

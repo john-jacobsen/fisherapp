@@ -577,7 +577,11 @@ def _gen_eq_quadratic():
 
     # Build LaTeX equation string
     parts = ["x^2"]
-    if b > 0:
+    if b == 1:
+        parts.append("+ x")
+    elif b == -1:
+        parts.append("- x")
+    elif b > 0:
         parts.append(f"+ {b}x")
     elif b < 0:
         parts.append(f"- {abs(b)}x")

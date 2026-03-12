@@ -778,9 +778,10 @@ def _gen_prob_cdf_method():
     # F_Y(y) = (y - b)/a for b ≤ y ≤ a+b
     t = random.randint(b + 1, a + b - 1)
     ans = _fr(t - b, a)
+    b_part = f" + {b}" if b > 0 else ""
     return {
         "problem_text": (
-            f"Let \\(X \\sim \\text{{Uniform}}(0, 1)\\) and \\(Y = {a}X + {b}\\). "
+            f"Let \\(X \\sim \\text{{Uniform}}(0, 1)\\) and \\(Y = {a}X{b_part}\\). "
             f"Find \\(F_Y({t}) = P(Y \\leq {t})\\)."
         ),
         "correct_answer": ans, "answer_type": "symbolic", "difficulty": 0.6,
