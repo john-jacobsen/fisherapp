@@ -1,393 +1,3046 @@
 {
-  "metadata": {
-    "domain_name": "Algebra for Statistics — UC Berkeley STAT 20",
-    "version": "1.1.0",
-    "created_at": "2026-02-25T00:00:00Z",
-    "provenance": {
-      "methodology": "Expert-defined prerequisite structure for UC Berkeley statistics prerequisite algebra skills"
-    }
-  },
-  "subjects": [
-    {
-      "id": "algebra",
-      "name": "Algebra",
-      "description": "Foundation algebra skills for UC Berkeley STAT 20",
-      "hasContent": true,
-      "prerequisites": [],
-      "topics": [
-        {
-          "id": "fraction-arithmetic",
-          "name": "Fraction Arithmetic",
-          "nodeIds": ["frac-simplify", "frac-add-like", "frac-common-denom", "frac-add-unlike", "frac-multiply", "frac-divide"],
-          "display_x": 20, "display_y": 20
-        },
-        {
-          "id": "order-of-operations",
-          "name": "Order of Operations",
-          "nodeIds": ["order-pemdas", "order-nested"],
-          "display_x": 200, "display_y": 20
-        },
-        {
-          "id": "exponent-rules",
-          "name": "Exponent Rules",
-          "nodeIds": ["exp-product", "exp-power", "exp-negative", "exp-combined"],
-          "display_x": 380, "display_y": 20
-        },
-        {
-          "id": "solving-equations",
-          "name": "Solving Equations",
-          "nodeIds": ["eq-one-step", "eq-two-step", "eq-fractions", "eq-distribution", "eq-quadratic"],
-          "display_x": 110, "display_y": 180
-        },
-        {
-          "id": "logarithms",
-          "name": "Logarithms",
-          "nodeIds": ["log-exponential", "log-definition", "log-rules", "log-equations"],
-          "display_x": 380, "display_y": 180
-        },
-        {
-          "id": "summation-notation",
-          "name": "Summation Notation",
-          "nodeIds": ["sum-sigma", "sum-arithmetic", "sum-nested"],
-          "display_x": 20, "display_y": 340
-        },
-        {
-          "id": "combinatorics",
-          "name": "Combinatorics",
-          "nodeIds": ["comb-counting", "comb-permutations", "comb-combinations"],
-          "display_x": 200, "display_y": 340
-        },
-        {
-          "id": "geometric-series",
-          "name": "Geometric Series",
-          "nodeIds": ["geo-sequences", "geo-finite", "geo-infinite"],
-          "display_x": 380, "display_y": 340
-        }
-      ]
-    },
-    {
-      "id": "calculus-1",
-      "name": "Calculus I",
-      "description": "Limits, derivatives, and integrals",
-      "hasContent": false,
-      "prerequisites": ["algebra"],
-      "topics": []
-    },
-    {
-      "id": "probability",
-      "name": "Probability",
-      "description": "Probability theory and distributions",
-      "hasContent": false,
-      "prerequisites": ["algebra"],
-      "topics": []
-    }
-  ],
   "items": [
     {
       "id": "frac-simplify",
       "label": "Simplifying Fractions",
-      "description": "Reduce fractions to lowest terms by dividing numerator and denominator by their GCD.",
-      "tags": ["Fractions"],
       "topic": "Fractions",
-      "display_x": 80,
-      "display_y": 200
+      "description": "Simplifying Fractions",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 0,
+      "display_y": 0
     },
     {
       "id": "frac-add-like",
       "label": "Adding Fractions (Like Denominators)",
-      "description": "Add and subtract fractions that share the same denominator.",
-      "tags": ["Fractions"],
       "topic": "Fractions",
-      "display_x": 220,
-      "display_y": 140
+      "description": "Adding Fractions (Like Denominators)",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 200,
+      "display_y": 0
     },
     {
       "id": "frac-common-denom",
-      "label": "Finding Common Denominators",
-      "description": "Find the least common denominator (LCD) of two or more fractions.",
-      "tags": ["Fractions"],
+      "label": "Common Denominators",
       "topic": "Fractions",
-      "display_x": 360,
-      "display_y": 80
+      "description": "Common Denominators",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 400,
+      "display_y": 0
     },
     {
       "id": "frac-add-unlike",
       "label": "Adding Fractions (Unlike Denominators)",
-      "description": "Add and subtract fractions with different denominators using the LCD.",
-      "tags": ["Fractions"],
       "topic": "Fractions",
-      "display_x": 500,
-      "display_y": 80
+      "description": "Adding Fractions (Unlike Denominators)",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 600,
+      "display_y": 0
     },
     {
       "id": "frac-multiply",
       "label": "Multiplying Fractions",
-      "description": "Multiply two fractions by multiplying numerators and denominators.",
-      "tags": ["Fractions"],
       "topic": "Fractions",
-      "display_x": 360,
-      "display_y": 200
+      "description": "Multiplying Fractions",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 400,
+      "display_y": 150
     },
     {
       "id": "frac-divide",
       "label": "Dividing Fractions",
-      "description": "Divide fractions by multiplying by the reciprocal of the divisor.",
-      "tags": ["Fractions"],
       "topic": "Fractions",
-      "display_x": 500,
-      "display_y": 200
+      "description": "Dividing Fractions",
+      "tags": [
+        "fractions"
+      ],
+      "display_x": 600,
+      "display_y": 150
     },
     {
       "id": "order-pemdas",
       "label": "Order of Operations (PEMDAS)",
-      "description": "Apply PEMDAS/BODMAS rules to evaluate arithmetic expressions correctly.",
-      "tags": ["Order of Operations"],
       "topic": "Order of Operations",
-      "display_x": 80,
-      "display_y": 360
+      "description": "Order of Operations (PEMDAS)",
+      "tags": [
+        "order-of-operations"
+      ],
+      "display_x": 0,
+      "display_y": 150
     },
     {
       "id": "order-nested",
-      "label": "Nested Expressions and Grouping",
-      "description": "Evaluate expressions with nested parentheses, brackets, and complex grouping.",
-      "tags": ["Order of Operations"],
+      "label": "Nested Expressions",
       "topic": "Order of Operations",
-      "display_x": 220,
-      "display_y": 360
+      "description": "Nested Expressions",
+      "tags": [
+        "order-of-operations"
+      ],
+      "display_x": 200,
+      "display_y": 150
     },
     {
       "id": "exp-product",
       "label": "Product Rule for Exponents",
-      "description": "Apply the product rule: x^a · x^b = x^(a+b).",
-      "tags": ["Exponents"],
       "topic": "Exponents",
-      "display_x": 80,
-      "display_y": 500
+      "description": "Product Rule for Exponents",
+      "tags": [
+        "exponents"
+      ],
+      "display_x": 0,
+      "display_y": 300
     },
     {
       "id": "exp-power",
       "label": "Power Rule for Exponents",
-      "description": "Apply the power rule: (x^a)^b = x^(ab).",
-      "tags": ["Exponents"],
       "topic": "Exponents",
-      "display_x": 220,
-      "display_y": 500
+      "description": "Power Rule for Exponents",
+      "tags": [
+        "exponents"
+      ],
+      "display_x": 200,
+      "display_y": 300
     },
     {
       "id": "exp-negative",
-      "label": "Negative and Zero Exponents",
-      "description": "Evaluate expressions with negative exponents (x^-n = 1/x^n) and zero exponents (x^0 = 1).",
-      "tags": ["Exponents"],
+      "label": "Negative Exponents",
       "topic": "Exponents",
-      "display_x": 360,
-      "display_y": 500
+      "description": "Negative Exponents",
+      "tags": [
+        "exponents"
+      ],
+      "display_x": 400,
+      "display_y": 300
     },
     {
       "id": "exp-combined",
-      "label": "Combining Exponent Rules",
-      "description": "Apply multiple exponent rules in a single expression (quotient rule, product rule, power rule together).",
-      "tags": ["Exponents"],
+      "label": "Combined Exponent Rules",
       "topic": "Exponents",
-      "display_x": 500,
-      "display_y": 500
+      "description": "Combined Exponent Rules",
+      "tags": [
+        "exponents"
+      ],
+      "display_x": 600,
+      "display_y": 300
     },
     {
       "id": "eq-one-step",
-      "label": "One-Step Linear Equations",
-      "description": "Solve equations requiring a single operation to isolate the variable.",
-      "tags": ["Equations"],
+      "label": "One-Step Equations",
       "topic": "Equations",
-      "display_x": 360,
-      "display_y": 360
+      "description": "One-Step Equations",
+      "tags": [
+        "equations"
+      ],
+      "display_x": 400,
+      "display_y": 450
     },
     {
       "id": "eq-two-step",
-      "label": "Two-Step Linear Equations",
-      "description": "Solve equations requiring two operations to isolate the variable.",
-      "tags": ["Equations"],
+      "label": "Two-Step Equations",
       "topic": "Equations",
-      "display_x": 500,
-      "display_y": 360
+      "description": "Two-Step Equations",
+      "tags": [
+        "equations"
+      ],
+      "display_x": 600,
+      "display_y": 450
     },
     {
       "id": "eq-fractions",
       "label": "Equations with Fractions",
-      "description": "Solve linear equations that contain fractional coefficients or terms.",
-      "tags": ["Equations"],
       "topic": "Equations",
-      "display_x": 640,
-      "display_y": 280
+      "description": "Equations with Fractions",
+      "tags": [
+        "equations"
+      ],
+      "display_x": 800,
+      "display_y": 0
     },
     {
       "id": "eq-distribution",
-      "label": "Equations with Distribution",
-      "description": "Solve equations requiring the distributive property to expand expressions.",
-      "tags": ["Equations"],
+      "label": "Distributive Property in Equations",
       "topic": "Equations",
-      "display_x": 640,
-      "display_y": 420
+      "description": "Distributive Property in Equations",
+      "tags": [
+        "equations"
+      ],
+      "display_x": 800,
+      "display_y": 150
     },
     {
       "id": "eq-quadratic",
-      "label": "Quadratic Equations (Factoring)",
-      "description": "Solve quadratic equations by factoring into binomials.",
-      "tags": ["Equations"],
+      "label": "Quadratic Equations",
       "topic": "Equations",
-      "display_x": 780,
-      "display_y": 420
+      "description": "Quadratic Equations",
+      "tags": [
+        "equations"
+      ],
+      "display_x": 1000,
+      "display_y": 0
     },
     {
       "id": "log-exponential",
-      "label": "Exponential Functions",
-      "description": "Understand and evaluate exponential functions of the form f(x) = a^x.",
-      "tags": ["Logarithms"],
+      "label": "Exponential Form \u2194 Log Form",
       "topic": "Logarithms",
-      "display_x": 640,
-      "display_y": 560
+      "description": "Exponential Form \u2194 Log Form",
+      "tags": [
+        "logarithms"
+      ],
+      "display_x": 800,
+      "display_y": 300
     },
     {
       "id": "log-definition",
-      "label": "Logarithm Definition",
-      "description": "Convert between exponential and logarithmic forms: log_a(b) = c ↔ a^c = b.",
-      "tags": ["Logarithms"],
+      "label": "Definition of Logarithm",
       "topic": "Logarithms",
-      "display_x": 780,
-      "display_y": 560
+      "description": "Definition of Logarithm",
+      "tags": [
+        "logarithms"
+      ],
+      "display_x": 1000,
+      "display_y": 150
     },
     {
       "id": "log-rules",
       "label": "Logarithm Rules",
-      "description": "Apply product, quotient, and power rules for logarithms.",
-      "tags": ["Logarithms"],
       "topic": "Logarithms",
-      "display_x": 920,
-      "display_y": 560
+      "description": "Logarithm Rules",
+      "tags": [
+        "logarithms"
+      ],
+      "display_x": 1200,
+      "display_y": 0
     },
     {
       "id": "log-equations",
       "label": "Solving Logarithmic Equations",
-      "description": "Solve equations involving logarithms by applying log rules and exponentiating.",
-      "tags": ["Logarithms"],
       "topic": "Logarithms",
-      "display_x": 1060,
-      "display_y": 490
+      "description": "Solving Logarithmic Equations",
+      "tags": [
+        "logarithms"
+      ],
+      "display_x": 1400,
+      "display_y": 0
     },
     {
       "id": "sum-sigma",
       "label": "Sigma Notation",
-      "description": "Read and write sums using sigma (Σ) notation, including index, bounds, and summand.",
-      "tags": ["Summation"],
       "topic": "Summation",
-      "display_x": 640,
-      "display_y": 200
+      "description": "Sigma Notation",
+      "tags": [
+        "summation"
+      ],
+      "display_x": 800,
+      "display_y": 450
     },
     {
       "id": "sum-arithmetic",
-      "label": "Arithmetic Sums",
-      "description": "Compute sums of arithmetic sequences using closed-form formulas.",
-      "tags": ["Summation"],
+      "label": "Arithmetic Series",
       "topic": "Summation",
-      "display_x": 780,
-      "display_y": 200
+      "description": "Arithmetic Series",
+      "tags": [
+        "summation"
+      ],
+      "display_x": 1000,
+      "display_y": 300
     },
     {
       "id": "sum-nested",
       "label": "Nested Sums",
-      "description": "Evaluate double sigma notation and sums with inner and outer indices.",
-      "tags": ["Summation"],
       "topic": "Summation",
-      "display_x": 920,
-      "display_y": 200
+      "description": "Nested Sums",
+      "tags": [
+        "summation"
+      ],
+      "display_x": 1200,
+      "display_y": 150
     },
     {
       "id": "comb-counting",
-      "label": "Counting Principles",
-      "description": "Apply the fundamental counting principle (multiplication rule) to count outcomes.",
-      "tags": ["Combinatorics"],
+      "label": "Fundamental Counting Principle",
       "topic": "Combinatorics",
-      "display_x": 640,
-      "display_y": 340
+      "description": "Fundamental Counting Principle",
+      "tags": [
+        "combinatorics"
+      ],
+      "display_x": 800,
+      "display_y": 600
     },
     {
       "id": "comb-permutations",
       "label": "Permutations",
-      "description": "Count ordered arrangements using P(n,r) = n!/(n-r)!",
-      "tags": ["Combinatorics"],
       "topic": "Combinatorics",
-      "display_x": 780,
-      "display_y": 340
+      "description": "Permutations",
+      "tags": [
+        "combinatorics"
+      ],
+      "display_x": 1000,
+      "display_y": 450
     },
     {
       "id": "comb-combinations",
       "label": "Combinations",
-      "description": "Count unordered selections using C(n,r) = n!/(r!(n-r)!)",
-      "tags": ["Combinatorics"],
       "topic": "Combinatorics",
-      "display_x": 920,
-      "display_y": 340
+      "description": "Combinations",
+      "tags": [
+        "combinatorics"
+      ],
+      "display_x": 1200,
+      "display_y": 300
     },
     {
       "id": "geo-sequences",
       "label": "Geometric Sequences",
-      "description": "Identify and evaluate geometric sequences with common ratio r.",
-      "tags": ["Geometric Series"],
       "topic": "Geometric Series",
-      "display_x": 1060,
-      "display_y": 340
+      "description": "Geometric Sequences",
+      "tags": [
+        "geometric-series"
+      ],
+      "display_x": 1200,
+      "display_y": 450
     },
     {
       "id": "geo-finite",
-      "label": "Finite Geometric Sums",
-      "description": "Compute finite geometric series using S_n = a(1-r^n)/(1-r).",
-      "tags": ["Geometric Series"],
+      "label": "Finite Geometric Series",
       "topic": "Geometric Series",
-      "display_x": 1200,
-      "display_y": 400
+      "description": "Finite Geometric Series",
+      "tags": [
+        "geometric-series"
+      ],
+      "display_x": 1400,
+      "display_y": 150
     },
     {
       "id": "geo-infinite",
       "label": "Infinite Geometric Series",
-      "description": "Evaluate convergent infinite geometric series S = a/(1-r) when |r| < 1.",
-      "tags": ["Geometric Series"],
       "topic": "Geometric Series",
+      "description": "Infinite Geometric Series",
+      "tags": [
+        "geometric-series"
+      ],
+      "display_x": 1600,
+      "display_y": 0
+    },
+    {
+      "id": "alg-linear-graphs",
+      "label": "Graphing Linear Equations",
+      "topic": "Algebra",
+      "description": "Graphing Linear Equations",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 600,
+      "display_y": 600
+    },
+    {
+      "id": "alg-slope",
+      "label": "Slope and Rate of Change",
+      "topic": "Algebra",
+      "description": "Slope and Rate of Change",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 800,
+      "display_y": 750
+    },
+    {
+      "id": "alg-systems-sub",
+      "label": "Systems of Equations (Substitution)",
+      "topic": "Algebra",
+      "description": "Systems of Equations (Substitution)",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 800,
+      "display_y": 900
+    },
+    {
+      "id": "alg-systems-elim",
+      "label": "Systems of Equations (Elimination)",
+      "topic": "Algebra",
+      "description": "Systems of Equations (Elimination)",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1000,
+      "display_y": 600
+    },
+    {
+      "id": "alg-inequalities",
+      "label": "Linear Inequalities",
+      "topic": "Algebra",
+      "description": "Linear Inequalities",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 600,
+      "display_y": 750
+    },
+    {
+      "id": "alg-poly-ops",
+      "label": "Polynomial Operations",
+      "topic": "Algebra",
+      "description": "Polynomial Operations",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1000,
+      "display_y": 750
+    },
+    {
+      "id": "alg-factoring-gcf",
+      "label": "Factoring: GCF",
+      "topic": "Algebra",
+      "description": "Factoring: GCF",
+      "tags": [
+        "algebra"
+      ],
       "display_x": 1200,
-      "display_y": 520
+      "display_y": 600
+    },
+    {
+      "id": "alg-factoring-quad",
+      "label": "Factoring Quadratics",
+      "topic": "Algebra",
+      "description": "Factoring Quadratics",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1400,
+      "display_y": 300
+    },
+    {
+      "id": "alg-completing-square",
+      "label": "Completing the Square",
+      "topic": "Algebra",
+      "description": "Completing the Square",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1600,
+      "display_y": 150
+    },
+    {
+      "id": "alg-rational-expr",
+      "label": "Rational Expressions",
+      "topic": "Algebra",
+      "description": "Rational Expressions",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1600,
+      "display_y": 300
+    },
+    {
+      "id": "alg-radical-simplify",
+      "label": "Simplifying Radicals",
+      "topic": "Algebra",
+      "description": "Simplifying Radicals",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 800,
+      "display_y": 1050
+    },
+    {
+      "id": "alg-radical-equations",
+      "label": "Radical Equations",
+      "topic": "Algebra",
+      "description": "Radical Equations",
+      "tags": [
+        "algebra"
+      ],
+      "display_x": 1000,
+      "display_y": 900
+    },
+    {
+      "id": "precalc-functions",
+      "label": "Function Notation and Evaluation",
+      "topic": "Precalculus",
+      "description": "Function Notation and Evaluation",
+      "tags": [
+        "precalculus"
+      ],
+      "display_x": 600,
+      "display_y": 900
+    },
+    {
+      "id": "precalc-domain-range",
+      "label": "Domain and Range",
+      "topic": "Precalculus",
+      "description": "Domain and Range",
+      "tags": [
+        "precalculus"
+      ],
+      "display_x": 800,
+      "display_y": 1200
+    },
+    {
+      "id": "precalc-composition",
+      "label": "Composition of Functions",
+      "topic": "Precalculus",
+      "description": "Composition of Functions",
+      "tags": [
+        "precalculus"
+      ],
+      "display_x": 800,
+      "display_y": 1350
+    },
+    {
+      "id": "precalc-inverse-func",
+      "label": "Inverse Functions",
+      "topic": "Precalculus",
+      "description": "Inverse Functions",
+      "tags": [
+        "precalculus"
+      ],
+      "display_x": 1000,
+      "display_y": 1050
+    },
+    {
+      "id": "precalc-poly-func",
+      "label": "Polynomial Functions",
+      "topic": "Precalculus",
+      "description": "Polynomial Functions",
+      "tags": [
+        "precalculus"
+      ],
+      "display_x": 1600,
+      "display_y": 450
+    },
+    {
+      "id": "calc-limits",
+      "label": "Limits",
+      "topic": "Calculus",
+      "description": "Limits",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 1800,
+      "display_y": 0
+    },
+    {
+      "id": "calc-limit-laws",
+      "label": "Limit Laws",
+      "topic": "Calculus",
+      "description": "Limit Laws",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2000,
+      "display_y": 0
+    },
+    {
+      "id": "calc-continuity",
+      "label": "Continuity",
+      "topic": "Calculus",
+      "description": "Continuity",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2200,
+      "display_y": 0
+    },
+    {
+      "id": "calc-deriv-def",
+      "label": "Definition of the Derivative",
+      "topic": "Calculus",
+      "description": "Definition of the Derivative",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2200,
+      "display_y": 150
+    },
+    {
+      "id": "calc-deriv-power",
+      "label": "Power Rule",
+      "topic": "Calculus",
+      "description": "Power Rule",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2400,
+      "display_y": 0
+    },
+    {
+      "id": "calc-deriv-product",
+      "label": "Product Rule",
+      "topic": "Calculus",
+      "description": "Product Rule",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2600,
+      "display_y": 0
+    },
+    {
+      "id": "calc-deriv-chain",
+      "label": "Chain Rule",
+      "topic": "Calculus",
+      "description": "Chain Rule",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2800,
+      "display_y": 0
+    },
+    {
+      "id": "calc-deriv-exp-log",
+      "label": "Derivatives of Exponential and Log",
+      "topic": "Calculus",
+      "description": "Derivatives of Exponential and Log",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3000,
+      "display_y": 0
+    },
+    {
+      "id": "calc-implicit",
+      "label": "Implicit Differentiation",
+      "topic": "Calculus",
+      "description": "Implicit Differentiation",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3000,
+      "display_y": 150
+    },
+    {
+      "id": "calc-optim",
+      "label": "Optimization",
+      "topic": "Calculus",
+      "description": "Optimization",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3000,
+      "display_y": 300
+    },
+    {
+      "id": "calc-antideriv",
+      "label": "Antiderivatives",
+      "topic": "Calculus",
+      "description": "Antiderivatives",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2600,
+      "display_y": 150
+    },
+    {
+      "id": "calc-riemann",
+      "label": "Riemann Sums",
+      "topic": "Calculus",
+      "description": "Riemann Sums",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2800,
+      "display_y": 150
+    },
+    {
+      "id": "calc-ftc",
+      "label": "Fundamental Theorem of Calculus",
+      "topic": "Calculus",
+      "description": "Fundamental Theorem of Calculus",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3000,
+      "display_y": 450
+    },
+    {
+      "id": "calc-usub",
+      "label": "U-Substitution",
+      "topic": "Calculus",
+      "description": "U-Substitution",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3200,
+      "display_y": 0
+    },
+    {
+      "id": "calc-byparts",
+      "label": "Integration by Parts",
+      "topic": "Calculus",
+      "description": "Integration by Parts",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3400,
+      "display_y": 0
+    },
+    {
+      "id": "calc-improper",
+      "label": "Improper Integrals",
+      "topic": "Calculus",
+      "description": "Improper Integrals",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 3200,
+      "display_y": 150
+    },
+    {
+      "id": "calc-series-conv",
+      "label": "Series Convergence",
+      "topic": "Calculus",
+      "description": "Series Convergence",
+      "tags": [
+        "calculus"
+      ],
+      "display_x": 2200,
+      "display_y": 300
+    },
+    {
+      "id": "mv-partial",
+      "label": "Partial Derivatives",
+      "topic": "Multivariable Calculus",
+      "description": "Partial Derivatives",
+      "tags": [
+        "multivariable-calculus"
+      ],
+      "display_x": 3000,
+      "display_y": 600
+    },
+    {
+      "id": "mv-double-integral",
+      "label": "Double Integrals",
+      "topic": "Multivariable Calculus",
+      "description": "Double Integrals",
+      "tags": [
+        "multivariable-calculus"
+      ],
+      "display_x": 3200,
+      "display_y": 300
+    },
+    {
+      "id": "mv-change-vars",
+      "label": "Change of Variables (Jacobian)",
+      "topic": "Multivariable Calculus",
+      "description": "Change of Variables (Jacobian)",
+      "tags": [
+        "multivariable-calculus"
+      ],
+      "display_x": 3400,
+      "display_y": 150
+    },
+    {
+      "id": "linalg-vectors",
+      "label": "Vectors: Dot Product and Magnitude",
+      "topic": "Linear Algebra",
+      "description": "Vectors: Dot Product and Magnitude",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 600,
+      "display_y": 1050
+    },
+    {
+      "id": "linalg-matrix-ops",
+      "label": "Matrix Addition and Scalar Multiplication",
+      "topic": "Linear Algebra",
+      "description": "Matrix Addition and Scalar Multiplication",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 800,
+      "display_y": 1500
+    },
+    {
+      "id": "linalg-matrix-mult",
+      "label": "Matrix Multiplication",
+      "topic": "Linear Algebra",
+      "description": "Matrix Multiplication",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1000,
+      "display_y": 1200
+    },
+    {
+      "id": "linalg-transpose",
+      "label": "Transpose",
+      "topic": "Linear Algebra",
+      "description": "Transpose",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1200,
+      "display_y": 750
+    },
+    {
+      "id": "linalg-row-reduce",
+      "label": "Row Reduction",
+      "topic": "Linear Algebra",
+      "description": "Row Reduction",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1200,
+      "display_y": 900
+    },
+    {
+      "id": "linalg-determinant",
+      "label": "Determinants",
+      "topic": "Linear Algebra",
+      "description": "Determinants",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1200,
+      "display_y": 1050
+    },
+    {
+      "id": "linalg-inverse",
+      "label": "Matrix Inverse",
+      "topic": "Linear Algebra",
+      "description": "Matrix Inverse",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1400,
+      "display_y": 450
+    },
+    {
+      "id": "linalg-linear-systems",
+      "label": "Linear Systems",
+      "topic": "Linear Algebra",
+      "description": "Linear Systems",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1400,
+      "display_y": 600
+    },
+    {
+      "id": "linalg-span-independence",
+      "label": "Span and Linear Independence",
+      "topic": "Linear Algebra",
+      "description": "Span and Linear Independence",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1600,
+      "display_y": 600
+    },
+    {
+      "id": "linalg-subspaces",
+      "label": "Subspaces and Column Space",
+      "topic": "Linear Algebra",
+      "description": "Subspaces and Column Space",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1800,
+      "display_y": 150
+    },
+    {
+      "id": "linalg-rank-nullity",
+      "label": "Rank-Nullity Theorem",
+      "topic": "Linear Algebra",
+      "description": "Rank-Nullity Theorem",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2000,
+      "display_y": 150
+    },
+    {
+      "id": "linalg-linear-transforms",
+      "label": "Linear Transformations",
+      "topic": "Linear Algebra",
+      "description": "Linear Transformations",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2000,
+      "display_y": 300
+    },
+    {
+      "id": "linalg-change-basis",
+      "label": "Change of Basis",
+      "topic": "Linear Algebra",
+      "description": "Change of Basis",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2200,
+      "display_y": 450
+    },
+    {
+      "id": "linalg-eigenvalues",
+      "label": "Eigenvalues and Eigenvectors",
+      "topic": "Linear Algebra",
+      "description": "Eigenvalues and Eigenvectors",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1600,
+      "display_y": 750
+    },
+    {
+      "id": "linalg-diagonalization",
+      "label": "Diagonalization",
+      "topic": "Linear Algebra",
+      "description": "Diagonalization",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 1800,
+      "display_y": 300
+    },
+    {
+      "id": "linalg-symmetric-spectral",
+      "label": "Symmetric Matrices and Spectral Theorem",
+      "topic": "Linear Algebra",
+      "description": "Symmetric Matrices and Spectral Theorem",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2400,
+      "display_y": 150
+    },
+    {
+      "id": "linalg-orthogonality",
+      "label": "Orthogonality",
+      "topic": "Linear Algebra",
+      "description": "Orthogonality",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2200,
+      "display_y": 600
+    },
+    {
+      "id": "linalg-gram-schmidt",
+      "label": "Gram-Schmidt Process",
+      "topic": "Linear Algebra",
+      "description": "Gram-Schmidt Process",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2400,
+      "display_y": 300
+    },
+    {
+      "id": "linalg-orthogonal-projection",
+      "label": "Orthogonal Projection",
+      "topic": "Linear Algebra",
+      "description": "Orthogonal Projection",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2600,
+      "display_y": 300
+    },
+    {
+      "id": "linalg-least-squares",
+      "label": "Least Squares",
+      "topic": "Linear Algebra",
+      "description": "Least Squares",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2800,
+      "display_y": 300
+    },
+    {
+      "id": "linalg-svd",
+      "label": "Singular Value Decomposition",
+      "topic": "Linear Algebra",
+      "description": "Singular Value Decomposition",
+      "tags": [
+        "linear-algebra"
+      ],
+      "display_x": 2800,
+      "display_y": 450
+    },
+    {
+      "id": "prob-sample-space",
+      "label": "Sample Spaces",
+      "topic": "Probability",
+      "description": "Sample Spaces",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1000,
+      "display_y": 1350
+    },
+    {
+      "id": "prob-set-ops",
+      "label": "Set Operations",
+      "topic": "Probability",
+      "description": "Set Operations",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1200,
+      "display_y": 1200
+    },
+    {
+      "id": "prob-axioms",
+      "label": "Axioms of Probability",
+      "topic": "Probability",
+      "description": "Axioms of Probability",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1400,
+      "display_y": 750
+    },
+    {
+      "id": "prob-inclusion-excl",
+      "label": "Inclusion-Exclusion",
+      "topic": "Probability",
+      "description": "Inclusion-Exclusion",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1600,
+      "display_y": 900
+    },
+    {
+      "id": "prob-area-probability",
+      "label": "Geometric Probability",
+      "topic": "Probability",
+      "description": "Geometric Probability",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1600,
+      "display_y": 1050
+    },
+    {
+      "id": "prob-conditional",
+      "label": "Conditional Probability",
+      "topic": "Probability",
+      "description": "Conditional Probability",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1600,
+      "display_y": 1200
+    },
+    {
+      "id": "prob-independence",
+      "label": "Independence",
+      "topic": "Probability",
+      "description": "Independence",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1800,
+      "display_y": 450
+    },
+    {
+      "id": "prob-total-prob",
+      "label": "Law of Total Probability",
+      "topic": "Probability",
+      "description": "Law of Total Probability",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1800,
+      "display_y": 600
+    },
+    {
+      "id": "prob-bayes",
+      "label": "Bayes' Theorem",
+      "topic": "Probability",
+      "description": "Bayes' Theorem",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2000,
+      "display_y": 450
+    },
+    {
+      "id": "prob-discrete-rv",
+      "label": "Discrete Random Variables",
+      "topic": "Probability",
+      "description": "Discrete Random Variables",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1600,
+      "display_y": 1350
+    },
+    {
+      "id": "prob-expected-value",
+      "label": "Expected Value",
+      "topic": "Probability",
+      "description": "Expected Value",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1800,
+      "display_y": 750
+    },
+    {
+      "id": "prob-indicators",
+      "label": "Indicator Random Variables",
+      "topic": "Probability",
+      "description": "Indicator Random Variables",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2200,
+      "display_y": 750
+    },
+    {
+      "id": "prob-variance",
+      "label": "Variance",
+      "topic": "Probability",
+      "description": "Variance",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2000,
+      "display_y": 600
+    },
+    {
+      "id": "prob-bernoulli-binom",
+      "label": "Bernoulli and Binomial Distributions",
+      "topic": "Probability",
+      "description": "Bernoulli and Binomial Distributions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2000,
+      "display_y": 750
+    },
+    {
+      "id": "prob-hypergeometric",
+      "label": "Hypergeometric Distribution",
+      "topic": "Probability",
+      "description": "Hypergeometric Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1800,
+      "display_y": 900
+    },
+    {
+      "id": "prob-geometric-dist",
+      "label": "Geometric Distribution",
+      "topic": "Probability",
+      "description": "Geometric Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2000,
+      "display_y": 900
+    },
+    {
+      "id": "prob-poisson",
+      "label": "Poisson Distribution",
+      "topic": "Probability",
+      "description": "Poisson Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2000,
+      "display_y": 1050
+    },
+    {
+      "id": "prob-poisson-approx",
+      "label": "Poisson Approximation to Binomial",
+      "topic": "Probability",
+      "description": "Poisson Approximation to Binomial",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2200,
+      "display_y": 900
+    },
+    {
+      "id": "prob-continuous-rv",
+      "label": "Continuous Random Variables",
+      "topic": "Probability",
+      "description": "Continuous Random Variables",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3200,
+      "display_y": 450
+    },
+    {
+      "id": "prob-normal",
+      "label": "Normal Distribution",
+      "topic": "Probability",
+      "description": "Normal Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 300
+    },
+    {
+      "id": "prob-exponential-dist",
+      "label": "Exponential Distribution",
+      "topic": "Probability",
+      "description": "Exponential Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 450
+    },
+    {
+      "id": "prob-memoryless",
+      "label": "Memoryless Property",
+      "topic": "Probability",
+      "description": "Memoryless Property",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 0
+    },
+    {
+      "id": "prob-gamma-dist",
+      "label": "Gamma Distribution",
+      "topic": "Probability",
+      "description": "Gamma Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 150
+    },
+    {
+      "id": "prob-normal-approx",
+      "label": "Normal Approximation",
+      "topic": "Probability",
+      "description": "Normal Approximation",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 300
+    },
+    {
+      "id": "prob-cdf-method",
+      "label": "CDF Method",
+      "topic": "Probability",
+      "description": "CDF Method",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 600
+    },
+    {
+      "id": "prob-transformations",
+      "label": "Transformations of Random Variables",
+      "topic": "Probability",
+      "description": "Transformations of Random Variables",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 450
+    },
+    {
+      "id": "prob-inverse-cdf",
+      "label": "Inverse CDF / Quantile Function",
+      "topic": "Probability",
+      "description": "Inverse CDF / Quantile Function",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 750
+    },
+    {
+      "id": "prob-joint-discrete",
+      "label": "Joint Discrete Distributions",
+      "topic": "Probability",
+      "description": "Joint Discrete Distributions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 1800,
+      "display_y": 1050
+    },
+    {
+      "id": "prob-joint-continuous",
+      "label": "Joint Continuous Distributions",
+      "topic": "Probability",
+      "description": "Joint Continuous Distributions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 900
+    },
+    {
+      "id": "prob-marginal",
+      "label": "Marginal Distributions",
+      "topic": "Probability",
+      "description": "Marginal Distributions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 600
+    },
+    {
+      "id": "prob-conditional-dist",
+      "label": "Conditional Distributions",
+      "topic": "Probability",
+      "description": "Conditional Distributions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3800,
+      "display_y": 0
+    },
+    {
+      "id": "prob-covariance",
+      "label": "Covariance and Variance of Sums",
+      "topic": "Probability",
+      "description": "Covariance and Variance of Sums",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3800,
+      "display_y": 150
+    },
+    {
+      "id": "prob-conditional-expect",
+      "label": "Conditional Expectation",
+      "topic": "Probability",
+      "description": "Conditional Expectation",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 4000,
+      "display_y": 0
+    },
+    {
+      "id": "prob-bivariate-normal",
+      "label": "Bivariate Normal Distribution",
+      "topic": "Probability",
+      "description": "Bivariate Normal Distribution",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 4000,
+      "display_y": 150
+    },
+    {
+      "id": "prob-mgf",
+      "label": "Moment Generating Functions",
+      "topic": "Probability",
+      "description": "Moment Generating Functions",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 1050
+    },
+    {
+      "id": "prob-poisson-process",
+      "label": "Poisson Process",
+      "topic": "Probability",
+      "description": "Poisson Process",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 750
+    },
+    {
+      "id": "prob-order-stats",
+      "label": "Order Statistics",
+      "topic": "Probability",
+      "description": "Order Statistics",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3400,
+      "display_y": 1200
+    },
+    {
+      "id": "prob-lln",
+      "label": "Law of Large Numbers",
+      "topic": "Probability",
+      "description": "Law of Large Numbers",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 2200,
+      "display_y": 1050
+    },
+    {
+      "id": "prob-clt",
+      "label": "Central Limit Theorem",
+      "topic": "Probability",
+      "description": "Central Limit Theorem",
+      "tags": [
+        "probability"
+      ],
+      "display_x": 3600,
+      "display_y": 900
+    },
+    {
+      "id": "stat-sampling-dist",
+      "label": "Sampling Distributions",
+      "topic": "Statistics",
+      "description": "Sampling Distributions",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3800,
+      "display_y": 300
+    },
+    {
+      "id": "stat-estimator-props",
+      "label": "Properties of Estimators",
+      "topic": "Statistics",
+      "description": "Properties of Estimators",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4000,
+      "display_y": 300
+    },
+    {
+      "id": "stat-survey-srs",
+      "label": "Simple Random Sampling",
+      "topic": "Statistics",
+      "description": "Simple Random Sampling",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 0
+    },
+    {
+      "id": "stat-mom",
+      "label": "Method of Moments",
+      "topic": "Statistics",
+      "description": "Method of Moments",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 2000,
+      "display_y": 1200
+    },
+    {
+      "id": "stat-mle-univariate",
+      "label": "MLE: Univariate",
+      "topic": "Statistics",
+      "description": "MLE: Univariate",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3400,
+      "display_y": 1350
+    },
+    {
+      "id": "stat-mle-multiparameter",
+      "label": "MLE: Multiparameter",
+      "topic": "Statistics",
+      "description": "MLE: Multiparameter",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3600,
+      "display_y": 1050
+    },
+    {
+      "id": "stat-mle-properties",
+      "label": "MLE: Properties and Invariance",
+      "topic": "Statistics",
+      "description": "MLE: Properties and Invariance",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 150
+    },
+    {
+      "id": "stat-sufficiency",
+      "label": "Sufficient Statistics",
+      "topic": "Statistics",
+      "description": "Sufficient Statistics",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3600,
+      "display_y": 1200
+    },
+    {
+      "id": "stat-fisher-info",
+      "label": "Fisher Information",
+      "topic": "Statistics",
+      "description": "Fisher Information",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3600,
+      "display_y": 1350
+    },
+    {
+      "id": "stat-crlb",
+      "label": "Cram\u00e9r-Rao Lower Bound",
+      "topic": "Statistics",
+      "description": "Cram\u00e9r-Rao Lower Bound",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 300
+    },
+    {
+      "id": "stat-mvue",
+      "label": "MVUE",
+      "topic": "Statistics",
+      "description": "MVUE",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 0
+    },
+    {
+      "id": "stat-delta-method",
+      "label": "Delta Method",
+      "topic": "Statistics",
+      "description": "Delta Method",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3800,
+      "display_y": 450
+    },
+    {
+      "id": "stat-bootstrap",
+      "label": "Bootstrap",
+      "topic": "Statistics",
+      "description": "Bootstrap",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 450
+    },
+    {
+      "id": "stat-ci-z",
+      "label": "Z Confidence Intervals",
+      "topic": "Statistics",
+      "description": "Z Confidence Intervals",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4000,
+      "display_y": 450
+    },
+    {
+      "id": "stat-ci-t",
+      "label": "t Confidence Intervals",
+      "topic": "Statistics",
+      "description": "t Confidence Intervals",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 600
+    },
+    {
+      "id": "stat-ci-proportion",
+      "label": "CI for Proportions",
+      "topic": "Statistics",
+      "description": "CI for Proportions",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 750
+    },
+    {
+      "id": "stat-hyp-setup",
+      "label": "Hypothesis Test Setup",
+      "topic": "Statistics",
+      "description": "Hypothesis Test Setup",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 900
+    },
+    {
+      "id": "stat-errors-power",
+      "label": "Type I/II Errors and Power",
+      "topic": "Statistics",
+      "description": "Type I/II Errors and Power",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 150
+    },
+    {
+      "id": "stat-pvalue",
+      "label": "p-Values",
+      "topic": "Statistics",
+      "description": "p-Values",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 300
+    },
+    {
+      "id": "stat-neyman-pearson",
+      "label": "Neyman-Pearson Lemma",
+      "topic": "Statistics",
+      "description": "Neyman-Pearson Lemma",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 0
+    },
+    {
+      "id": "stat-ump",
+      "label": "Uniformly Most Powerful Tests",
+      "topic": "Statistics",
+      "description": "Uniformly Most Powerful Tests",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 0
+    },
+    {
+      "id": "stat-glrt",
+      "label": "Generalized Likelihood Ratio Test",
+      "topic": "Statistics",
+      "description": "Generalized Likelihood Ratio Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 450
+    },
+    {
+      "id": "stat-power-sample-size",
+      "label": "Power and Sample Size",
+      "topic": "Statistics",
+      "description": "Power and Sample Size",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 150
+    },
+    {
+      "id": "stat-ztest-one",
+      "label": "One-Sample Z-Test",
+      "topic": "Statistics",
+      "description": "One-Sample Z-Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 600
+    },
+    {
+      "id": "stat-ttest-one",
+      "label": "One-Sample t-Test",
+      "topic": "Statistics",
+      "description": "One-Sample t-Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 300
+    },
+    {
+      "id": "stat-ttest-two",
+      "label": "Two-Sample t-Test",
+      "topic": "Statistics",
+      "description": "Two-Sample t-Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 150
+    },
+    {
+      "id": "stat-pooled-variance",
+      "label": "Pooled Variance",
+      "topic": "Statistics",
+      "description": "Pooled Variance",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5000,
+      "display_y": 0
+    },
+    {
+      "id": "stat-ttest-paired",
+      "label": "Paired t-Test",
+      "topic": "Statistics",
+      "description": "Paired t-Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 300
+    },
+    {
+      "id": "stat-mannwhitney",
+      "label": "Mann-Whitney U Test",
+      "topic": "Statistics",
+      "description": "Mann-Whitney U Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5000,
+      "display_y": 150
+    },
+    {
+      "id": "stat-wilcoxon-signed",
+      "label": "Wilcoxon Signed-Rank Test",
+      "topic": "Statistics",
+      "description": "Wilcoxon Signed-Rank Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5000,
+      "display_y": 300
+    },
+    {
+      "id": "stat-permutation",
+      "label": "Permutation Tests",
+      "topic": "Statistics",
+      "description": "Permutation Tests",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 750
+    },
+    {
+      "id": "stat-chi-gof",
+      "label": "Chi-Squared Goodness-of-Fit",
+      "topic": "Statistics",
+      "description": "Chi-Squared Goodness-of-Fit",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 900
+    },
+    {
+      "id": "stat-chi-indep",
+      "label": "Chi-Squared Test of Independence",
+      "topic": "Statistics",
+      "description": "Chi-Squared Test of Independence",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 450
+    },
+    {
+      "id": "stat-chi-homog",
+      "label": "Chi-Squared Test of Homogeneity",
+      "topic": "Statistics",
+      "description": "Chi-Squared Test of Homogeneity",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 450
+    },
+    {
+      "id": "stat-anova-one",
+      "label": "One-Way ANOVA",
+      "topic": "Statistics",
+      "description": "One-Way ANOVA",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5000,
+      "display_y": 450
+    },
+    {
+      "id": "stat-anova-kruskal",
+      "label": "Kruskal-Wallis Test",
+      "topic": "Statistics",
+      "description": "Kruskal-Wallis Test",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5200,
+      "display_y": 0
+    },
+    {
+      "id": "stat-multiple-testing",
+      "label": "Multiple Testing Correction",
+      "topic": "Statistics",
+      "description": "Multiple Testing Correction",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 1050
+    },
+    {
+      "id": "stat-slr",
+      "label": "Simple Linear Regression",
+      "topic": "Statistics",
+      "description": "Simple Linear Regression",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4000,
+      "display_y": 600
+    },
+    {
+      "id": "stat-slr-matrix",
+      "label": "SLR in Matrix Form",
+      "topic": "Statistics",
+      "description": "SLR in Matrix Form",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4200,
+      "display_y": 1050
+    },
+    {
+      "id": "stat-slr-inference",
+      "label": "SLR Inference",
+      "topic": "Statistics",
+      "description": "SLR Inference",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 1200
+    },
+    {
+      "id": "stat-mlr",
+      "label": "Multiple Linear Regression",
+      "topic": "Statistics",
+      "description": "Multiple Linear Regression",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 1350
+    },
+    {
+      "id": "stat-mlr-inference",
+      "label": "MLR Inference",
+      "topic": "Statistics",
+      "description": "MLR Inference",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 600
+    },
+    {
+      "id": "stat-model-comparison",
+      "label": "Model Comparison (AIC/BIC)",
+      "topic": "Statistics",
+      "description": "Model Comparison (AIC/BIC)",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 5200,
+      "display_y": 150
+    },
+    {
+      "id": "stat-regression-checks",
+      "label": "Regression Diagnostics",
+      "topic": "Statistics",
+      "description": "Regression Diagnostics",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 600
+    },
+    {
+      "id": "stat-bayes-posterior",
+      "label": "Bayesian Posterior",
+      "topic": "Statistics",
+      "description": "Bayesian Posterior",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 3600,
+      "display_y": 1500
+    },
+    {
+      "id": "stat-order-statistics",
+      "label": "Order Statistics (Stat)",
+      "topic": "Statistics",
+      "description": "Order Statistics (Stat)",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4000,
+      "display_y": 750
+    },
+    {
+      "id": "stat-simulation",
+      "label": "Monte Carlo Simulation",
+      "topic": "Statistics",
+      "description": "Monte Carlo Simulation",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4400,
+      "display_y": 1500
+    },
+    {
+      "id": "stat-confounding",
+      "label": "Confounding",
+      "topic": "Statistics",
+      "description": "Confounding",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4600,
+      "display_y": 750
+    },
+    {
+      "id": "stat-causal-intro",
+      "label": "Causal Inference: Introduction",
+      "topic": "Statistics",
+      "description": "Causal Inference: Introduction",
+      "tags": [
+        "statistics"
+      ],
+      "display_x": 4800,
+      "display_y": 750
     }
   ],
   "surmise_relations": [
-    {"prerequisite": "frac-simplify", "target": "frac-add-like", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-add-like", "target": "frac-common-denom", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-common-denom", "target": "frac-add-unlike", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-add-like", "target": "frac-multiply", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-multiply", "target": "frac-divide", "relation_type": "prerequisite-of"},
-    {"prerequisite": "exp-product", "target": "exp-power", "relation_type": "prerequisite-of"},
-    {"prerequisite": "exp-power", "target": "exp-negative", "relation_type": "prerequisite-of"},
-    {"prerequisite": "exp-negative", "target": "exp-combined", "relation_type": "prerequisite-of"},
-    {"prerequisite": "order-pemdas", "target": "order-nested", "relation_type": "prerequisite-of"},
-    {"prerequisite": "order-nested", "target": "eq-one-step", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-one-step", "target": "eq-two-step", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-two-step", "target": "eq-fractions", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-add-unlike", "target": "eq-fractions", "relation_type": "prerequisite-of"},
-    {"prerequisite": "frac-multiply", "target": "eq-fractions", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-two-step", "target": "eq-distribution", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-distribution", "target": "eq-quadratic", "relation_type": "prerequisite-of"},
-    {"prerequisite": "exp-combined", "target": "log-exponential", "relation_type": "prerequisite-of"},
-    {"prerequisite": "log-exponential", "target": "log-definition", "relation_type": "prerequisite-of"},
-    {"prerequisite": "log-definition", "target": "log-rules", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-distribution", "target": "log-equations", "relation_type": "prerequisite-of"},
-    {"prerequisite": "log-rules", "target": "log-equations", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-two-step", "target": "sum-sigma", "relation_type": "prerequisite-of"},
-    {"prerequisite": "sum-sigma", "target": "sum-arithmetic", "relation_type": "prerequisite-of"},
-    {"prerequisite": "sum-arithmetic", "target": "sum-nested", "relation_type": "prerequisite-of"},
-    {"prerequisite": "order-nested", "target": "comb-counting", "relation_type": "prerequisite-of"},
-    {"prerequisite": "eq-two-step", "target": "comb-counting", "relation_type": "prerequisite-of"},
-    {"prerequisite": "comb-counting", "target": "comb-permutations", "relation_type": "prerequisite-of"},
-    {"prerequisite": "comb-permutations", "target": "comb-combinations", "relation_type": "prerequisite-of"},
-    {"prerequisite": "exp-negative", "target": "geo-sequences", "relation_type": "prerequisite-of"},
-    {"prerequisite": "sum-arithmetic", "target": "geo-sequences", "relation_type": "prerequisite-of"},
-    {"prerequisite": "comb-combinations", "target": "geo-finite", "relation_type": "prerequisite-of"},
-    {"prerequisite": "geo-sequences", "target": "geo-finite", "relation_type": "prerequisite-of"},
-    {"prerequisite": "log-rules", "target": "geo-infinite", "relation_type": "prerequisite-of"},
-    {"prerequisite": "geo-finite", "target": "geo-infinite", "relation_type": "prerequisite-of"}
+    {
+      "prerequisite": "frac-simplify",
+      "target": "frac-add-like"
+    },
+    {
+      "prerequisite": "frac-add-like",
+      "target": "frac-common-denom"
+    },
+    {
+      "prerequisite": "frac-common-denom",
+      "target": "frac-add-unlike"
+    },
+    {
+      "prerequisite": "frac-add-like",
+      "target": "frac-multiply"
+    },
+    {
+      "prerequisite": "frac-multiply",
+      "target": "frac-divide"
+    },
+    {
+      "prerequisite": "exp-product",
+      "target": "exp-power"
+    },
+    {
+      "prerequisite": "exp-power",
+      "target": "exp-negative"
+    },
+    {
+      "prerequisite": "exp-negative",
+      "target": "exp-combined"
+    },
+    {
+      "prerequisite": "order-pemdas",
+      "target": "order-nested"
+    },
+    {
+      "prerequisite": "order-nested",
+      "target": "eq-one-step"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "eq-two-step"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "eq-fractions"
+    },
+    {
+      "prerequisite": "frac-add-unlike",
+      "target": "eq-fractions"
+    },
+    {
+      "prerequisite": "frac-multiply",
+      "target": "eq-fractions"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "eq-distribution"
+    },
+    {
+      "prerequisite": "eq-distribution",
+      "target": "eq-quadratic"
+    },
+    {
+      "prerequisite": "exp-combined",
+      "target": "log-exponential"
+    },
+    {
+      "prerequisite": "log-exponential",
+      "target": "log-definition"
+    },
+    {
+      "prerequisite": "log-definition",
+      "target": "log-rules"
+    },
+    {
+      "prerequisite": "eq-distribution",
+      "target": "log-equations"
+    },
+    {
+      "prerequisite": "log-rules",
+      "target": "log-equations"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "sum-sigma"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "sum-arithmetic"
+    },
+    {
+      "prerequisite": "sum-arithmetic",
+      "target": "sum-nested"
+    },
+    {
+      "prerequisite": "order-nested",
+      "target": "comb-counting"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "comb-counting"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "comb-permutations"
+    },
+    {
+      "prerequisite": "comb-permutations",
+      "target": "comb-combinations"
+    },
+    {
+      "prerequisite": "exp-negative",
+      "target": "geo-sequences"
+    },
+    {
+      "prerequisite": "sum-arithmetic",
+      "target": "geo-sequences"
+    },
+    {
+      "prerequisite": "comb-combinations",
+      "target": "geo-finite"
+    },
+    {
+      "prerequisite": "geo-sequences",
+      "target": "geo-finite"
+    },
+    {
+      "prerequisite": "log-rules",
+      "target": "geo-infinite"
+    },
+    {
+      "prerequisite": "geo-finite",
+      "target": "geo-infinite"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "alg-linear-graphs"
+    },
+    {
+      "prerequisite": "alg-linear-graphs",
+      "target": "alg-slope"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "alg-systems-sub"
+    },
+    {
+      "prerequisite": "alg-systems-sub",
+      "target": "alg-systems-elim"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "alg-inequalities"
+    },
+    {
+      "prerequisite": "eq-distribution",
+      "target": "alg-poly-ops"
+    },
+    {
+      "prerequisite": "alg-poly-ops",
+      "target": "alg-factoring-gcf"
+    },
+    {
+      "prerequisite": "alg-factoring-gcf",
+      "target": "alg-factoring-quad"
+    },
+    {
+      "prerequisite": "alg-factoring-quad",
+      "target": "alg-completing-square"
+    },
+    {
+      "prerequisite": "frac-multiply",
+      "target": "alg-rational-expr"
+    },
+    {
+      "prerequisite": "alg-factoring-quad",
+      "target": "alg-rational-expr"
+    },
+    {
+      "prerequisite": "exp-combined",
+      "target": "alg-radical-simplify"
+    },
+    {
+      "prerequisite": "alg-radical-simplify",
+      "target": "alg-radical-equations"
+    },
+    {
+      "prerequisite": "eq-two-step",
+      "target": "alg-radical-equations"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "precalc-functions"
+    },
+    {
+      "prerequisite": "precalc-functions",
+      "target": "precalc-domain-range"
+    },
+    {
+      "prerequisite": "precalc-functions",
+      "target": "precalc-composition"
+    },
+    {
+      "prerequisite": "precalc-composition",
+      "target": "precalc-inverse-func"
+    },
+    {
+      "prerequisite": "alg-factoring-quad",
+      "target": "precalc-poly-func"
+    },
+    {
+      "prerequisite": "precalc-functions",
+      "target": "precalc-poly-func"
+    },
+    {
+      "prerequisite": "precalc-functions",
+      "target": "calc-limits"
+    },
+    {
+      "prerequisite": "alg-rational-expr",
+      "target": "calc-limits"
+    },
+    {
+      "prerequisite": "calc-limits",
+      "target": "calc-limit-laws"
+    },
+    {
+      "prerequisite": "calc-limit-laws",
+      "target": "calc-continuity"
+    },
+    {
+      "prerequisite": "calc-limit-laws",
+      "target": "calc-deriv-def"
+    },
+    {
+      "prerequisite": "calc-deriv-def",
+      "target": "calc-deriv-power"
+    },
+    {
+      "prerequisite": "calc-deriv-power",
+      "target": "calc-deriv-product"
+    },
+    {
+      "prerequisite": "calc-deriv-product",
+      "target": "calc-deriv-chain"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "calc-deriv-exp-log"
+    },
+    {
+      "prerequisite": "log-rules",
+      "target": "calc-deriv-exp-log"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "calc-implicit"
+    },
+    {
+      "prerequisite": "calc-deriv-power",
+      "target": "calc-optim"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "calc-optim"
+    },
+    {
+      "prerequisite": "calc-deriv-power",
+      "target": "calc-antideriv"
+    },
+    {
+      "prerequisite": "calc-antideriv",
+      "target": "calc-riemann"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "calc-riemann"
+    },
+    {
+      "prerequisite": "calc-riemann",
+      "target": "calc-ftc"
+    },
+    {
+      "prerequisite": "calc-ftc",
+      "target": "calc-usub"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "calc-usub"
+    },
+    {
+      "prerequisite": "calc-usub",
+      "target": "calc-byparts"
+    },
+    {
+      "prerequisite": "calc-deriv-product",
+      "target": "calc-byparts"
+    },
+    {
+      "prerequisite": "calc-ftc",
+      "target": "calc-improper"
+    },
+    {
+      "prerequisite": "calc-limit-laws",
+      "target": "calc-improper"
+    },
+    {
+      "prerequisite": "geo-infinite",
+      "target": "calc-series-conv"
+    },
+    {
+      "prerequisite": "calc-limit-laws",
+      "target": "calc-series-conv"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "mv-partial"
+    },
+    {
+      "prerequisite": "calc-ftc",
+      "target": "mv-double-integral"
+    },
+    {
+      "prerequisite": "mv-partial",
+      "target": "mv-double-integral"
+    },
+    {
+      "prerequisite": "mv-double-integral",
+      "target": "mv-change-vars"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "linalg-vectors"
+    },
+    {
+      "prerequisite": "linalg-vectors",
+      "target": "linalg-matrix-ops"
+    },
+    {
+      "prerequisite": "linalg-matrix-ops",
+      "target": "linalg-matrix-mult"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "linalg-matrix-mult"
+    },
+    {
+      "prerequisite": "linalg-matrix-mult",
+      "target": "linalg-transpose"
+    },
+    {
+      "prerequisite": "alg-systems-elim",
+      "target": "linalg-row-reduce"
+    },
+    {
+      "prerequisite": "linalg-matrix-ops",
+      "target": "linalg-row-reduce"
+    },
+    {
+      "prerequisite": "linalg-matrix-mult",
+      "target": "linalg-determinant"
+    },
+    {
+      "prerequisite": "linalg-row-reduce",
+      "target": "linalg-inverse"
+    },
+    {
+      "prerequisite": "linalg-determinant",
+      "target": "linalg-inverse"
+    },
+    {
+      "prerequisite": "linalg-row-reduce",
+      "target": "linalg-linear-systems"
+    },
+    {
+      "prerequisite": "linalg-matrix-mult",
+      "target": "linalg-linear-systems"
+    },
+    {
+      "prerequisite": "linalg-linear-systems",
+      "target": "linalg-span-independence"
+    },
+    {
+      "prerequisite": "linalg-span-independence",
+      "target": "linalg-subspaces"
+    },
+    {
+      "prerequisite": "linalg-row-reduce",
+      "target": "linalg-subspaces"
+    },
+    {
+      "prerequisite": "linalg-subspaces",
+      "target": "linalg-rank-nullity"
+    },
+    {
+      "prerequisite": "linalg-matrix-mult",
+      "target": "linalg-linear-transforms"
+    },
+    {
+      "prerequisite": "linalg-subspaces",
+      "target": "linalg-linear-transforms"
+    },
+    {
+      "prerequisite": "linalg-linear-transforms",
+      "target": "linalg-change-basis"
+    },
+    {
+      "prerequisite": "linalg-inverse",
+      "target": "linalg-change-basis"
+    },
+    {
+      "prerequisite": "linalg-determinant",
+      "target": "linalg-eigenvalues"
+    },
+    {
+      "prerequisite": "linalg-linear-systems",
+      "target": "linalg-eigenvalues"
+    },
+    {
+      "prerequisite": "linalg-eigenvalues",
+      "target": "linalg-diagonalization"
+    },
+    {
+      "prerequisite": "linalg-inverse",
+      "target": "linalg-diagonalization"
+    },
+    {
+      "prerequisite": "linalg-diagonalization",
+      "target": "linalg-symmetric-spectral"
+    },
+    {
+      "prerequisite": "linalg-orthogonality",
+      "target": "linalg-symmetric-spectral"
+    },
+    {
+      "prerequisite": "linalg-subspaces",
+      "target": "linalg-orthogonality"
+    },
+    {
+      "prerequisite": "linalg-rank-nullity",
+      "target": "linalg-orthogonality"
+    },
+    {
+      "prerequisite": "linalg-orthogonality",
+      "target": "linalg-gram-schmidt"
+    },
+    {
+      "prerequisite": "linalg-gram-schmidt",
+      "target": "linalg-orthogonal-projection"
+    },
+    {
+      "prerequisite": "linalg-subspaces",
+      "target": "linalg-orthogonal-projection"
+    },
+    {
+      "prerequisite": "linalg-orthogonal-projection",
+      "target": "linalg-least-squares"
+    },
+    {
+      "prerequisite": "linalg-transpose",
+      "target": "linalg-least-squares"
+    },
+    {
+      "prerequisite": "linalg-symmetric-spectral",
+      "target": "linalg-svd"
+    },
+    {
+      "prerequisite": "linalg-orthogonal-projection",
+      "target": "linalg-svd"
+    },
+    {
+      "prerequisite": "frac-simplify",
+      "target": "prob-sample-space"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "prob-sample-space"
+    },
+    {
+      "prerequisite": "prob-sample-space",
+      "target": "prob-set-ops"
+    },
+    {
+      "prerequisite": "prob-set-ops",
+      "target": "prob-axioms"
+    },
+    {
+      "prerequisite": "prob-axioms",
+      "target": "prob-inclusion-excl"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "prob-inclusion-excl"
+    },
+    {
+      "prerequisite": "prob-axioms",
+      "target": "prob-area-probability"
+    },
+    {
+      "prerequisite": "prob-axioms",
+      "target": "prob-conditional"
+    },
+    {
+      "prerequisite": "frac-multiply",
+      "target": "prob-conditional"
+    },
+    {
+      "prerequisite": "prob-conditional",
+      "target": "prob-independence"
+    },
+    {
+      "prerequisite": "prob-conditional",
+      "target": "prob-total-prob"
+    },
+    {
+      "prerequisite": "prob-total-prob",
+      "target": "prob-bayes"
+    },
+    {
+      "prerequisite": "prob-axioms",
+      "target": "prob-discrete-rv"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "prob-discrete-rv"
+    },
+    {
+      "prerequisite": "prob-discrete-rv",
+      "target": "prob-expected-value"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-indicators"
+    },
+    {
+      "prerequisite": "prob-bernoulli-binom",
+      "target": "prob-indicators"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-variance"
+    },
+    {
+      "prerequisite": "prob-independence",
+      "target": "prob-bernoulli-binom"
+    },
+    {
+      "prerequisite": "comb-combinations",
+      "target": "prob-bernoulli-binom"
+    },
+    {
+      "prerequisite": "prob-discrete-rv",
+      "target": "prob-hypergeometric"
+    },
+    {
+      "prerequisite": "comb-combinations",
+      "target": "prob-hypergeometric"
+    },
+    {
+      "prerequisite": "prob-independence",
+      "target": "prob-geometric-dist"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-poisson"
+    },
+    {
+      "prerequisite": "log-exponential",
+      "target": "prob-poisson"
+    },
+    {
+      "prerequisite": "prob-poisson",
+      "target": "prob-poisson-approx"
+    },
+    {
+      "prerequisite": "prob-bernoulli-binom",
+      "target": "prob-poisson-approx"
+    },
+    {
+      "prerequisite": "calc-ftc",
+      "target": "prob-continuous-rv"
+    },
+    {
+      "prerequisite": "prob-axioms",
+      "target": "prob-continuous-rv"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-normal"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-normal"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-exponential-dist"
+    },
+    {
+      "prerequisite": "prob-exponential-dist",
+      "target": "prob-memoryless"
+    },
+    {
+      "prerequisite": "prob-geometric-dist",
+      "target": "prob-memoryless"
+    },
+    {
+      "prerequisite": "prob-exponential-dist",
+      "target": "prob-gamma-dist"
+    },
+    {
+      "prerequisite": "calc-byparts",
+      "target": "prob-gamma-dist"
+    },
+    {
+      "prerequisite": "prob-normal",
+      "target": "prob-normal-approx"
+    },
+    {
+      "prerequisite": "prob-bernoulli-binom",
+      "target": "prob-normal-approx"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-cdf-method"
+    },
+    {
+      "prerequisite": "calc-ftc",
+      "target": "prob-cdf-method"
+    },
+    {
+      "prerequisite": "prob-cdf-method",
+      "target": "prob-transformations"
+    },
+    {
+      "prerequisite": "mv-change-vars",
+      "target": "prob-transformations"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-inverse-cdf"
+    },
+    {
+      "prerequisite": "precalc-inverse-func",
+      "target": "prob-inverse-cdf"
+    },
+    {
+      "prerequisite": "prob-discrete-rv",
+      "target": "prob-joint-discrete"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-joint-continuous"
+    },
+    {
+      "prerequisite": "mv-double-integral",
+      "target": "prob-joint-continuous"
+    },
+    {
+      "prerequisite": "prob-joint-discrete",
+      "target": "prob-marginal"
+    },
+    {
+      "prerequisite": "prob-joint-continuous",
+      "target": "prob-marginal"
+    },
+    {
+      "prerequisite": "prob-marginal",
+      "target": "prob-conditional-dist"
+    },
+    {
+      "prerequisite": "prob-conditional",
+      "target": "prob-conditional-dist"
+    },
+    {
+      "prerequisite": "prob-marginal",
+      "target": "prob-covariance"
+    },
+    {
+      "prerequisite": "prob-variance",
+      "target": "prob-covariance"
+    },
+    {
+      "prerequisite": "prob-conditional-dist",
+      "target": "prob-conditional-expect"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-conditional-expect"
+    },
+    {
+      "prerequisite": "prob-normal",
+      "target": "prob-bivariate-normal"
+    },
+    {
+      "prerequisite": "prob-covariance",
+      "target": "prob-bivariate-normal"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-mgf"
+    },
+    {
+      "prerequisite": "calc-improper",
+      "target": "prob-mgf"
+    },
+    {
+      "prerequisite": "log-rules",
+      "target": "prob-mgf"
+    },
+    {
+      "prerequisite": "prob-poisson",
+      "target": "prob-poisson-process"
+    },
+    {
+      "prerequisite": "prob-exponential-dist",
+      "target": "prob-poisson-process"
+    },
+    {
+      "prerequisite": "prob-joint-discrete",
+      "target": "prob-order-stats"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "prob-order-stats"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "prob-lln"
+    },
+    {
+      "prerequisite": "prob-variance",
+      "target": "prob-lln"
+    },
+    {
+      "prerequisite": "prob-normal",
+      "target": "prob-clt"
+    },
+    {
+      "prerequisite": "prob-variance",
+      "target": "prob-clt"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "prob-clt"
+    },
+    {
+      "prerequisite": "prob-clt",
+      "target": "stat-sampling-dist"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "stat-sampling-dist"
+    },
+    {
+      "prerequisite": "stat-sampling-dist",
+      "target": "stat-estimator-props"
+    },
+    {
+      "prerequisite": "stat-estimator-props",
+      "target": "stat-survey-srs"
+    },
+    {
+      "prerequisite": "prob-variance",
+      "target": "stat-survey-srs"
+    },
+    {
+      "prerequisite": "prob-expected-value",
+      "target": "stat-mom"
+    },
+    {
+      "prerequisite": "eq-one-step",
+      "target": "stat-mom"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "stat-mle-univariate"
+    },
+    {
+      "prerequisite": "calc-optim",
+      "target": "stat-mle-univariate"
+    },
+    {
+      "prerequisite": "log-rules",
+      "target": "stat-mle-univariate"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-mle-multiparameter"
+    },
+    {
+      "prerequisite": "mv-partial",
+      "target": "stat-mle-multiparameter"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-mle-properties"
+    },
+    {
+      "prerequisite": "stat-estimator-props",
+      "target": "stat-mle-properties"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-sufficiency"
+    },
+    {
+      "prerequisite": "prob-joint-continuous",
+      "target": "stat-sufficiency"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-fisher-info"
+    },
+    {
+      "prerequisite": "calc-deriv-exp-log",
+      "target": "stat-fisher-info"
+    },
+    {
+      "prerequisite": "stat-fisher-info",
+      "target": "stat-crlb"
+    },
+    {
+      "prerequisite": "stat-estimator-props",
+      "target": "stat-crlb"
+    },
+    {
+      "prerequisite": "stat-crlb",
+      "target": "stat-mvue"
+    },
+    {
+      "prerequisite": "stat-sufficiency",
+      "target": "stat-mvue"
+    },
+    {
+      "prerequisite": "prob-clt",
+      "target": "stat-delta-method"
+    },
+    {
+      "prerequisite": "calc-deriv-chain",
+      "target": "stat-delta-method"
+    },
+    {
+      "prerequisite": "stat-estimator-props",
+      "target": "stat-bootstrap"
+    },
+    {
+      "prerequisite": "stat-sampling-dist",
+      "target": "stat-bootstrap"
+    },
+    {
+      "prerequisite": "stat-sampling-dist",
+      "target": "stat-ci-z"
+    },
+    {
+      "prerequisite": "prob-normal",
+      "target": "stat-ci-z"
+    },
+    {
+      "prerequisite": "stat-ci-z",
+      "target": "stat-ci-t"
+    },
+    {
+      "prerequisite": "stat-ci-z",
+      "target": "stat-ci-proportion"
+    },
+    {
+      "prerequisite": "prob-bernoulli-binom",
+      "target": "stat-ci-proportion"
+    },
+    {
+      "prerequisite": "stat-ci-z",
+      "target": "stat-hyp-setup"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-errors-power"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-pvalue"
+    },
+    {
+      "prerequisite": "stat-errors-power",
+      "target": "stat-neyman-pearson"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-neyman-pearson"
+    },
+    {
+      "prerequisite": "stat-neyman-pearson",
+      "target": "stat-ump"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-glrt"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-glrt"
+    },
+    {
+      "prerequisite": "stat-errors-power",
+      "target": "stat-power-sample-size"
+    },
+    {
+      "prerequisite": "prob-normal",
+      "target": "stat-power-sample-size"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-ztest-one"
+    },
+    {
+      "prerequisite": "stat-ci-z",
+      "target": "stat-ztest-one"
+    },
+    {
+      "prerequisite": "stat-ztest-one",
+      "target": "stat-ttest-one"
+    },
+    {
+      "prerequisite": "stat-ci-t",
+      "target": "stat-ttest-one"
+    },
+    {
+      "prerequisite": "stat-ttest-one",
+      "target": "stat-ttest-two"
+    },
+    {
+      "prerequisite": "stat-ttest-two",
+      "target": "stat-pooled-variance"
+    },
+    {
+      "prerequisite": "stat-ttest-one",
+      "target": "stat-ttest-paired"
+    },
+    {
+      "prerequisite": "stat-ttest-two",
+      "target": "stat-mannwhitney"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "stat-mannwhitney"
+    },
+    {
+      "prerequisite": "stat-ttest-paired",
+      "target": "stat-wilcoxon-signed"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "stat-wilcoxon-signed"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-permutation"
+    },
+    {
+      "prerequisite": "comb-counting",
+      "target": "stat-permutation"
+    },
+    {
+      "prerequisite": "prob-bernoulli-binom",
+      "target": "stat-chi-gof"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-chi-gof"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "stat-chi-gof"
+    },
+    {
+      "prerequisite": "stat-chi-gof",
+      "target": "stat-chi-indep"
+    },
+    {
+      "prerequisite": "stat-chi-indep",
+      "target": "stat-chi-homog"
+    },
+    {
+      "prerequisite": "stat-ttest-two",
+      "target": "stat-anova-one"
+    },
+    {
+      "prerequisite": "sum-sigma",
+      "target": "stat-anova-one"
+    },
+    {
+      "prerequisite": "stat-anova-one",
+      "target": "stat-anova-kruskal"
+    },
+    {
+      "prerequisite": "stat-mannwhitney",
+      "target": "stat-anova-kruskal"
+    },
+    {
+      "prerequisite": "stat-hyp-setup",
+      "target": "stat-multiple-testing"
+    },
+    {
+      "prerequisite": "prob-independence",
+      "target": "stat-multiple-testing"
+    },
+    {
+      "prerequisite": "prob-covariance",
+      "target": "stat-slr"
+    },
+    {
+      "prerequisite": "calc-optim",
+      "target": "stat-slr"
+    },
+    {
+      "prerequisite": "stat-slr",
+      "target": "stat-slr-matrix"
+    },
+    {
+      "prerequisite": "linalg-inverse",
+      "target": "stat-slr-matrix"
+    },
+    {
+      "prerequisite": "linalg-transpose",
+      "target": "stat-slr-matrix"
+    },
+    {
+      "prerequisite": "linalg-least-squares",
+      "target": "stat-slr-matrix"
+    },
+    {
+      "prerequisite": "stat-slr-matrix",
+      "target": "stat-slr-inference"
+    },
+    {
+      "prerequisite": "stat-ci-t",
+      "target": "stat-slr-inference"
+    },
+    {
+      "prerequisite": "stat-slr-matrix",
+      "target": "stat-mlr"
+    },
+    {
+      "prerequisite": "stat-mlr",
+      "target": "stat-mlr-inference"
+    },
+    {
+      "prerequisite": "stat-ci-t",
+      "target": "stat-mlr-inference"
+    },
+    {
+      "prerequisite": "stat-mlr-inference",
+      "target": "stat-model-comparison"
+    },
+    {
+      "prerequisite": "stat-anova-one",
+      "target": "stat-model-comparison"
+    },
+    {
+      "prerequisite": "stat-mlr-inference",
+      "target": "stat-regression-checks"
+    },
+    {
+      "prerequisite": "prob-bayes",
+      "target": "stat-bayes-posterior"
+    },
+    {
+      "prerequisite": "stat-mle-univariate",
+      "target": "stat-bayes-posterior"
+    },
+    {
+      "prerequisite": "prob-continuous-rv",
+      "target": "stat-bayes-posterior"
+    },
+    {
+      "prerequisite": "prob-order-stats",
+      "target": "stat-order-statistics"
+    },
+    {
+      "prerequisite": "stat-sampling-dist",
+      "target": "stat-order-statistics"
+    },
+    {
+      "prerequisite": "stat-order-statistics",
+      "target": "stat-mannwhitney"
+    },
+    {
+      "prerequisite": "stat-bootstrap",
+      "target": "stat-simulation"
+    },
+    {
+      "prerequisite": "stat-sampling-dist",
+      "target": "stat-simulation"
+    },
+    {
+      "prerequisite": "stat-mlr",
+      "target": "stat-confounding"
+    },
+    {
+      "prerequisite": "stat-confounding",
+      "target": "stat-causal-intro"
+    }
   ]
 }

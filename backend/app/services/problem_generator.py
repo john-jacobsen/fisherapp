@@ -684,6 +684,21 @@ GENERATORS = {
     "geo-infinite":      _gen_geo_infinite,
 }
 
+# ─── Extended generators (146 additional nodes) ───────────────────────────────
+from .generators.algebra import GENERATORS as _ALGEBRA_GENERATORS
+from .generators.precalculus import GENERATORS as _PRECALC_GENERATORS
+from .generators.calculus import GENERATORS as _CALC_GENERATORS
+from .generators.linear_algebra import GENERATORS as _LINALG_GENERATORS
+from .generators.probability import GENERATORS as _PROB_GENERATORS
+from .generators.statistics import GENERATORS as _STAT_GENERATORS
+
+GENERATORS.update(_ALGEBRA_GENERATORS)
+GENERATORS.update(_PRECALC_GENERATORS)
+GENERATORS.update(_CALC_GENERATORS)
+GENERATORS.update(_LINALG_GENERATORS)
+GENERATORS.update(_PROB_GENERATORS)
+GENERATORS.update(_STAT_GENERATORS)
+
 
 def generate_problem(node_id: str) -> dict | None:
     """
