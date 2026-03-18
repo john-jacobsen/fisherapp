@@ -37,6 +37,7 @@ export default function PracticePage() {
   const [sessionDone, setSessionDone] = useState(false);
   const [masteryAchieved, setMasteryAchieved] = useState(false);
   const [networkError, setNetworkError] = useState(false);
+  const [nextRecommended, setNextRecommended] = useState(null); // { node_id, label } for post-mastery CTA
 
   // Hints
   const [hints, setHints] = useState([]);
@@ -50,6 +51,30 @@ export default function PracticePage() {
   const aiBottomRef = useRef(null);
 
   const initialized = useRef(false);
+  const completeCalledRef = useRef(false);
+  const [completeData, setCompleteData] = useState(null);
+
+  // Fetch the next recommended topic when mastery is achieved
+  useEffect(() => {
+    if (!masteryAchieved) return;
+    api.get('/dashboard')
+      .then(r => {
+        const rn = r.data?.recommended_next;
+        if (rn && rn.node_id !== nodeId) {
+          setNextRecommended(rn);
+        }
+      })
+      .catch(() => {});
+  }, [masteryAchieved, nodeId]);
+
+  // Auto-call /complete as soon as the session ends — don't rely on button click.
+  useEffect(() => {
+    if (!sessionDone || !sessionId || completeCalledRef.current) return;
+    completeCalledRef.current = true;
+    api.post(`/practice/${nodeId}/complete`, { session_id: sessionId })
+      .then(r => setCompleteData(r.data))
+      .catch(() => {}); // non-blocking; navigate fallback uses local state
+  }, [sessionDone, sessionId, nodeId]);
 
   useEffect(() => {
     if (initialized.current) return;
@@ -184,8 +209,14 @@ export default function PracticePage() {
 
   const advance = () => {
     if (sessionDone) {
-      // Call /complete so mastery is recorded, review is scheduled, and fringes update
-      endSession();
+      // /complete was already called by the useEffect; just navigate with the result.
+      navigate(`/score/${nodeId}`, {
+        state: {
+          mastery: completeData?.summary?.mastery_posterior ?? mastery,
+          questionsAnswered: completeData?.summary?.questions ?? questionsAnswered,
+          correct: correctAnswers,
+        }
+      });
       return;
     }
     if (nextProblemData) {
@@ -197,9 +228,21 @@ export default function PracticePage() {
     setNextProblemData(null);
   };
 
-  const switchToTest = () => {
+  const switchToTest = async () => {
     setMode('test');
     setFeedback(null);
+    setAnswer('');
+    setHints([]);
+    // Fetch a fresh problem so the student can't reuse the one they saw hints for
+    try {
+      const r = await api.post(`/practice/${nodeId}/new-problem`, { session_id: sessionId });
+      if (r.data.problem) {
+        setProblem(r.data.problem);
+      }
+    } catch (e) {
+      // Non-fatal: mode already switched, student just keeps current problem
+      console.error('Failed to get new problem on mode switch', e);
+    }
   };
 
   const switchToLearning = () => {
@@ -239,6 +282,18 @@ export default function PracticePage() {
   };
 
   const endSession = async () => {
+    if (completeCalledRef.current) {
+      // Auto-called by useEffect; just navigate with whatever result we have.
+      navigate(`/score/${nodeId}`, {
+        state: {
+          mastery: completeData?.summary?.mastery_posterior ?? mastery,
+          questionsAnswered: completeData?.summary?.questions ?? questionsAnswered,
+          correct: correctAnswers,
+        }
+      });
+      return;
+    }
+    completeCalledRef.current = true;
     try {
       const r = await api.post(`/practice/${nodeId}/complete`, { session_id: sessionId });
       navigate(`/score/${nodeId}`, {
@@ -288,7 +343,7 @@ export default function PracticePage() {
         {/* Mastery celebration banner */}
         {masteryAchieved && (
           <div style={{
-            padding: '16px 20px', borderRadius: theme.radius.md, marginBottom: 16,
+            padding: '20px 24px', borderRadius: theme.radius.md, marginBottom: 16,
             background: 'linear-gradient(135deg, #d4edda, #c3e6cb)',
             border: '2px solid #28a745',
             textAlign: 'center',
@@ -297,8 +352,32 @@ export default function PracticePage() {
             <div style={{ fontSize: 18, fontWeight: 700, color: '#155724', marginBottom: 4 }}>
               Topic Mastered!
             </div>
-            <div style={{ fontSize: 14, color: '#155724' }}>
+            <div style={{ fontSize: 14, color: '#155724', marginBottom: 16 }}>
               You've demonstrated mastery of this topic. It's been added to your review schedule.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {nextRecommended && (
+                <button
+                  onClick={() => navigate(`/lesson/${nextRecommended.node_id}`)}
+                  style={{
+                    padding: '10px 22px', background: '#28a745', color: '#fff',
+                    border: 'none', borderRadius: theme.radius.md,
+                    cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: theme.fonts.sans,
+                  }}
+                >
+                  Continue to {nextRecommended.label} →
+                </button>
+              )}
+              <button
+                onClick={() => navigate('/dashboard')}
+                style={{
+                  padding: '10px 22px', background: 'transparent', color: '#155724',
+                  border: '1px solid #28a745', borderRadius: theme.radius.md,
+                  cursor: 'pointer', fontSize: 14, fontFamily: theme.fonts.sans,
+                }}
+              >
+                Back to Dashboard
+              </button>
             </div>
           </div>
         )}
@@ -392,13 +471,22 @@ export default function PracticePage() {
 
             {/* Math input */}
             {problem.answer_type !== 'multiple_choice' && (
-              <MathInput
-                value={answer}
-                onChange={setAnswer}
-                onSubmit={submit}
-                placeholder={problem.answer_type === 'numeric' ? 'Enter a number…' : 'Enter your answer…'}
-                disabled={hasFeedback}
-              />
+              <>
+                <MathInput
+                  value={answer}
+                  onChange={setAnswer}
+                  onSubmit={submit}
+                  placeholder={problem.answer_type === 'numeric' ? 'Enter a number…' : 'Enter your answer…'}
+                  disabled={hasFeedback}
+                />
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.fonts.sans }}>
+                  {problem.format_hint
+                    ? problem.format_hint
+                    : problem.answer_type === 'numeric'
+                      ? 'Enter a number (e.g., 7, -3, 0.5, 3/4)'
+                      : 'Enter an expression (e.g., 3/4, x+1, -2/3, x^2)'}
+                </p>
+              </>
             )}
 
             {/* Feedback section */}

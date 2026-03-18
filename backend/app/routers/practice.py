@@ -24,6 +24,10 @@ class CompleteRequest(BaseModel):
     session_id: str
 
 
+class NewProblemRequest(BaseModel):
+    session_id: str
+
+
 @router.post("/{node_id}/start")
 def start_practice(
     node_id: str,
@@ -49,6 +53,21 @@ def submit_answer(
         return practice_service.submit_practice_answer(
             node_id, req.session_id, req.problem_id, req.answer, str(current_user.id), db,
             mode=req.mode,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{node_id}/new-problem")
+def new_problem(
+    node_id: str,
+    req: NewProblemRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        return practice_service.get_new_problem(
+            node_id, req.session_id, str(current_user.id), db
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

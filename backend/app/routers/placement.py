@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.routers.auth import get_current_user
 from app.models.user import User
-from app.services import placement_service
+from app.services import placement_engine
 
 router = APIRouter(prefix="/api/placement", tags=["placement"])
 
@@ -22,7 +22,7 @@ def start_placement(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        return placement_service.start_placement(str(current_user.id), db)
+        return placement_engine.initialize_placement(str(current_user.id), db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -34,7 +34,7 @@ def submit_answer(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        return placement_service.submit_answer(
+        return placement_engine.submit_placement_answer(
             req.session_id, req.problem_id, req.answer, str(current_user.id), db
         )
     except ValueError as e:
@@ -47,6 +47,6 @@ def get_results(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        return placement_service.get_results(str(current_user.id), db)
+        return placement_engine.get_results(str(current_user.id), db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

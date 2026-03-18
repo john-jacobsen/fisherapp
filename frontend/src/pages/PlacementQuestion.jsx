@@ -16,7 +16,8 @@ export default function PlacementQuestion() {
   const [isComplete, setIsComplete] = useState(false)   // placement test finished
   const [errorMessage, setErrorMessage] = useState(null) // structured error from answer checker
   const [errorNextQuestion, setErrorNextQuestion] = useState(null) // next_question when error occurred
-  const [progress, setProgress] = useState({ questions_answered: 0, estimated_remaining: 15 })
+  const [progress, setProgress] = useState({ questions_asked: 0, estimated_total: 25, nodes_classified: 0, total_nodes: 176 })
+  const [completionSummary, setCompletionSummary] = useState(null) // { mastered_count, subjects_count }
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -65,9 +66,10 @@ export default function PlacementQuestion() {
       }
 
       setFeedback({ is_correct: data.is_correct, correct_answer: data.correct_answer })
-      setProgress(data.progress)
+      if (data.progress) setProgress(data.progress)
       setNextQuestion(data.next_question || null)
       setIsComplete(!!data.is_complete)
+      if (data.completion_summary) setCompletionSummary(data.completion_summary)
       setSubmitting(false)
     } catch (err) {
       setError(err.response?.data?.detail || 'Submission failed')
@@ -105,9 +107,10 @@ export default function PlacementQuestion() {
     setSubmitting(false)
   }
 
-  const totalEstimated = progress.questions_answered + progress.estimated_remaining
-  const progressPct = totalEstimated > 0
-    ? Math.round((progress.questions_answered / totalEstimated) * 100)
+  const estimatedTotal = progress.estimated_total ?? 25
+  const currentQuestionNum = Math.min(progress.questions_asked + 1, estimatedTotal)
+  const progressPct = progress.total_nodes > 0
+    ? Math.round((progress.nodes_classified / progress.total_nodes) * 100)
     : 0
 
   if (loading) {
@@ -146,7 +149,7 @@ export default function PlacementQuestion() {
           <div style={styles.progressSection}>
             <div style={styles.progressMeta}>
               <span style={styles.progressLabel}>
-                Question {progress.questions_answered + 1} of ~{totalEstimated}
+                Question {currentQuestionNum} of ~{estimatedTotal}
               </span>
               <span style={styles.topicChip}>{question?.topic}</span>
             </div>
@@ -173,10 +176,20 @@ export default function PlacementQuestion() {
                 fontWeight: 600,
                 color: feedback.is_correct ? theme.colors.primary : theme.colors.danger,
                 display: 'block',
-                marginBottom: '12px',
+                marginBottom: isComplete && completionSummary ? '8px' : '12px',
               }}>
                 {feedback.is_correct ? '✓ Correct' : '✗ Incorrect'}
               </span>
+              {isComplete && completionSummary && (
+                <p style={{
+                  fontFamily: theme.fonts.sans,
+                  fontSize: '14px',
+                  color: theme.colors.text,
+                  margin: '0 0 12px',
+                }}>
+                  {`You've demonstrated mastery of ${completionSummary.mastered_count} topics across ${completionSummary.subjects_count} subjects.`}
+                </p>
+              )}
               <button
                 onClick={handleAdvance}
                 style={{

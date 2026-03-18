@@ -399,7 +399,9 @@ def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerTy
     For symbolic: SymPy symbolic equivalence, with LaTeX parsing for MathLive output.
                   Also handles solution sets (multiple comma-separated values).
     """
-    student = student_answer.strip()
+    # Strip variable assignment prefix for single-value answers (e.g. "x=2" → "2")
+    # Multi-value answers like "x=2, x=3" are handled later by _split_multi_value
+    student = _strip_variable_prefix(student_answer.strip())
     correct = correct_answer.strip()
 
     logger.info(

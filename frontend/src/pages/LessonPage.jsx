@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
 import MasteryMeter from '../components/MasteryMeter';
@@ -19,15 +20,10 @@ export default function LessonPage() {
   const [videoFailed, setVideoFailed] = useState(false);
   const [curatedVideos, setCuratedVideos] = useState(null); // null = loading, [] = no videos
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     api.get(`/lessons/${nodeId}`)
-      .then(r => {
-        setLessonData(r.data);
-        const title = r.data.node?.label || '';
-        setSearchQuery(`${title} algebra tutorial`);
-      })
+      .then(r => setLessonData(r.data))
       .catch(() => setError('Could not load lesson.'))
       .finally(() => setLoading(false));
 
@@ -69,8 +65,6 @@ export default function LessonPage() {
   const activeVideoId = activeVideo ? extractYouTubeId(activeVideo.url) : null;
   const activeEmbedUrl = activeVideoId ? `https://www.youtube.com/embed/${activeVideoId}` : null;
 
-  // Tier 2: YouTube search fallback
-  const encodedQuery = encodeURIComponent(searchQuery);
 
   return (
     <>
@@ -138,67 +132,16 @@ export default function LessonPage() {
             )}
           </div>
         ) : (
-          /* Tier 2: YouTube search fallback */
+          /* No video available */
           <div style={{
             marginBottom: 32, borderRadius: theme.radius.lg, boxShadow: theme.shadow.sm,
             background: theme.colors.surfaceAlt, border: `1px solid ${theme.colors.border}`,
-            padding: '32px 28px',
+            padding: '28px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 32, marginBottom: 10, textAlign: 'center' }}>▶</div>
-            <p style={{ margin: '0 0 16px', color: theme.colors.textSecondary, fontSize: 14, textAlign: 'center' }}>
-              No curated video available for this topic yet.
+            <div style={{ fontSize: 28, marginBottom: 8, color: theme.colors.textMuted }}>▶</div>
+            <p style={{ margin: 0, color: theme.colors.textMuted, fontSize: 14 }}>
+              No video available for this topic yet.
             </p>
-
-            {/* Search bar */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search query…"
-                style={{
-                  flex: 1, padding: '9px 12px', fontSize: 14,
-                  border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
-                  background: theme.colors.surface, color: theme.colors.text,
-                  fontFamily: theme.fonts.sans, outline: 'none',
-                }}
-              />
-              <a
-                href={`https://www.youtube.com/results?search_query=${encodedQuery}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  padding: '9px 18px', background: '#FF0000', color: '#fff',
-                  borderRadius: theme.radius.md, textDecoration: 'none',
-                  fontSize: 14, fontWeight: 600, fontFamily: theme.fonts.sans,
-                  whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center',
-                }}
-              >
-                Search YouTube →
-              </a>
-            </div>
-
-            {/* Suggested resource links */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: theme.colors.textSecondary }}>Suggested resources:</div>
-              {[
-                { label: 'Khan Academy', query: `khan academy ${title}` },
-                { label: 'The Organic Chemistry Tutor', query: `organic chemistry tutor ${title}` },
-                { label: 'Professor Leonard', query: `professor leonard ${title}` },
-              ].map(({ label, query }) => (
-                <a
-                  key={label}
-                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: 13, color: theme.colors.primary,
-                    textDecoration: 'none', display: 'inline-block',
-                  }}
-                >
-                  Search {label}: {title} →
-                </a>
-              ))}
-            </div>
           </div>
         )}
 
@@ -212,6 +155,7 @@ export default function LessonPage() {
           {contentMarkdown ? (
             <div style={{ lineHeight: 1.8, color: theme.colors.text, fontSize: 15 }}>
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   p: ({ children }) => (
                     <p style={{ margin: '0 0 12px' }}>
@@ -226,6 +170,17 @@ export default function LessonPage() {
                   code: ({ inline, children }) => inline
                     ? <MathDisplay content={String(children)} />
                     : <pre style={{ background: theme.colors.surfaceAlt, padding: '12px 16px', borderRadius: theme.radius.sm, overflow: 'auto' }}><code>{children}</code></pre>,
+                  table: ({ children }) => (
+                    <div style={{ overflowX: 'auto', marginBottom: 12 }}>
+                      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 14 }}>{children}</table>
+                    </div>
+                  ),
+                  th: ({ children }) => (
+                    <th style={{ border: `1px solid ${theme.colors.border}`, padding: '8px 12px', background: theme.colors.surfaceAlt, fontWeight: 600, textAlign: 'left' }}>{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td style={{ border: `1px solid ${theme.colors.border}`, padding: '8px 12px' }}>{children}</td>
+                  ),
                 }}
               >
                 {contentMarkdown}

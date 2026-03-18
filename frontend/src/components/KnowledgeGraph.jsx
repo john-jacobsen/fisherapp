@@ -8,6 +8,7 @@ const STATUS_COLORS = {
   ready: theme.colors.accent,
   practicing: theme.colors.practicing,
   locked: theme.colors.locked,
+  available: theme.colors.locked,
 }
 
 const NODE_W = 130
@@ -15,6 +16,112 @@ const NODE_H = 44
 const TOPIC_W = 160
 const TOPIC_H = 80
 const PAD = 40
+const TOPIC_GAP = 20
+const TOPICS_PER_ROW = 4
+
+// Static subject/topic definitions — node IDs are matched against HIERARCHY.items at runtime
+const SUBJECT_DEFS = [
+  {
+    id: 'foundations', name: 'Foundations',
+    description: 'Fractions, equations, exponents, and series fundamentals',
+    hasContent: true,
+    topicDefs: [
+      { id: 'fractions',    name: 'Fractions',            prefix: 'frac-' },
+      { id: 'order-ops',    name: 'Order of Operations',  prefix: 'order-' },
+      { id: 'exponents',    name: 'Exponents',            prefix: 'exp-' },
+      { id: 'equations',    name: 'Equations',            prefix: 'eq-' },
+      { id: 'logarithms',   name: 'Logarithms',           prefix: 'log-' },
+      { id: 'summations',   name: 'Summations',           prefix: 'sum-' },
+      { id: 'combinatorics',name: 'Combinatorics',        prefix: 'comb-' },
+      { id: 'geometric',    name: 'Geometric Series',     prefix: 'geo-' },
+    ],
+  },
+  {
+    id: 'algebra', name: 'Algebra',
+    description: 'Linear, polynomial, and pre-calculus algebra',
+    hasContent: true,
+    topicDefs: [
+      { id: 'alg-linear', name: 'Linear & Systems',   nodeIds: ['alg-linear-graphs','alg-slope','alg-systems-sub','alg-systems-elim','alg-inequalities'] },
+      { id: 'alg-poly',   name: 'Polynomials',         nodeIds: ['alg-poly-ops','alg-factoring-gcf','alg-factoring-quad','alg-completing-square'] },
+      { id: 'alg-expr',   name: 'Expressions',         nodeIds: ['alg-rational-expr','alg-radical-simplify','alg-radical-equations'] },
+      { id: 'precalc',    name: 'Pre-Calculus',         prefix: 'precalc-' },
+    ],
+  },
+  {
+    id: 'calculus', name: 'Calculus',
+    description: 'Limits, derivatives, integrals, and multivariable calculus',
+    hasContent: true,
+    topicDefs: [
+      { id: 'limits',       name: 'Limits',                nodeIds: ['calc-limits','calc-limit-laws','calc-continuity'] },
+      { id: 'derivatives',  name: 'Derivatives',           nodeIds: ['calc-deriv-def','calc-deriv-power','calc-deriv-product','calc-deriv-chain','calc-deriv-exp-log','calc-implicit','calc-optim'] },
+      { id: 'integrals',    name: 'Integrals',             nodeIds: ['calc-antideriv','calc-riemann','calc-ftc','calc-usub','calc-byparts','calc-improper','calc-series-conv'] },
+      { id: 'multivariable',name: 'Multivariable',         prefix: 'mv-' },
+    ],
+  },
+  {
+    id: 'linalg', name: 'Linear Algebra',
+    description: 'Vectors, matrices, and linear transformations',
+    hasContent: true,
+    topicDefs: [
+      { id: 'linalg-matrices', name: 'Vectors & Matrices', nodeIds: ['linalg-vectors','linalg-matrix-ops','linalg-matrix-mult','linalg-transpose','linalg-row-reduce','linalg-determinant','linalg-inverse','linalg-linear-systems'] },
+      { id: 'linalg-spaces',   name: 'Vector Spaces',      nodeIds: ['linalg-span-independence','linalg-subspaces','linalg-rank-nullity'] },
+      { id: 'linalg-eigen',    name: 'Eigenvalues',        nodeIds: ['linalg-linear-transforms','linalg-change-basis','linalg-eigenvalues','linalg-diagonalization','linalg-symmetric-spectral'] },
+      { id: 'linalg-ortho',    name: 'Orthogonality',      nodeIds: ['linalg-orthogonality','linalg-gram-schmidt','linalg-orthogonal-projection','linalg-least-squares','linalg-svd'] },
+    ],
+  },
+  {
+    id: 'probability', name: 'Probability',
+    description: 'Sample spaces, random variables, and distributions',
+    hasContent: true,
+    topicDefs: [
+      { id: 'prob-basics',     name: 'Probability Basics',  nodeIds: ['prob-sample-space','prob-set-ops','prob-axioms','prob-inclusion-excl','prob-area-probability','prob-conditional','prob-independence','prob-total-prob','prob-bayes'] },
+      { id: 'prob-discrete',   name: 'Discrete RVs',        nodeIds: ['prob-discrete-rv','prob-expected-value','prob-indicators','prob-variance','prob-bernoulli-binom','prob-hypergeometric','prob-geometric-dist','prob-poisson','prob-poisson-approx'] },
+      { id: 'prob-continuous', name: 'Continuous RVs',      nodeIds: ['prob-continuous-rv','prob-normal','prob-exponential-dist','prob-memoryless','prob-gamma-dist','prob-normal-approx','prob-cdf-method','prob-transformations','prob-inverse-cdf'] },
+      { id: 'prob-joint',      name: 'Joint Distributions', nodeIds: ['prob-joint-discrete','prob-joint-continuous','prob-marginal','prob-conditional-dist','prob-covariance','prob-conditional-expect','prob-bivariate-normal'] },
+      { id: 'prob-limits',     name: 'Limit Theorems',      nodeIds: ['prob-mgf','prob-poisson-process','prob-order-stats','prob-lln','prob-clt'] },
+    ],
+  },
+  {
+    id: 'statistics', name: 'Statistics',
+    description: 'Estimation, hypothesis testing, and regression',
+    hasContent: true,
+    topicDefs: [
+      { id: 'stat-estimation', name: 'Estimation',          nodeIds: ['stat-sampling-dist','stat-estimator-props','stat-survey-srs','stat-mom','stat-mle-univariate','stat-mle-multiparameter','stat-mle-properties','stat-sufficiency','stat-fisher-info','stat-crlb','stat-mvue','stat-delta-method','stat-bootstrap'] },
+      { id: 'stat-ci',         name: 'Confidence Intervals',nodeIds: ['stat-ci-z','stat-ci-t','stat-ci-proportion'] },
+      { id: 'stat-hyp',        name: 'Hypothesis Testing',  nodeIds: ['stat-hyp-setup','stat-errors-power','stat-pvalue','stat-neyman-pearson','stat-ump','stat-glrt','stat-power-sample-size'] },
+      { id: 'stat-tests',      name: 'Statistical Tests',   nodeIds: ['stat-ztest-one','stat-ttest-one','stat-ttest-two','stat-pooled-variance','stat-ttest-paired','stat-mannwhitney','stat-wilcoxon-signed','stat-permutation','stat-chi-gof','stat-chi-indep','stat-chi-homog','stat-anova-one','stat-anova-kruskal','stat-multiple-testing'] },
+      { id: 'stat-regression', name: 'Regression',          nodeIds: ['stat-slr','stat-slr-matrix','stat-slr-inference','stat-mlr','stat-mlr-inference','stat-model-comparison','stat-regression-checks'] },
+      { id: 'stat-advanced',   name: 'Advanced Topics',     nodeIds: ['stat-bayes-posterior','stat-order-statistics','stat-simulation','stat-confounding','stat-causal-intro'] },
+    ],
+  },
+]
+
+// Build the subjects array from the flat HIERARCHY.items list
+function buildSubjects() {
+  const itemSet = new Set(HIERARCHY.items || [])
+  return SUBJECT_DEFS.map(subj => ({
+    id: subj.id,
+    name: subj.name,
+    description: subj.description,
+    hasContent: subj.hasContent,
+    topics: subj.topicDefs.map((td, i) => {
+      const nodeIds = td.prefix
+        ? (HIERARCHY.items || []).filter(id => id.startsWith(td.prefix))
+        : (td.nodeIds || []).filter(id => itemSet.has(id))
+      const col = i % TOPICS_PER_ROW
+      const row = Math.floor(i / TOPICS_PER_ROW)
+      return {
+        id: td.id,
+        name: td.name,
+        nodeIds,
+        display_x: PAD + col * (TOPIC_W + TOPIC_GAP),
+        display_y: PAD + row * (TOPIC_H + TOPIC_GAP),
+      }
+    }),
+  }))
+}
+
+const SUBJECTS = buildSubjects()
 
 // Compute where an inter-topic edge should start/end based on relative positions
 function getTopicEdgePoints(from, to) {
@@ -84,7 +191,7 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
   // Build nodeId → topicId lookup from hierarchy
   const nodeTopicMap = useMemo(() => {
     const m = {}
-    HIERARCHY.subjects.forEach(subj => {
+    SUBJECTS.forEach(subj => {
       subj.topics.forEach(topic => {
         topic.nodeIds.forEach(nid => { m[nid] = topic.id })
       })
@@ -95,7 +202,7 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
   // Topic stats: mastered, ready, total, progress
   const topicStats = useMemo(() => {
     const stats = {}
-    HIERARCHY.subjects.forEach(subj => {
+    SUBJECTS.forEach(subj => {
       subj.topics.forEach(topic => {
         let mastered = 0, ready = 0, total = 0
         topic.nodeIds.forEach(nid => {
@@ -115,14 +222,15 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
   // Subject stats: aggregate from topics
   const subjectStats = useMemo(() => {
     const stats = {}
-    HIERARCHY.subjects.forEach(subj => {
-      let mastered = 0, total = 0
+    SUBJECTS.forEach(subj => {
+      let mastered = 0, ready = 0, total = 0
       subj.topics.forEach(t => {
         const s = topicStats[t.id] || {}
         mastered += s.mastered || 0
+        ready += s.ready || 0
         total += s.total || 0
       })
-      stats[subj.id] = { mastered, total, progress: total > 0 ? mastered / total : 0 }
+      stats[subj.id] = { mastered, ready, total, progress: total > 0 ? mastered / total : 0 }
     })
     return stats
   }, [topicStats])
@@ -155,17 +263,30 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
   if (level === 'subject') {
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-        {HIERARCHY.subjects.map(subj => {
+        {SUBJECTS.map(subj => {
           const stats = subjectStats[subj.id] || {}
           const active = subj.hasContent
+          const allMastered = active && stats.mastered > 0 && stats.mastered === stats.total
+          const hasReady = active && stats.ready > 0
+          const subjBg = !active ? '#F5F4F2'
+            : allMastered ? theme.colors.primaryLight
+            : hasReady ? theme.colors.accentLight
+            : theme.colors.primaryLight
+          const subjBorder = !active ? theme.colors.border
+            : allMastered ? theme.colors.primary
+            : hasReady ? theme.colors.accent
+            : theme.colors.primary
+          const subjTitleColor = !active ? theme.colors.textMuted
+            : hasReady && !allMastered ? '#7A5C00'
+            : theme.colors.primary
           return (
             <div
               key={subj.id}
               onClick={() => active && (setActiveSubject(subj), setLevel('topic'))}
               style={{
                 width: 200, padding: '20px 24px', boxSizing: 'border-box',
-                background: active ? theme.colors.primaryLight : '#F5F4F2',
-                border: `2px solid ${active ? theme.colors.primary : theme.colors.border}`,
+                background: subjBg,
+                border: `2px solid ${subjBorder}`,
                 borderRadius: theme.radius.lg,
                 cursor: active ? 'pointer' : 'default',
                 opacity: active ? 1 : 0.55,
@@ -173,7 +294,7 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
                 boxShadow: active ? theme.shadow.sm : 'none',
               }}
             >
-              <div style={{ fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: active ? theme.colors.primary : theme.colors.textMuted, marginBottom: 6 }}>
+              <div style={{ fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: subjTitleColor, marginBottom: 6 }}>
                 {subj.name}
               </div>
               <div style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.textMuted, marginBottom: 10, lineHeight: 1.4 }}>
@@ -187,8 +308,8 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
                   <div style={{ height: 4, background: theme.colors.border, borderRadius: 2, marginBottom: 12 }}>
                     <div style={{ height: '100%', width: `${(stats.progress || 0) * 100}%`, background: theme.colors.primary, borderRadius: 2, transition: 'width 0.4s' }} />
                   </div>
-                  <div style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.primary, fontWeight: 600 }}>
-                    Explore topics →
+                  <div style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: subjTitleColor, fontWeight: 600 }}>
+                    {hasReady && !allMastered ? `${stats.ready} ready to learn →` : 'Explore topics →'}
                   </div>
                 </>
               ) : (
@@ -351,29 +472,28 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
             {topicNodes.map(node => {
               const x = norm(node.display_x, minX)
               const y = norm(node.display_y, minY)
-              const statusColor = STATUS_COLORS[node.status] || theme.colors.locked
-              const isClickable = node.status !== 'locked'
+              const statusColor = STATUS_COLORS[node.status] || STATUS_COLORS.available
+              const isAvailable = node.status === 'available' || node.status === 'locked'
 
               return (
                 <div
                   key={node.id}
                   onClick={() => {
-                    if (!isClickable) return
                     if (onNodeClick) onNodeClick(node)
                     else navigate(`/lesson/${node.id}`)
                   }}
-                  title={node.status === 'locked' ? `${node.label} — prerequisites not met` : node.label}
+                  title={isAvailable ? `${node.label} — prerequisites not yet met` : node.label}
                   style={{
                     position: 'absolute', left: x, top: y,
                     width: NODE_W, height: NODE_H,
                     background: node.status === 'mastered' ? theme.colors.primaryLight
                       : node.status === 'ready' ? theme.colors.accentLight : '#F5F4F2',
-                    border: `2px solid ${statusColor}`,
+                    border: `2px ${isAvailable ? 'dashed' : 'solid'} ${statusColor}`,
                     borderRadius: theme.radius.md,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: isClickable ? 'pointer' : 'not-allowed',
+                    cursor: 'pointer',
                     padding: '4px 8px', boxSizing: 'border-box',
-                    opacity: node.status === 'locked' ? 0.6 : 1,
+                    opacity: isAvailable ? 0.7 : 1,
                     transition: 'all 0.15s',
                     boxShadow: theme.shadow.sm,
                   }}

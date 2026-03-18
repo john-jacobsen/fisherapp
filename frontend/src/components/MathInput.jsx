@@ -22,6 +22,12 @@ export default function MathInput({ value, onChange, onSubmit, placeholder = 'En
     mf.virtualKeyboardMode = 'onfocus';
     if (placeholder) mf.placeholder = placeholder;
 
+    // Add shortcut: type "logb" to insert \log_{#?}(#?) template
+    mf.inlineShortcuts = {
+      ...mf.inlineShortcuts,
+      'logb': '\\log_{#?}\\left(#?\\right)',
+    };
+
     const handleInput = () => {
       if (onChange) onChange(mf.value);
     };
@@ -78,7 +84,7 @@ export default function MathInput({ value, onChange, onSubmit, placeholder = 'En
         color: theme.colors.textMuted,
         fontFamily: theme.fonts.sans,
       }}>
-        Click to enter math. Press Enter to submit. For exponents, type all digits then press → to exit.
+        Click to enter math. Press Enter to submit. For exponents, type all digits then press → to exit. For log base: type "logb" or type "log" then press _ to add the base.
       </div>
     </div>
   );

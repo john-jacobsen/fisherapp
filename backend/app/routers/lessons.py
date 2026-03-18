@@ -15,6 +15,17 @@ from app.kst.kst_engine import get_active_graph
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
 
 _VIDEOS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "lesson_videos.json")
+_LESSONS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "lessons")
+
+
+def _load_lesson_file(node_id: str):
+    """Load lesson markdown from file, returns None if not found."""
+    path = os.path.join(_LESSONS_DIR, f"{node_id}.md")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
 
 
 def _load_videos() -> dict:
@@ -63,6 +74,7 @@ def get_lesson(
         raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found")
 
     lesson = db.query(Lesson).filter(Lesson.node_id == node_id).first()
+    file_content = _load_lesson_file(node_id)
     examples = db.query(WorkedExample).filter(
         WorkedExample.node_id == node_id
     ).order_by(WorkedExample.display_order).all()
@@ -85,8 +97,12 @@ def get_lesson(
         "node": {"id": node.id, "label": node.label, "topic": node.topic},
         "lesson": {
             "video_url": lesson.video_url if lesson else None,
-            "content_markdown": lesson.content_markdown if lesson else f"# {node.label}\n\nLesson content coming soon.",
-        } if lesson else {"video_url": None, "content_markdown": f"# {node.label}\n\nLesson content coming soon."},
+            "content_markdown": (
+                lesson.content_markdown if lesson and lesson.content_markdown
+                else file_content
+                or f"# {node.label}\n\nLesson content coming soon."
+            ),
+        },
         "worked_examples": [
             {
                 "id": str(e.id),

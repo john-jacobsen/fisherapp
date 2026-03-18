@@ -105,7 +105,8 @@ def _gen_precalc_functions():
 # ─── precalc-domain-range ─────────────────────────────────────────────────────
 
 def _gen_precalc_domain_range():
-    if random.randint(0, 1) == 0:
+    variant = random.choice([0, 1, 2])
+    if variant == 0:
         a = random.randint(1, 6)
         return {
             "problem_text": f"What value of \\(x\\) is excluded from the domain of \\(f(x) = \\frac{{1}}{{x - {a}}}\\)?",
@@ -118,7 +119,7 @@ def _gen_precalc_domain_range():
                 {"level": 3, "text": f"\\(x - {a} = 0 \\Rightarrow x = {a}\\). This value is excluded from the domain."},
             ],
         }
-    else:
+    elif variant == 1:
         a = random.randint(1, 8)
         return {
             "problem_text": f"What is the smallest value of \\(x\\) in the domain of \\(f(x) = \\sqrt{{x - {a}}}\\)?",
@@ -129,6 +130,19 @@ def _gen_precalc_domain_range():
                 {"level": 1, "text": "A square root requires the expression inside to be non-negative (≥ 0)."},
                 {"level": 2, "text": f"Set \\(x - {a} \\geq 0\\) and solve for \\(x\\)."},
                 {"level": 3, "text": f"\\(x - {a} \\geq 0 \\Rightarrow x \\geq {a}\\). The smallest value in the domain is \\(x = {a}\\)."},
+            ],
+        }
+    else:
+        a = random.randint(1, 8)
+        return {
+            "problem_text": f"What is the boundary value excluded from the domain of \\(f(x) = \\ln(x - {a})\\)?",
+            "correct_answer": str(a),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "A logarithm requires its argument to be strictly positive: \\(\\ln(u)\\) is defined only for \\(u > 0\\)."},
+                {"level": 2, "text": f"Set \\(x - {a} > 0\\). The boundary (excluded) value is where \\(x - {a} = 0\\)."},
+                {"level": 3, "text": f"\\(x - {a} = 0 \\Rightarrow x = {a}\\). The domain is \\(x > {a}\\); the boundary \\({a}\\) is excluded."},
             ],
         }
 
@@ -174,21 +188,58 @@ def _gen_precalc_composition():
 # ─── precalc-inverse-func ─────────────────────────────────────────────────────
 
 def _gen_precalc_inverse_func():
+    variant = random.choice([0, 1, 2])
     a = random.randint(2, 5)
     b = random.choice([-6,-5,-4,-3,-2,-1,1,2,3,4,5,6])
-    x_orig = random.randint(1, 8)
-    y = a * x_orig + b
-    return {
-        "problem_text": f"Let \\(f(x) = {_lin(a, b)}\\). Find \\(f^{{-1}}({y})\\).",
-        "correct_answer": str(x_orig),
-        "answer_type": "numeric",
-        "difficulty": 0.6,
-        "hints": [
-            {"level": 1, "text": "To find an inverse, swap \\(x\\) and \\(y\\) in \\(y = f(x)\\), then solve for \\(y\\)."},
-            {"level": 2, "text": f"Swap: \\(x = {a}y + ({b})\\). Subtract \\({b}\\), then divide by \\({a}\\)."},
-            {"level": 3, "text": f"\\(f^{{-1}}(x) = \\frac{{x - ({b})}}{{{a}}}\\). At \\(x = {y}\\): \\(\\frac{{{y} - ({b})}}{{{a}}} = \\frac{{{y-b}}}{{{a}}} = {x_orig}\\)."},
-        ],
-    }
+    if variant == 0:
+        x_orig = random.randint(1, 8)
+        y = a * x_orig + b
+        return {
+            "problem_text": f"Let \\(f(x) = {_lin(a, b)}\\). Find \\(f^{{-1}}({y})\\).",
+            "correct_answer": str(x_orig),
+            "answer_type": "numeric",
+            "difficulty": 0.6,
+            "hints": [
+                {"level": 1, "text": "To find an inverse, swap \\(x\\) and \\(y\\) in \\(y = f(x)\\), then solve for \\(y\\)."},
+                {"level": 2, "text": f"Swap: \\(x = {a}y + ({b})\\). Subtract \\({b}\\), then divide by \\({a}\\)."},
+                {"level": 3, "text": f"\\(f^{{-1}}(x) = \\frac{{x - ({b})}}{{{a}}}\\). At \\(x = {y}\\): \\(\\frac{{{y} - ({b})}}{{{a}}} = \\frac{{{y-b}}}{{{a}}} = {x_orig}\\)."},
+            ],
+        }
+    elif variant == 1:
+        # Ask for f^{-1}(0): solve ax + b = 0 → x = -b/a (only if divisible)
+        # Ensure b is divisible by a for clean integer answer
+        b2 = a * random.randint(1, 4) * random.choice([-1, 1])
+        x_at_zero = -b2 // a
+        return {
+            "problem_text": f"Let \\(f(x) = {_lin(a, b2)}\\). Find \\(f^{{-1}}(0)\\).",
+            "correct_answer": str(x_at_zero),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "\\(f^{-1}(0)\\) is the value of \\(x\\) such that \\(f(x) = 0\\)."},
+                {"level": 2, "text": f"Solve \\({_lin(a, b2)} = 0\\)."},
+                {"level": 3, "text": f"\\({a}x = {-b2} \\Rightarrow x = {x_at_zero}\\)."},
+            ],
+        }
+    else:
+        # Intersection of f and f^{-1}: lies on y = x, so ax+b = x → (a-1)x = -b → x = -b/(a-1)
+        # Ensure a != 1 (already since a >= 2) and (a-1)|b for integer answer
+        b3 = (a - 1) * random.randint(1, 4) * random.choice([-1, 1])
+        x_intersect = -b3 // (a - 1)
+        return {
+            "problem_text": (
+                f"Let \\(f(x) = {_lin(a, b3)}\\). "
+                f"Find the \\(x\\)-coordinate of the intersection of \\(y = f(x)\\) and \\(y = f^{{-1}}(x)\\)."
+            ),
+            "correct_answer": str(x_intersect),
+            "answer_type": "numeric",
+            "difficulty": 0.7,
+            "hints": [
+                {"level": 1, "text": "The graph of \\(f\\) and \\(f^{-1}\\) intersect on the line \\(y = x\\). Set \\(f(x) = x\\) and solve."},
+                {"level": 2, "text": f"Set \\({_lin(a, b3)} = x\\): \\({a}x + ({b3}) = x \\Rightarrow {a-1}x = {-b3}\\)."},
+                {"level": 3, "text": f"\\(x = \\frac{{{-b3}}}{{{a-1}}} = {x_intersect}\\)."},
+            ],
+        }
 
 
 # ─── precalc-poly-func ────────────────────────────────────────────────────────

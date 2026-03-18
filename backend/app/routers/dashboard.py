@@ -17,21 +17,20 @@ def get_node_status(node_id: str, student_state: StudentState | None, graph_cach
     """
     Compute status for a node given student state.
     - mastered: in mastered_nodes
-    - ready: all prerequisites mastered (outer fringe)
-    - practicing: (future use, for now same as ready)
-    - locked: at least one prerequisite not mastered
+    - ready: in outer fringe (all prerequisites mastered — recommended next)
+    - available: prerequisites not yet met, but still accessible (advisory only)
     """
     if student_state is None:
-        # Before placement: nodes with no prerequisites are ready
+        # Before placement: outer-fringe nodes (no prereqs) are ready, others are available
         relations = graph_cache.get("relations", [])
         has_prereqs = any(target == node_id for _, target in relations)
-        return "locked" if has_prereqs else "ready"
+        return "available" if has_prereqs else "ready"
 
     if node_id in student_state.mastered_nodes:
         return "mastered"
     if node_id in student_state.outer_fringe:
         return "ready"
-    return "locked"
+    return "available"
 
 
 @router.get("")
@@ -79,8 +78,10 @@ def get_dashboard(
     ready_count = len(ready)
     overall_progress = round(mastered_count / total, 3) if total > 0 else 0
 
-    # Recommended next: first outer fringe node
+    # Recommended next: fallback chain so this is never empty
     recommended_next = None
+
+    # 1. Outer fringe (ready to learn)
     if ready:
         rn = ready[0]
         prereq_ids = [rel[0] for rel in cache.get("relations", []) if rel[1] == rn["id"]]
@@ -90,6 +91,42 @@ def get_dashboard(
             "topic": rn["topic"],
             "prereqs_met": prereq_ids,
         }
+
+    # 2. Any accessible node (prerequisites not yet met but available)
+    if not recommended_next and student_state:
+        available_nodes = [n for n in node_list if n["status"] == "available"]
+        if available_nodes:
+            an = available_nodes[0]
+            recommended_next = {
+                "node_id": an["id"],
+                "label": an["label"],
+                "topic": an["topic"],
+                "prereqs_met": [],
+            }
+
+    # 3. Review due node
+    if not recommended_next and reviews_due:
+        rd = reviews_due[0]
+        rd_node = next((n for n in node_list if n["id"] == rd["node_id"]), None)
+        if rd_node:
+            recommended_next = {
+                "node_id": rd["node_id"],
+                "label": rd["label"],
+                "topic": rd_node.get("topic", ""),
+                "prereqs_met": [],
+            }
+
+    # 4. First unmastered node in curriculum order
+    if not recommended_next:
+        unmastered = [n for n in node_list if n["status"] != "mastered"]
+        if unmastered:
+            un = unmastered[0]
+            recommended_next = {
+                "node_id": un["id"],
+                "label": un["label"],
+                "topic": un["topic"],
+                "prereqs_met": [],
+            }
 
     # Reviews due
     now = datetime.now(timezone.utc)

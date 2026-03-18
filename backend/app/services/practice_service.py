@@ -114,8 +114,8 @@ def _get_problem(node_id: str, exclude_ids: list[str], db: DBSession) -> Optiona
 
 def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
     """Start a practice session for a node. Returns session + first problem + mastery info."""
-    if not _check_prereqs(node_id, user_id, db):
-        raise PermissionError(f"Prerequisites for '{node_id}' not met")
+    prereqs_met = _check_prereqs(node_id, user_id, db)
+    # Prerequisites are advisory only — students may practice any topic at any time.
 
     node = db.query(KnowledgeNode).filter(KnowledgeNode.id == node_id).first()
     if not node:
@@ -186,6 +186,7 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
             "min_questions": 3,
             "soft_cap": 10,
         },
+        "prereqs_met": prereqs_met,  # advisory only
     }
 
 
@@ -387,6 +388,52 @@ def submit_practice_answer(
         "next_problem": next_problem,
         "suggest_review_lesson": low_posterior,
     }
+
+
+def get_new_problem(node_id: str, session_id: str, user_id: str, db: DBSession) -> dict:
+    """Generate a fresh problem for an existing session (used when switching to test mode)."""
+    session = db.query(Session).filter(
+        Session.id == session_id,
+        Session.user_id == user_id,
+        Session.is_active == True,
+    ).first()
+    if not session:
+        raise ValueError("Session not found")
+
+    state = copy.deepcopy(session.state_snapshot)
+    ephemeral_problems = state.get("ephemeral_problems", {})
+
+    generated = generate_problem(node_id)
+    if generated:
+        new_id = str(uuid.uuid4())
+        ephemeral_problems[new_id] = {
+            "correct_answer": generated["correct_answer"],
+            "answer_type": generated["answer_type"],
+            "hints": generated.get("hints", []),
+        }
+        problem = {
+            "id": new_id,
+            "problem_text": generated["problem_text"],
+            "answer_type": generated["answer_type"],
+            "hints": generated.get("hints", []),
+        }
+    else:
+        seen = state.get("seen_problems", [])
+        db_problem = _get_problem(node_id, seen, db)
+        if not db_problem:
+            raise ValueError(f"No problems found for node '{node_id}'")
+        problem = {
+            "id": str(db_problem.id),
+            "problem_text": db_problem.problem_text,
+            "answer_type": db_problem.answer_type,
+        }
+
+    state["ephemeral_problems"] = ephemeral_problems
+    session.state_snapshot = state
+    flag_modified(session, "state_snapshot")
+    db.commit()
+
+    return {"problem": problem}
 
 
 def get_hint(node_id: str, problem_id: str, level: int, db: DBSession, session_id: str = None) -> dict:

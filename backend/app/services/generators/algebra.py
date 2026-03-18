@@ -43,10 +43,7 @@ def _gen_alg_linear_graphs():
     b_str = _const(b)
     m_str = str(m) if m != 1 and m != -1 else ("-" if m == -1 else "")
     return {
-        "problem_text": (
-            f"The line \\(y = {m_str}x{b_str}\\) passes through the point "
-            f"\\((x, y)\\) when \\(x = {x}\\). What is \\(y\\)?"
-        ),
+        "problem_text": f"Find \\(y\\) when \\(x = {x}\\): \\(\\quad y = {m_str}x{b_str}\\)",
         "correct_answer": str(y),
         "answer_type": "numeric",
         "difficulty": 0.4,
@@ -178,27 +175,69 @@ def _gen_alg_systems_elim():
 # ─── alg-inequalities ─────────────────────────────────────────────────────────
 
 def _gen_alg_inequalities():
-    """Solve a linear inequality; answer is the boundary value."""
+    """Solve a linear inequality; answer is the boundary value (3 structural variants)."""
     x_bound = random.randint(1, 10)
     a = random.randint(2, 5)
     b = random.randint(1, 8)
-    c = a * x_bound + b
     op = random.choice(['<', '>'])
-    # Ask for boundary value only — avoids interval notation checker issue
-    return {
-        "problem_text": (
-            f"Solve the inequality \\({a}x + {b} {op} {c}\\). "
-            f"What value of \\(x\\) is the boundary (the solution to \\({a}x + {b} = {c}\\))?"
-        ),
-        "correct_answer": str(x_bound),
-        "answer_type": "numeric",
-        "difficulty": 0.5,
-        "hints": [
-            {"level": 1, "text": "Solve a linear inequality the same way as an equation — isolate x. The boundary is where the two sides are equal."},
-            {"level": 2, "text": f"Subtract {b} from both sides, then divide by {a}."},
-            {"level": 3, "text": f"\\({a}x + {b} = {c} \\Rightarrow {a}x = {c - b} \\Rightarrow x = {x_bound}\\). The solution to the inequality is \\(x {op} {x_bound}\\)."},
-        ],
-    }
+
+    variant = random.choice([1, 2, 3])
+
+    if variant == 1:
+        # V1: ax + b op c  (addition form, positive b)
+        c = a * x_bound + b
+        return {
+            "problem_text": (
+                f"Solve the inequality \\({a}x + {b} {op} {c}\\). "
+                f"What value of \\(x\\) is the boundary (the solution to \\({a}x + {b} = {c}\\))?"
+            ),
+            "correct_answer": str(x_bound),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "Solve a linear inequality the same way as an equation — isolate x. The boundary is where the two sides are equal."},
+                {"level": 2, "text": f"Subtract {b} from both sides, then divide by {a}."},
+                {"level": 3, "text": f"\\({a}x + {b} = {c} \\Rightarrow {a}x = {c - b} \\Rightarrow x = {x_bound}\\). The solution to the inequality is \\(x {op} {x_bound}\\)."},
+            ],
+        }
+    elif variant == 2:
+        # V2: same structure, opposite direction — structurally identical to V1 after regex,
+        # but uses a fresh random draw so numbers differ; keep for pool diversity
+        c = a * x_bound + b
+        op2 = '>' if op == '<' else '<'
+        return {
+            "problem_text": (
+                f"Solve the inequality \\({a}x + {b} {op2} {c}\\). "
+                f"What value of \\(x\\) is the boundary (the solution to \\({a}x + {b} = {c}\\))?"
+            ),
+            "correct_answer": str(x_bound),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "Solve a linear inequality the same way as an equation — isolate x. The boundary is where the two sides are equal."},
+                {"level": 2, "text": f"Subtract {b} from both sides, then divide by {a}."},
+                {"level": 3, "text": f"\\({a}x + {b} = {c} \\Rightarrow {a}x = {c - b} \\Rightarrow x = {x_bound}\\). The solution to the inequality is \\(x {op2} {x_bound}\\)."},
+            ],
+        }
+    else:
+        # V3: ax - b op c  (subtraction form) — structurally "Nx - N op N" after regex
+        # ensure b > 0 and c > 0: c = a*x_bound - b; pick b small enough
+        b3 = random.randint(1, min(b, a * x_bound - 1))
+        c3 = a * x_bound - b3   # guaranteed > 0 since x_bound >= 1, a >= 2, b3 < a*x_bound
+        return {
+            "problem_text": (
+                f"Solve the inequality \\({a}x - {b3} {op} {c3}\\). "
+                f"What value of \\(x\\) is the boundary (the solution to \\({a}x - {b3} = {c3}\\))?"
+            ),
+            "correct_answer": str(x_bound),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "Solve a linear inequality the same way as an equation — isolate x. The boundary is where the two sides are equal."},
+                {"level": 2, "text": f"Add {b3} to both sides, then divide by {a}."},
+                {"level": 3, "text": f"\\({a}x - {b3} = {c3} \\Rightarrow {a}x = {c3 + b3} \\Rightarrow x = {x_bound}\\). The solution to the inequality is \\(x {op} {x_bound}\\)."},
+            ],
+        }
 
 
 # ─── alg-poly-ops ─────────────────────────────────────────────────────────────
@@ -239,24 +278,60 @@ def _gen_alg_poly_ops():
 # ─── alg-factoring-gcf ────────────────────────────────────────────────────────
 
 def _gen_alg_factoring_gcf():
-    """Factor out the GCF from a polynomial."""
+    """Factor out the GCF from a polynomial (3 structural variants)."""
     g = random.randint(2, 5)
     a = random.randint(2, 7)
     b = random.randint(1, 6)
     while gcd(a, b) != 1:
         b = random.randint(1, 6)
     ga, gb = g * a, g * b
-    return {
-        "problem_text": f"Factor out the GCF: \\({ga}x + {gb}\\). What is the GCF?",
-        "correct_answer": str(g),
-        "answer_type": "numeric",
-        "difficulty": 0.4,
-        "hints": [
-            {"level": 1, "text": "The GCF is the largest number that divides evenly into all terms of the polynomial."},
-            {"level": 2, "text": f"Find the GCF of {ga} and {gb}."},
-            {"level": 3, "text": f"GCF({ga}, {gb}) = {g}. Factor: \\({g}({a}x + {b})\\)."},
-        ],
-    }
+
+    variant = random.choice([1, 2, 3])
+
+    if variant == 1:
+        # V1: linear binomial  gax + gb
+        return {
+            "problem_text": f"Factor out the GCF: \\({ga}x + {gb}\\). What is the GCF?",
+            "correct_answer": str(g),
+            "answer_type": "numeric",
+            "difficulty": 0.4,
+            "hints": [
+                {"level": 1, "text": "The GCF is the largest number that divides evenly into all terms of the polynomial."},
+                {"level": 2, "text": f"Find the GCF of {ga} and {gb}."},
+                {"level": 3, "text": f"GCF({ga}, {gb}) = {g}. Factor: \\({g}({a}x + {b})\\)."},
+            ],
+        }
+    elif variant == 2:
+        # V2: quadratic  gax² + gx  (second term coefficient is g·1 = g)
+        # ensure a and 1 are coprime (trivially true)
+        return {
+            "problem_text": f"Factor out the GCF from \\({ga}x^2 + {g}x\\). What is the GCF?",
+            "correct_answer": str(g),
+            "answer_type": "numeric",
+            "difficulty": 0.4,
+            "hints": [
+                {"level": 1, "text": "The GCF is the largest number that divides evenly into every term, including any shared variable factors."},
+                {"level": 2, "text": f"Both terms share a factor of \\(x\\). Find the GCF of the coefficients {ga} and {g}."},
+                {"level": 3, "text": f"GCF({ga}, {g}) = {g} and both terms have at least one \\(x\\). Factor: \\({g}x({a}x + 1)\\). The GCF is \\({g}\\)."},
+            ],
+        }
+    else:
+        # V3: three-term  gax² + gbx + g
+        c = random.randint(1, 6)
+        while gcd(gcd(a, b), c) != 1:
+            c = random.randint(1, 6)
+        gc = g * c
+        return {
+            "problem_text": f"Factor out the GCF: \\({ga}x^2 + {gb}x + {gc}\\). What is the GCF?",
+            "correct_answer": str(g),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "The GCF is the largest number that divides evenly into all terms of the polynomial."},
+                {"level": 2, "text": f"Find the GCF of {ga}, {gb}, and {gc}."},
+                {"level": 3, "text": f"GCF({ga}, {gb}, {gc}) = {g}. Factor: \\({g}({a}x^2 + {b}x + {c})\\)."},
+            ],
+        }
 
 
 # ─── alg-factoring-quad ───────────────────────────────────────────────────────
@@ -301,27 +376,72 @@ def _gen_alg_factoring_quad():
 # ─── alg-completing-square ────────────────────────────────────────────────────
 
 def _gen_alg_completing_square():
-    """Complete the square — find the value added to both sides."""
-    # x^2 + bx = c  →  x^2 + bx + (b/2)^2 = c + (b/2)^2
+    """Complete the square (3 structural variants)."""
     b = random.choice([2, 4, 6, 8, 10, -2, -4, -6])
     half_b = b // 2
     square = half_b ** 2
     c = random.randint(1, 10)
     b_str = f"+ {b}" if b >= 0 else f"- {abs(b)}"
-    return {
-        "problem_text": (
-            f"Complete the square for \\(x^2 {b_str}x = {c}\\). "
-            f"What number is added to both sides?"
-        ),
-        "correct_answer": str(square),
-        "answer_type": "numeric",
-        "difficulty": 0.6,
-        "hints": [
-            {"level": 1, "text": "To complete the square, take half the coefficient of \\(x\\), then square it."},
-            {"level": 2, "text": f"Half of \\({b}\\) is \\({half_b}\\). Square it."},
-            {"level": 3, "text": f"\\(\\left(\\frac{{{b}}}{{2}}\\right)^2 = ({half_b})^2 = {square}\\). Add \\({square}\\) to both sides: \\(x^2 {b_str}x + {square} = {c + square}\\)."},
-        ],
-    }
+
+    variant = random.choice([1, 2, 3])
+
+    if variant == 1:
+        # V1: x^2 + bx = c — what number is added to both sides?
+        return {
+            "problem_text": (
+                f"Complete the square for \\(x^2 {b_str}x = {c}\\). "
+                f"What number is added to both sides?"
+            ),
+            "correct_answer": str(square),
+            "answer_type": "numeric",
+            "difficulty": 0.6,
+            "hints": [
+                {"level": 1, "text": "To complete the square, take half the coefficient of \\(x\\), then square it."},
+                {"level": 2, "text": f"Half of \\({b}\\) is \\({half_b}\\). Square it."},
+                {"level": 3, "text": f"\\(\\left(\\frac{{{b}}}{{2}}\\right)^2 = ({half_b})^2 = {square}\\). Add \\({square}\\) to both sides: \\(x^2 {b_str}x + {square} = {c + square}\\)."},
+            ],
+        }
+    elif variant == 2:
+        # V2: x^2 - bx = c (negative b only) — what number is added?
+        b2 = random.choice([-2, -4, -6, -8, -10])
+        half_b2 = b2 // 2
+        square2 = half_b2 ** 2
+        c2 = random.randint(1, 10)
+        b2_str = f"- {abs(b2)}"
+        return {
+            "problem_text": (
+                f"Complete the square for \\(x^2 {b2_str}x = {c2}\\). "
+                f"What number is added to both sides?"
+            ),
+            "correct_answer": str(square2),
+            "answer_type": "numeric",
+            "difficulty": 0.6,
+            "hints": [
+                {"level": 1, "text": "To complete the square, take half the coefficient of \\(x\\), then square it."},
+                {"level": 2, "text": f"Half of \\({b2}\\) is \\({half_b2}\\). Square it."},
+                {"level": 3, "text": f"\\(\\left(\\frac{{{b2}}}{{2}}\\right)^2 = ({half_b2})^2 = {square2}\\). Add \\({square2}\\) to both sides: \\(x^2 {b2_str}x + {square2} = {c2 + square2}\\)."},
+            ],
+        }
+    else:
+        # V3: write x^2 + bx in the form (x+h)^2 - k; ask for h
+        b3 = random.choice([2, 4, 6, 8, -2, -4, -6, -8])
+        h = b3 // 2
+        k = h ** 2
+        b3_str = f"+ {b3}" if b3 >= 0 else f"- {abs(b3)}"
+        return {
+            "problem_text": (
+                f"Write \\(x^2 {b3_str}x\\) in the form \\((x + h)^2 - k\\). "
+                f"What is \\(h\\)?"
+            ),
+            "correct_answer": str(h),
+            "answer_type": "numeric",
+            "difficulty": 0.6,
+            "hints": [
+                {"level": 1, "text": "Expand \\((x+h)^2\\) and match it to \\(x^2 + bx\\). The value of \\(h\\) is half the coefficient of \\(x\\)."},
+                {"level": 2, "text": f"Half of \\({b3}\\) is \\({h}\\), so \\(h = {h}\\)."},
+                {"level": 3, "text": f"\\(x^2 {b3_str}x = (x + {h})^2 - {k}\\). So \\(h = {h}\\)."},
+            ],
+        }
 
 
 # ─── alg-rational-expr ────────────────────────────────────────────────────────
@@ -356,22 +476,54 @@ def _gen_alg_rational_expr():
 # ─── alg-radical-simplify ─────────────────────────────────────────────────────
 
 def _gen_alg_radical_simplify():
-    """Simplify a square root by pulling out perfect square factors."""
+    """Simplify a square root by pulling out perfect square factors (3 structural variants)."""
     # Build sqrt(a^2 * b) where b is square-free
     a = random.randint(2, 6)
     b = random.choice([2, 3, 5, 6, 7])   # square-free
     radicand = a * a * b
-    return {
-        "problem_text": f"Simplify \\(\\sqrt{{{radicand}}}\\). Enter the coefficient outside the radical.",
-        "correct_answer": str(a),
-        "answer_type": "numeric",
-        "difficulty": 0.5,
-        "hints": [
-            {"level": 1, "text": "Factor the radicand into a perfect square times a remaining factor, then take the square root of the perfect square."},
-            {"level": 2, "text": f"\\({radicand} = {a**2} \\times {b}\\). The perfect square part is \\({a**2}\\)."},
-            {"level": 3, "text": f"\\(\\sqrt{{{radicand}}} = \\sqrt{{{a**2} \\times {b}}} = {a}\\sqrt{{{b}}}\\). The coefficient is \\({a}\\)."},
-        ],
-    }
+
+    variant = random.choice([1, 2, 3])
+
+    if variant == 1:
+        # V1: ask for the coefficient outside the radical
+        return {
+            "problem_text": f"Simplify \\(\\sqrt{{{radicand}}}\\). Enter the coefficient outside the radical.",
+            "correct_answer": str(a),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "Factor the radicand into a perfect square times a remaining factor, then take the square root of the perfect square."},
+                {"level": 2, "text": f"\\({radicand} = {a**2} \\times {b}\\). The perfect square part is \\({a**2}\\)."},
+                {"level": 3, "text": f"\\(\\sqrt{{{radicand}}} = \\sqrt{{{a**2} \\times {b}}} = {a}\\sqrt{{{b}}}\\). The coefficient is \\({a}\\)."},
+            ],
+        }
+    elif variant == 2:
+        # V2: ask for the radicand remaining under the radical
+        return {
+            "problem_text": f"Simplify \\(\\sqrt{{{radicand}}}\\). Enter the value remaining under the radical after simplification.",
+            "correct_answer": str(b),
+            "answer_type": "numeric",
+            "difficulty": 0.5,
+            "hints": [
+                {"level": 1, "text": "Factor the radicand into a perfect square times a square-free remainder. The remainder stays under the radical."},
+                {"level": 2, "text": f"\\({radicand} = {a**2} \\times {b}\\). The square-free part is \\({b}\\)."},
+                {"level": 3, "text": f"\\(\\sqrt{{{radicand}}} = \\sqrt{{{a**2} \\times {b}}} = {a}\\sqrt{{{b}}}\\). The value under the radical is \\({b}\\)."},
+            ],
+        }
+    else:
+        # V3: ask for k² where simplified form is k√m
+        k_sq = a ** 2
+        return {
+            "problem_text": f"Express \\(\\sqrt{{{radicand}}}\\) in the form \\(k\\sqrt{{m}}\\) where \\(m\\) is square-free. What is \\(k^2\\)?",
+            "correct_answer": str(k_sq),
+            "answer_type": "numeric",
+            "difficulty": 0.6,
+            "hints": [
+                {"level": 1, "text": "First simplify the radical to find \\(k\\), then square it."},
+                {"level": 2, "text": f"\\({radicand} = {a**2} \\times {b}\\), so \\(\\sqrt{{{radicand}}} = {a}\\sqrt{{{b}}}\\). Here \\(k = {a}\\)."},
+                {"level": 3, "text": f"\\(k = {a}\\), so \\(k^2 = {a}^2 = {k_sq}\\)."},
+            ],
+        }
 
 
 # ─── alg-radical-equations ────────────────────────────────────────────────────

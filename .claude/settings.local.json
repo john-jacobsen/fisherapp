@@ -6,7 +6,8 @@
       "Bash(docker compose:*)",
       "Bash(curl:*)",
       "Bash(__NEW_LINE_5f6a539938c07dba__ echo:*)",
-      "Bash(__NEW_LINE_9cf2fc5a340407f9__ echo:*)"
+      "Bash(__NEW_LINE_9cf2fc5a340407f9__ echo:*)",
+      "Bash(grep:*)"
     ]
   }
 }
