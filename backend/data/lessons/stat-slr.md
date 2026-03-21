@@ -2,43 +2,64 @@
 
 ## Overview
 
-**Simple linear regression (SLR)** models the relationship between a response $Y$ and a predictor $X$ as a line. The goal is to estimate the intercept and slope from data.
+**Simple linear regression** models the relationship between a single predictor $X$ and a response $Y$ as a straight line. The model is $Y_i = \beta_0 + \beta_1 X_i + \varepsilon_i$, where $\beta_0$ is the intercept, $\beta_1$ is the slope, and $\varepsilon_i \overset{iid}{\sim} N(0, \sigma^2)$ is random noise. Your goal is to estimate $\beta_0$ and $\beta_1$ from observed data.
 
 ## Key Idea
 
-Model: $Y_i = \beta_0 + \beta_1 X_i + \varepsilon_i$, where $\varepsilon_i \overset{iid}{\sim} N(0,\sigma^2)$.
+Ordinary least squares (OLS) finds the estimates that minimize the total squared vertical distance between observed values and the fitted line. The closed-form solutions are:
 
-OLS estimates:
+$$\hat{\beta}_1 = \frac{\sum_{i=1}^n (X_i - \bar{X})(Y_i - \bar{Y})}{\sum_{i=1}^n (X_i - \bar{X})^2}, \quad \hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}$$
 
-$$\hat{\beta}_1 = \frac{\sum(X_i - \bar{X})(Y_i - \bar{Y})}{\sum(X_i - \bar{X})^2} = \frac{S_{XY}}{S_{XX}}, \quad \hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}$$
+The numerator measures how $X$ and $Y$ move together; the denominator scales by the spread of $X$. Once you have $\hat{\beta}_1$, the intercept formula forces the fitted line to pass exactly through the point $(\bar{X}, \bar{Y})$.
 
 ## Worked Examples
 
-**Example 1: $(X,Y)$ pairs: $(1,2),(2,4),(3,5)$. Fit SLR.**
+**Example 1: Compute OLS estimates from summary statistics**
 
-$\bar{X}=2$, $\bar{Y}=11/3$. $S_{XY} = 1.5+0+(-5/3) = ...$. Actually: $S_{XY}=(1-2)(2-11/3)+(2-2)(...)+(3-2)(5-11/3) = 5/3 + 0 + 4/3 = 3$. $S_{XX} = 2$. $\hat{\beta}_1 = 1.5$. $\hat{\beta}_0 = 11/3 - 3 = 2/3$.
+You are given: $\sum(X_i - \bar{X})(Y_i - \bar{Y}) = 120$, $\sum(X_i - \bar{X})^2 = 30$, $\bar{X} = 5$, $\bar{Y} = 20$.
+
+Apply the slope formula. The numerator (120) captures total co-movement between $X$ and $Y$; dividing by the denominator (30) normalizes this per unit of $X$-spread:
+
+$$\hat{\beta}_1 = \frac{120}{30} = 4$$
+
+Now compute the intercept by forcing the line through $(\bar{X}, \bar{Y}) = (5, 20)$:
+
+$$\hat{\beta}_0 = 20 - 4 \cdot 5 = 0$$
+
+The fitted line is $\hat{Y} = 4X$.
 
 ---
 
-**Example 2: Interpretation of $\hat{\beta}_1$**
+**Example 2: Predict a new value**
 
-For each 1-unit increase in $X$, $Y$ is expected to increase by $\hat{\beta}_1$.
+Using $\hat{Y} = 4X$ from Example 1, predict $\hat{Y}$ when $X = 6$.
+
+$$\hat{Y} = 4(6) = 24$$
+
+This works because the regression line estimates $E[Y \mid X]$ — the average value of $Y$ at a given $X$. An individual new observation at $X = 6$ will not equal exactly 24 (the error term $\varepsilon$ introduces scatter), but 24 is your best point prediction. Predicting at $X = 100$ would be unreliable because you are far outside the range of observed data, where the linear relationship may not hold.
 
 ---
 
-**Example 3: $R^2$ coefficient of determination**
+**Example 3: Interpret the slope**
 
-$R^2 = 1 - SS_E/SS_T$. Proportion of variance in $Y$ explained by $X$.
+Suppose you fit a model predicting exam score $Y$ from study hours $X$ and obtain $\hat{\beta}_1 = 5.2$.
+
+Interpretation: for each additional hour of study, the predicted exam score increases by 5.2 points **on average**. The phrase "on average" is critical — it acknowledges that individual students scatter around the fitted line due to $\varepsilon$. The slope describes the average trend across many students, not a guaranteed result for any one person. If $\hat{\beta}_1$ were negative, each additional hour would be associated with a lower predicted score on average, which would prompt you to question the model or look for confounders.
 
 ## Common Mistakes
 
-- **Extrapolating outside the data range.** The linear model may not hold there.
-- **Interpreting $\hat{\beta}_1$ causally.** Correlation $\ne$ causation.
+- **Interpreting the slope as causal.** OLS estimates a linear association, not a causal effect. A third variable could drive both $X$ and $Y$, producing a positive $\hat{\beta}_1$ even when $X$ has no causal influence on $Y$.
+
+- **Computing $\hat{\beta}_0$ incorrectly.** The intercept is always $\hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}$. A common error is to solve for the intercept by substituting one arbitrary data point into the equation instead of using the sample means.
+
+- **Extrapolating far beyond the observed data range.** The linear model is calibrated to your data. Predicting at $X$ values far outside $[\min X_i, \max X_i]$ can produce nonsensical results if the true relationship curves or breaks down outside that range.
 
 ## Quick Check
 
-1. OLS minimizes what?
-2. $\hat{\beta}_0$ interpretation when $X=0$?
-3. $R^2=0.8$ means what?
+Try these before using hints:
 
-*(Answers: $\sum(Y_i - \hat{Y}_i)^2$; estimated mean of $Y$ when $X=0$; 80% of variance in $Y$ explained by $X$)*
+1. Given $\sum(X_i - \bar{X})(Y_i - \bar{Y}) = 50$ and $\sum(X_i - \bar{X})^2 = 25$, what is $\hat{\beta}_1$?
+2. If $\hat{\beta}_1 = 2$, $\bar{X} = 4$, and $\bar{Y} = 10$, what is $\hat{\beta}_0$?
+3. With the line from (2), predict $\hat{Y}$ when $X = 7$.
+
+*(Answers: 1. $\hat{\beta}_1 = 2$; 2. $\hat{\beta}_0 = 2$; 3. $\hat{Y} = 16$)*

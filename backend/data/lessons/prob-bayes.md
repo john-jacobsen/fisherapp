@@ -2,47 +2,74 @@
 
 ## Overview
 
-**Bayes' theorem** inverts conditional probability: it computes $P(A|B)$ from $P(B|A)$, $P(A)$, and $P(B)$. It is the foundation of Bayesian inference.
+**Bayes' theorem** inverts a conditional probability. You know $P(B \mid A)$ — how likely you are to observe $B$ if $A$ is true — and you want $P(A \mid B)$ — how likely $A$ is given that you observed $B$. The theorem combines this "forward" probability with a **prior** $P(A)$ (your initial probability for $A$ before seeing any evidence) and a normalizing denominator to produce a **posterior** $P(A \mid B)$ (the updated probability after accounting for the evidence $B$). This update mechanism is the foundation of Bayesian reasoning.
 
 ## Key Idea
 
-$$P(A|B) = \frac{P(B|A)\, P(A)}{P(B)}$$
+$$P(A \mid B) = \frac{P(B \mid A)\,P(A)}{P(B)}$$
 
-Combined with the law of total probability:
+The denominator is computed via the Law of Total Probability. If $A_1, \ldots, A_n$ partition $\Omega$, the full form is:
 
-$$P(A_i | B) = \frac{P(B|A_i)\,P(A_i)}{\sum_j P(B|A_j)\,P(A_j)}$$
+$$P(A_i \mid B) = \frac{P(B \mid A_i)\,P(A_i)}{\displaystyle\sum_{j=1}^{n} P(B \mid A_j)\,P(A_j)}$$
 
 ## Worked Examples
 
-**Example 1: Medical test. Disease prevalence 1%. Test sensitivity 99%, specificity 95%. $P(\text{disease}|\text{positive})$?**
+**Example 1: Medical test — find $P(\text{disease} \mid \text{positive})$**
 
-$P(+|D)=0.99$, $P(+|D^c)=0.05$, $P(D)=0.01$.
+A disease affects 1% of the population. A diagnostic test has 95% sensitivity (it correctly detects disease 95% of the time) and 90% specificity (it correctly gives a negative result 90% of the time in healthy individuals). A randomly selected person tests positive. Find the probability they actually have the disease.
 
-$P(+) = 0.99(0.01) + 0.05(0.99) = 0.0594$.
+Identify the quantities: $P(D) = 0.01$, $P(D^c) = 0.99$, $P(+ \mid D) = 0.95$, $P(+ \mid D^c) = 1 - 0.90 = 0.10$.
 
-$$P(D|+) = \frac{0.99 \times 0.01}{0.0594} \approx 0.167$$
+Compute the denominator using total probability:
+
+$$P(+) = P(+ \mid D)\,P(D) + P(+ \mid D^c)\,P(D^c) = (0.95)(0.01) + (0.10)(0.99) = 0.0095 + 0.099 = 0.1085$$
+
+Apply Bayes' theorem:
+
+$$P(D \mid +) = \frac{(0.95)(0.01)}{0.1085} = \frac{0.0095}{0.1085} \approx 0.088$$
+
+Only about 8.8% of positive testers actually have the disease. The low prevalence (1%) means that even with a good test, most positives come from the large pool of healthy people. This counterintuitive result is why understanding the denominator $P(B)$ is critical.
 
 ---
 
-**Example 2: Box problem (from Total Probability lesson)**
+**Example 2: Two-box problem**
 
-$P(B_1|\text{red}) = \frac{P(R|B_1)P(B_1)}{P(R)} = \frac{(3/5)(1/2)}{2/5} = 3/4$.
+Box 1 contains 3 red and 2 blue balls. Box 2 contains 1 red and 4 blue balls. You choose a box uniformly at random, then draw one ball. The ball is red. What is the probability it came from Box 1?
+
+From the Law of Total Probability lesson: $P(R) = (3/5)(1/2) + (1/5)(1/2) = 2/5$.
+
+Now apply Bayes' theorem with $A = B_1$ and $B = R$:
+
+$$P(B_1 \mid R) = \frac{P(R \mid B_1)\,P(B_1)}{P(R)} = \frac{(3/5)(1/2)}{2/5} = \frac{3/10}{2/5} = \frac{3}{10} \cdot \frac{5}{2} = \frac{3}{4}$$
+
+Given that the ball is red, there is a 75% chance it came from Box 1. This makes sense: Box 1 has a much higher proportion of red balls, so drawing red is strong evidence for Box 1.
 
 ---
 
-**Example 3: Prior vs. posterior**
+**Example 3: Bayes with three hypotheses**
 
-$P(A)$ is the **prior** (before observing $B$). $P(A|B)$ is the **posterior** (after). Bayes' theorem updates beliefs.
+An email is classified as spam, ham, or newsletter with prior probabilities $P(S) = 0.5$, $P(H) = 0.3$, $P(N) = 0.2$. The word "deal" appears with conditional probabilities $P(\text{deal} \mid S) = 0.8$, $P(\text{deal} \mid H) = 0.1$, $P(\text{deal} \mid N) = 0.4$. Given that the email contains "deal," find $P(S \mid \text{deal})$.
+
+Denominator via total probability:
+
+$$P(\text{deal}) = (0.8)(0.5) + (0.1)(0.3) + (0.4)(0.2) = 0.40 + 0.03 + 0.08 = 0.51$$
+
+Apply Bayes':
+
+$$P(S \mid \text{deal}) = \frac{(0.8)(0.5)}{0.51} = \frac{0.40}{0.51} \approx 0.784$$
+
+Seeing the word "deal" pushes the spam probability from 50% to 78%. Each hypothesis gets updated by how well it predicts the observed evidence, scaled by its prior.
 
 ## Common Mistakes
 
-- **Confusing $P(A|B)$ with $P(B|A)$.** The classic prosecutor's fallacy.
-- **Using $P(+)$ without total probability.** Compute $P(B)$ in the denominator carefully.
+- **Confusing $P(A \mid B)$ with $P(B \mid A)$.** This is the classic "prosecutor's fallacy": confusing the probability of a guilty person leaving evidence with the probability of someone who left evidence being guilty. These quantities can differ dramatically.
+- **Forgetting to compute $P(B)$ using total probability.** The denominator is not simply $P(B \mid A)$ or $P(A)$. You must sum over all hypotheses: $P(B) = \sum_j P(B \mid A_j) P(A_j)$.
+- **Neglecting the prior.** Bayes' theorem requires a prior $P(A)$. If you omit it and treat $P(A \mid B) \approx P(B \mid A)$, you will get wrong answers whenever the prior differs substantially from $1/2$.
 
 ## Quick Check
 
-1. $P(A)=0.3$, $P(B|A)=0.8$, $P(B)=0.5$. Find $P(A|B)$.
-2. What is the denominator in Bayes' theorem?
-3. If $P(B|A) = P(B)$, what does that imply about $A$ and $B$?
+1. $P(A) = 0.4$, $P(B \mid A) = 0.7$, $P(B \mid A^c) = 0.2$. Find $P(A \mid B)$.
+2. In the medical test example, what happens to $P(D \mid +)$ if prevalence increases to 10%? (Just describe the direction.)
+3. If $P(B \mid A) = P(B)$, what does Bayes' theorem give for $P(A \mid B)$?
 
-*(Answers: 0.48; $P(B)$; they are independent)*
+*(Answers: $P(B) = 0.7(0.4)+0.2(0.6) = 0.40$, so $P(A|B) = 0.28/0.40 = 0.70$; it increases — higher prevalence means fewer false positives dominate; $P(A \mid B) = P(A)$, i.e., the posterior equals the prior when $A$ and $B$ are independent)*

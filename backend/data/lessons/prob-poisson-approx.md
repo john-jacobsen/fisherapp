@@ -2,41 +2,72 @@
 
 ## Overview
 
-When $n$ is large and $p$ is small, the **Binomial$(n,p)$** distribution is well-approximated by **Poisson$( \lambda = np)$**. This avoids computing large binomial coefficients.
+When $n$ is large and $p$ is small, $\text{Bin}(n, p)$ is well approximated by $\text{Poisson}(\lambda)$ with $\lambda = np$. The approximation works because the binomial PMF converges to the Poisson PMF as $n \to \infty$ and $p \to 0$ with $np$ held fixed. In practice, the approximation is excellent when $n \geq 20$ and $p \leq 0.05$. This is useful because the Poisson PMF is often much easier to compute than the binomial when $n$ is large.
 
 ## Key Idea
 
-$\text{Bin}(n,p) \approx \text{Pois}(np)$ when $n \to \infty$ and $p \to 0$ with $np = \lambda$ fixed.
+The approximation rule is:
 
-Rule of thumb: use this approximation when $n \ge 20$ and $p \le 0.05$.
+$$\text{Bin}(n, p) \approx \text{Poisson}(\lambda), \quad \lambda = np, \quad \text{when } n \geq 20 \text{ and } p \leq 0.05$$
+
+In terms of probabilities, you replace:
+
+$$\binom{n}{k} p^k (1-p)^{n-k} \approx \frac{e^{-\lambda} \lambda^k}{k!}$$
+
+Both distributions have mean $\lambda = np$. The binomial variance is $np(1-p) \approx np = \lambda$ when $p$ is small, so the variances also approximately match — this is why the approximation is so accurate in the small-$p$ regime.
 
 ## Worked Examples
 
-**Example 1: $n=100$, $p=0.02$. $P(X=3)$ via Poisson.**
+**Example 1: Factory components — finding $P(X = 0)$**
 
-$\lambda = 2$. $P(X=3) = e^{-2}(2)^3/3! = 8e^{-2}/6 \approx 0.180$.
+A factory produces 1000 components. Each component independently fails during quality testing with probability 0.002. Let $X$ count the number of failures. Here $n = 1000$ is large and $p = 0.002$ is small, so the binomial is unwieldy but the Poisson approximation is excellent.
+
+Set $\lambda = np = 1000 \times 0.002 = 2$. The probability that no components fail is:
+
+$$P(X = 0) \approx e^{-\lambda} = e^{-2} \approx 0.135$$
+
+Compare: the exact binomial gives $P(X=0) = (0.998)^{1000} \approx 0.135$ — they agree to three decimal places.
 
 ---
 
-**Example 2: Number of typos per page**
+**Example 2: Comparing exact binomial vs. Poisson for small $k$**
 
-If a book has 500 characters per page and each has a 0.001 chance of being a typo, $\lambda = 0.5$. $P(0 \text{ typos}) = e^{-0.5} \approx 0.607$.
+Using the same setup ($n = 1000$, $p = 0.002$, $\lambda = 2$), compare $P(X = 1)$ under both models.
+
+Exact binomial:
+
+$$P(X = 1) = \binom{1000}{1}(0.002)^1(0.998)^{999} = 1000 \cdot 0.002 \cdot (0.998)^{999}$$
+
+$(0.998)^{999}$ is painful to compute by hand. The Poisson approximation gives it immediately:
+
+$$P(X = 1) \approx \frac{e^{-2} \cdot 2^1}{1!} = 2e^{-2} \approx 0.271$$
+
+The exact binomial answer is also approximately $0.271$. The Poisson approximation saves all the computation while giving a result indistinguishable from the exact answer at this precision.
 
 ---
 
-**Example 3: Compare Binomial and Poisson for $n=50, p=0.02, k=2$**
+**Example 3: Identifying when the approximation is appropriate**
 
-Exact: $\binom{50}{2}(0.02)^2(0.98)^{48} \approx 0.184$. Poisson ($\lambda=1$): $e^{-1}/2 \approx 0.184$. Close!
+Consider three scenarios: (A) $n = 10$, $p = 0.3$; (B) $n = 200$, $p = 0.01$; (C) $n = 50$, $p = 0.4$.
+
+Scenario A: $n = 10$ is too small. The approximation requires $n \geq 20$.
+
+Scenario B: $n = 200 \geq 20$ and $p = 0.01 \leq 0.05$. Both conditions are met — use $\text{Poisson}(2)$.
+
+Scenario C: $p = 0.4$ is much too large. With $p$ near 0.5, the binomial is symmetric and bell-shaped, not resembling the Poisson at all. Use the exact binomial or a normal approximation instead.
+
+The check is simple: both $n$ large and $p$ small must hold simultaneously.
 
 ## Common Mistakes
 
-- **Using the approximation when $p$ is large.** If $p = 0.4$, use Binomial directly.
-- **Forgetting $\lambda = np$, not $n$ alone.**
+- **Setting $\lambda$ incorrectly.** You must use $\lambda = np$, not just $n$ or $p$ alone. The Poisson parameter is the expected number of successes, which you must compute from the binomial parameters.
+- **Applying the approximation when $p$ is not small.** Large $n$ alone is not enough. If $p = 0.5$ and $n = 1000$, the normal approximation is correct, not the Poisson. The Poisson approximation specifically requires $p \to 0$.
+- **Forgetting that the approximation only works for small $k$.** The Poisson PMF matches the binomial PMF most closely near $k = 0, 1, 2, \ldots$ When $k$ is close to $n$, both are near zero anyway — but always sanity-check that $k \ll n$.
 
 ## Quick Check
 
-1. $n=200$, $p=0.01$. What is $\lambda$?
-2. $P(X=0)$ for the approximation above?
-3. When is the approximation accurate?
+1. $n = 500$, $p = 0.004$. What $\lambda$ do you use for the Poisson approximation?
+2. For the same setup, find $P(X = 0)$ using the approximation.
+3. Is the Poisson approximation appropriate for $n = 30$, $p = 0.3$? Explain.
 
-*(Answers: 2; $e^{-2}\approx0.135$; $n$ large, $p$ small, $np$ moderate)*
+*(Answers: $\lambda = 500 \times 0.004 = 2$; $e^{-2} \approx 0.135$; No — $p = 0.3 > 0.05$, so $p$ is not small enough for the approximation to be valid)*

@@ -2,43 +2,66 @@
 
 ## Overview
 
-The **Law of Total Probability** computes $P(B)$ by partitioning the sample space into mutually exclusive events $A_1, \ldots, A_n$ and summing conditional probabilities.
+The **Law of Total Probability** computes $P(B)$ by breaking the sample space into disjoint cases, computing the probability of $B$ within each case, and weighting those conditional probabilities by how likely each case is. It is the systematic way to handle situations where you know probabilities within subgroups but need an overall probability. The law is also the engine behind Bayes' theorem — the denominator in Bayes' formula is always computed via total probability.
 
 ## Key Idea
 
-If $A_1, \ldots, A_n$ partition $\Omega$ (mutually exclusive and exhaustive):
+If events $A_1, A_2, \ldots, A_n$ form a **partition** of $\Omega$ — mutually exclusive ($A_i \cap A_j = \emptyset$ for $i \neq j$) and exhaustive ($\bigcup_i A_i = \Omega$) — then for any event $B$:
 
-$$P(B) = \sum_{i=1}^n P(B | A_i)\, P(A_i)$$
+$$P(B) = \sum_{i=1}^{n} P(B \mid A_i)\, P(A_i)$$
+
+Each term $P(B \mid A_i) \cdot P(A_i)$ is the probability that $B$ occurs via the route through $A_i$. Summing over all routes gives the total probability of $B$.
 
 ## Worked Examples
 
-**Example 1: Two boxes. Box 1 has 3 red, 2 blue. Box 2 has 1 red, 4 blue. Pick a box at random, then a ball. $P(\text{red})$?**
+**Example 1: Two factories — find the overall defective rate**
 
-$P(R|B_1) = 3/5$, $P(R|B_2) = 1/5$, $P(B_1) = P(B_2) = 1/2$.
+A company has two factories. Factory 1 produces 60% of all parts and has a 2% defect rate. Factory 2 produces 40% of parts and has a 5% defect rate. What is the overall probability that a randomly selected part is defective?
 
-$$P(R) = (3/5)(1/2) + (1/5)(1/2) = 3/10 + 1/10 = 2/5$$
+The partition is $\{F_1, F_2\}$ — every part comes from exactly one factory. Set up the law:
+
+$$P(D) = P(D \mid F_1)\,P(F_1) + P(D \mid F_2)\,P(F_2)$$
+
+$$P(D) = (0.02)(0.60) + (0.05)(0.40) = 0.012 + 0.020 = 0.032$$
+
+The overall defect rate is 3.2%. This is a weighted average of the two factory rates, weighted by how much each factory contributes. Factory 2's higher defect rate pulls the total above Factory 1's rate alone.
 
 ---
 
-**Example 2: Factory defects**
+**Example 2: Partition into three cases**
 
-Machine A produces 60% of parts (1% defective). Machine B produces 40% (2% defective). $P(\text{defective}) = 0.01(0.6) + 0.02(0.4) = 0.014$.
+A student picks a study strategy at random: 50% of the time they read notes ($R$), 30% of the time they do practice problems ($P$), and 20% of the time they watch videos ($V$). Given each strategy, the probability they pass the quiz is $P(\text{pass} \mid R) = 0.7$, $P(\text{pass} \mid P) = 0.9$, $P(\text{pass} \mid V) = 0.5$. Find $P(\text{pass})$.
+
+The three strategies partition the sample space. Apply the law with three terms:
+
+$$P(\text{pass}) = (0.7)(0.5) + (0.9)(0.3) + (0.5)(0.2)$$
+
+$$= 0.35 + 0.27 + 0.10 = 0.72$$
+
+The student passes 72% of the time overall. Note that the weights $0.5$, $0.3$, and $0.2$ sum to 1 — this is required for a valid partition.
 
 ---
 
-**Example 3: Weather model**
+**Example 3: Setting up the partition from a word problem**
 
-$P(\text{rain}|\text{cloudy}) = 0.7$, $P(\text{rain}|\text{clear}) = 0.1$. $P(\text{cloudy}) = 0.4$. $P(\text{rain}) = 0.7(0.4) + 0.1(0.6) = 0.34$.
+A bag contains coins of three types: 40% are pennies (1 cent), 35% are nickels (5 cents), and 25% are dimes (10 cents). If you draw a coin at random and flip it (all coins are fair), what is the probability you get heads?
+
+This seems trivial since all coins are fair, but the law of total probability makes the setup explicit. The partition is $\{$penny, nickel, dime$\}$. Since all coins are fair, $P(H \mid \text{any coin}) = 0.5$:
+
+$$P(H) = (0.5)(0.40) + (0.5)(0.35) + (0.5)(0.25) = 0.5(0.40 + 0.35 + 0.25) = 0.5(1) = 0.5$$
+
+As expected, the coin type does not affect the result since all coins are fair. The law correctly reduces to 0.5. This illustrates how the law handles even cases where conditioning doesn't matter.
 
 ## Common Mistakes
 
-- **Partition not exhaustive or not mutually exclusive.** The $A_i$ must cover all cases exactly once.
-- **Mixing up $P(B|A_i)$ and $P(A_i|B)$.**
+- **Using a partition that is not exhaustive.** If $A_1, \ldots, A_n$ do not cover all of $\Omega$, the sum $\sum P(B \mid A_i) P(A_i)$ will be less than $P(B)$. Always verify that the partition weights $P(A_i)$ sum to 1.
+- **Confusing $P(B \mid A_i)$ with $P(A_i \mid B)$.** These are different. $P(B \mid A_i)$ is the input to the total probability formula; $P(A_i \mid B)$ is what Bayes' theorem computes as output.
+- **Creating overlapping cases.** If two partition events can occur simultaneously, the formula double-counts. The $A_i$ must be mutually exclusive — every outcome belongs to exactly one $A_i$.
 
 ## Quick Check
 
-1. $P(A_1)=0.4$, $P(A_2)=0.6$, $P(B|A_1)=0.3$, $P(B|A_2)=0.7$. Find $P(B)$.
-2. Is the law needed when all $A_i$ have equal probability?
-3. How many terms if the partition has 3 events?
+1. $P(A_1) = 0.3$, $P(A_2) = 0.7$, $P(B \mid A_1) = 0.4$, $P(B \mid A_2) = 0.8$. Find $P(B)$.
+2. The partition weights are $0.2$, $0.5$, and $0.3$. Do they form a valid partition?
+3. If $P(B \mid A_i) = c$ (a constant) for all $i$, what is $P(B)$?
 
-*(Answers: 0.54; yes (it still applies); 3)*
+*(Answers: $(0.4)(0.3) + (0.8)(0.7) = 0.12 + 0.56 = 0.68$; yes, they sum to 1.0; $P(B) = c$)*
