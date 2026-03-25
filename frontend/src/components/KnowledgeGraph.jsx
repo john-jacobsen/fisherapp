@@ -480,7 +480,7 @@ export default function KnowledgeGraph({ nodes, edges, onNodeClick }) {
                   key={node.id}
                   onClick={() => {
                     if (onNodeClick) onNodeClick(node)
-                    else navigate(`/lesson/${node.id}`)
+                    else navigate(`/walkthrough/${node.id}`)
                   }}
                   title={isAvailable ? `${node.label} — prerequisites not yet met` : node.label}
                   style={{

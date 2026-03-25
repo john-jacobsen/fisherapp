@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import auth, dashboard, placement, lessons, practice, review, settings as settings_router
-from app.routers import ai_chat
+from app.routers import ai_chat, walkthrough
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,6 +28,7 @@ app.include_router(practice.router)
 app.include_router(review.router)
 app.include_router(settings_router.router)
 app.include_router(ai_chat.router)
+app.include_router(walkthrough.router)
 
 
 @app.get("/health")

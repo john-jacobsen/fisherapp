@@ -8,6 +8,7 @@ import PlacementIntro from './pages/PlacementIntro.jsx'
 import PlacementQuestion from './pages/PlacementQuestion.jsx'
 import PlacementResults from './pages/PlacementResults.jsx'
 import LessonPage from './pages/LessonPage.jsx'
+import WalkthroughPage from './pages/WalkthroughPage.jsx'
 import WorkedExamplesPage from './pages/WorkedExamplesPage.jsx'
 import PracticePage from './pages/PracticePage.jsx'
 import ScoreReport from './pages/ScoreReport.jsx'
@@ -42,6 +43,10 @@ function App() {
           <Route
             path="/placement/results"
             element={<ProtectedRoute><PlacementResults /></ProtectedRoute>}
+          />
+          <Route
+            path="/walkthrough/:nodeId"
+            element={<ProtectedRoute><WalkthroughPage /></ProtectedRoute>}
           />
           <Route
             path="/lesson/:nodeId"

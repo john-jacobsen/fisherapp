@@ -1,0 +1,149 @@
+{
+  "node_id": "frac-simplify",
+  "title": "Simplifying Fractions",
+
+  "intro": {
+    "body": "A fraction is **simplified** (or \"in lowest terms\") when the numerator and denominator share no common factor other than 1. For example, $\\frac{6}{8}$ and $\\frac{3}{4}$ represent the same quantity — $\\frac{3}{4}$ — but $\\frac{3}{4}$ is simplified because 3 and 4 share no factor besides 1.\n\nThe method is straightforward: find the **greatest common factor (GCF)** of the numerator and denominator, then divide both by it. This works because dividing the top and bottom of a fraction by the same number is equivalent to dividing by $\\frac{\\text{GCF}}{\\text{GCF}} = 1$, which doesn't change the fraction's value.",
+    "key_formula": "\\frac{a}{b} = \\frac{a \\div \\gcd(a,b)}{b \\div \\gcd(a,b)}"
+  },
+
+  "problem_generator": {
+    "description": "Generate numerator and denominator that share a common factor > 1, with a non-trivial simplified form",
+    "params": {
+      "numerator": { "type": "random_int", "min": 4, "max": 48, "constraint": "must share a common factor > 1 with denominator" },
+      "denominator": { "type": "random_int", "min": 4, "max": 48, "constraint": "must share a common factor > 1 with numerator" }
+    },
+    "derived": {
+      "gcf": "gcd(numerator, denominator)",
+      "simplified_num": "numerator / gcf",
+      "simplified_den": "denominator / gcf",
+      "smallest_common_factor": "smallest_prime_factor(gcf)"
+    },
+    "display_problem": "Simplify $\\frac{{{numerator}}}{{{denominator}}}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify common factors",
+      "prompt": "Look at the numerator {numerator} and denominator {denominator}. What is the greatest common factor (GCF) of these two numbers?",
+      "input_type": "numeric",
+      "correct_answer": "{gcf}",
+      "hint": "List the factors of {numerator} and the factors of {denominator}. The GCF is the largest number that appears in both lists.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "A GCF of 1 would mean the fraction is already simplified. But both {numerator} and {denominator} are divisible by {smallest_common_factor} — try finding their largest shared factor."
+        },
+        {
+          "condition": "answer divides numerator but not denominator",
+          "feedback": "{answer} is a factor of {numerator}, but it doesn't divide evenly into {denominator}. The GCF must divide both numbers."
+        },
+        {
+          "condition": "answer divides denominator but not numerator",
+          "feedback": "{answer} is a factor of {denominator}, but it doesn't divide evenly into {numerator}. The GCF must divide both numbers."
+        },
+        {
+          "condition": "answer divides both but is not the greatest",
+          "feedback": "{answer} is a common factor, but it's not the greatest one. Keep looking — is there a larger number that divides both {numerator} and {denominator}?"
+        },
+        {
+          "condition": "default",
+          "feedback": "That's not quite right. Try listing the factors of {numerator} and {denominator} and find the largest one they share."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Divide the numerator",
+      "prompt": "Divide the numerator {numerator} by the GCF ({gcf}). What do you get?",
+      "input_type": "numeric",
+      "correct_answer": "{simplified_num}",
+      "hint": "Compute {numerator} ÷ {gcf}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == numerator",
+          "feedback": "That's the original numerator. You need to divide it by the GCF ({gcf}): {numerator} ÷ {gcf} = ?"
+        },
+        {
+          "condition": "default",
+          "feedback": "Not quite. {numerator} ÷ {gcf} = {simplified_num}. Try again."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Divide the denominator",
+      "prompt": "Now divide the denominator {denominator} by the same GCF ({gcf}). What do you get?",
+      "input_type": "numeric",
+      "correct_answer": "{simplified_den}",
+      "hint": "Compute {denominator} ÷ {gcf}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == denominator",
+          "feedback": "That's the original denominator. You need to divide it by the GCF ({gcf}): {denominator} ÷ {gcf} = ?"
+        },
+        {
+          "condition": "default",
+          "feedback": "Not quite. {denominator} ÷ {gcf} = {simplified_den}. Try again."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the simplified fraction",
+      "prompt": "You divided both the numerator and denominator by {gcf}. Write the simplified fraction.",
+      "input_type": "expression",
+      "correct_answer": "\\frac{{{simplified_num}}}{{{simplified_den}}}",
+      "strict_form": {
+        "type": "simplified_fraction",
+        "rejection_feedback": "That fraction is equivalent to the correct answer, but it is not fully simplified. Divide both the numerator and denominator by their GCF to reduce it to lowest terms."
+      },
+      "hint": "Put your new numerator ({simplified_num}) over your new denominator ({simplified_den}).",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == original fraction",
+          "feedback": "That's the original fraction, not the simplified one. Use the results from steps 2 and 3: the new numerator is {simplified_num} and the new denominator is {simplified_den}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The simplified fraction is {simplified_num}/{simplified_den}. Enter it as a fraction: put {simplified_num} on top and {simplified_den} on the bottom."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "Why does dividing both the numerator and denominator by the same number give an equivalent fraction?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Dividing by {gcf}/{gcf} is the same as dividing by 1, which doesn't change the value",
+        "The numerator and denominator get smaller, so the fraction gets smaller",
+        "It only works for certain numbers"
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what {gcf}/{gcf} equals. What happens when you divide any number by 1?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The numbers do get smaller, but the fraction's value stays the same. We're dividing top and bottom by the same number — that's like dividing by {gcf}/{gcf} = 1."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "This works for any common factor, not just certain numbers. The key insight is that dividing top and bottom by the same number is equivalent to dividing the whole fraction by 1."
+        },
+        {
+          "condition": "default",
+          "feedback": "Think about what happens when you divide any fraction by 1. Since {gcf}/{gcf} = 1, dividing both top and bottom by {gcf} doesn't change the fraction's value."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You simplified $\\frac{{{numerator}}}{{{denominator}}}$ to $\\frac{{{simplified_num}}}{{{simplified_den}}}$ by dividing both parts by their GCF of {gcf}. Ready to practice on your own?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}

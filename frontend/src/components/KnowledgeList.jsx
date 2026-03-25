@@ -26,7 +26,7 @@ export default function KnowledgeList({ nodes }) {
   })
 
   const handleClick = (node) => {
-    if (node.status !== 'locked') navigate(`/lesson/${node.id}`)
+    if (node.status !== 'locked') navigate(`/walkthrough/${node.id}`)
   }
 
   return (

@@ -1,0 +1,145 @@
+{
+  "node_id": "eq-one-step",
+  "title": "Solving One-Step Equations",
+
+  "intro": {
+    "body": "An **equation** states that two expressions are equal. For example, $3x = 12$ says that three times some number equals 12.\n\n**Solving** an equation means finding the value of the variable that makes it true.\n\nThe key strategy: **perform the inverse operation on both sides.** If the variable is being multiplied by a number, divide both sides by that number. Division is the inverse of multiplication. This works because dividing both sides by the same nonzero number preserves equality — both sides stay equal throughout:\n\n$$3x = 12 \\implies \\frac{3x}{3} = \\frac{12}{3} \\implies x = 4$$\n\nCheck: $3 \\cdot 4 = 12$ ✓\n\nThe same logic applies when the coefficient is negative:\n\n$$-5x = 20 \\implies \\frac{-5x}{-5} = \\frac{20}{-5} \\implies x = -4$$\n\nCheck: $-5 \\cdot (-4) = 20$ ✓",
+    "key_formula": "\\text{If } cx = d,\\;\\text{then}\\; x = \\frac{d}{c} \\;\\;(c \\neq 0)"
+  },
+
+  "problem_generator": {
+    "description": "Generate ax = b where a is a non-zero integer not equal to ±1, b = a × solution, and solution is a non-zero integer in [-10, 10]",
+    "params": {
+      "a": { "type": "random_int", "min": -12, "max": 12, "constraint": "not 0, not 1, not -1" },
+      "solution": { "type": "random_int", "min": -10, "max": 10, "constraint": "not 0" }
+    },
+    "derived": {
+      "b": "a * solution",
+      "abs_a": "abs(a)",
+      "operation_name": "multiplication",
+      "operation_inverse": "division"
+    },
+    "display_problem": "Solve for $x$: $\\;{a}x = {b}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify the operation",
+      "prompt": "What operation is being applied to $x$ in the equation ${a}x = {b}$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Addition",
+        "Subtraction",
+        "Multiplication",
+        "Division"
+      ],
+      "correct_answer": "2",
+      "hint": "When a number is written directly next to a variable with no symbol between them, that means multiplication. ${a}x$ means ${a}$ times $x$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 0",
+          "feedback": "${a}x$ means ${a}$ times $x$, not ${a}$ plus $x$. Addition would look like $x + {a}$. When a number is placed next to a variable with no operator, that always means multiplication."
+        },
+        {
+          "condition": "answer == 1",
+          "feedback": "${a}x$ means ${a}$ times $x$, not ${a}$ minus $x$. Subtraction would be written as $x - {a}$ or ${a} - x$. The {a} here is being multiplied."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "Division would look like $\\frac{x}{{a}}$ or $x \\div {a}$. Writing ${a}x$ means ${a}$ is multiplied by $x$ — the coefficient {a} is a multiplier."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Choose the inverse operation",
+      "prompt": "To isolate $x$, what should you do to both sides of ${a}x = {b}$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Add {a}",
+        "Subtract {a}",
+        "Multiply by {a}",
+        "Divide by {a}"
+      ],
+      "correct_answer": "3",
+      "hint": "The inverse of multiplication is division. To undo multiplying by {a}, divide both sides by {a}. This cancels the coefficient: $\\frac{{a}x}{{a}} = x$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 0",
+          "feedback": "Adding {a} to both sides would give ${a}x + {a} = {b} + {a}$, which doesn't remove the coefficient. The inverse of multiplication is division — divide both sides by {a}."
+        },
+        {
+          "condition": "answer == 1",
+          "feedback": "Subtracting {a} doesn't undo multiplication. To undo multiplying by {a}, use the inverse operation: divide both sides by {a}."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Multiplying by {a} would give ${a}^2 x = {b} \\cdot {a}$, making things more complicated. Use the inverse operation: divide both sides by {a} to cancel the coefficient."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Perform the division",
+      "prompt": "Divide both sides by {a}. What is {b} ÷ {a}?",
+      "input_type": "numeric",
+      "correct_answer": "{solution}",
+      "hint": "Compute {b} ÷ {a}. Remember: if both numbers have the same sign the result is positive; if they have different signs the result is negative.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Not quite. {b} ÷ {a} = {solution}. Double-check your arithmetic and pay attention to the signs of {b} and {a}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the solution",
+      "prompt": "Write the solution to the equation ${a}x = {b}$. You can write just the number or write $x = $ the number.",
+      "input_type": "expression",
+      "correct_answer": "{solution}",
+      "strict_form": {
+        "type": "exact_form",
+        "rejection_feedback": "Write the exact answer — no decimal approximations. Since the solution is an integer, write it as a whole number (e.g., {solution})."
+      },
+      "hint": "From step 3, {b} ÷ {a} = {solution}, so $x = {solution}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Not quite. From step 3, {b} ÷ {a} = {solution}, so $x = {solution}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "Why can we divide both sides of an equation by the same nonzero number?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Dividing both sides by the same nonzero number preserves equality",
+        "Division makes numbers smaller so the equation is simpler",
+        "You can only divide by positive numbers"
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what it means for two things to be equal. If you do the same operation to both sides, does the equality still hold?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "Making numbers smaller isn't the reason — and dividing doesn't always make numbers smaller (e.g., $\\frac{1}{0.5} = 2$). The real reason: doing the same thing to both sides keeps the equation balanced."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "You can divide by any nonzero number, positive or negative — as long as both sides are divided by the same value. The only restriction is you cannot divide by zero (that's undefined)."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You solved ${a}x = {b}$ by dividing both sides by {a}, giving $x = {solution}$. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
