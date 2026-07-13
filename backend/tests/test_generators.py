@@ -240,6 +240,41 @@ def run_tier3(iters=3):
     return True
 
 
+# ── Targeted artifact regressions (FIXES-15 Items 7 & 8) ──────────────────────
+
+def _all_text(p: dict) -> str:
+    """Concatenate a problem's displayed text and all hint texts."""
+    parts = [p.get("problem_text", "")]
+    parts.extend(h.get("text", "") for h in p.get("hints", []))
+    return " ".join(parts)
+
+
+def test_eq_no_plus_minus_artifact():
+    """eq-fractions (and siblings) must never render '+ -' or '- -' (Item 7)."""
+    bad = []
+    for node in ("eq-fractions", "eq-two-step", "eq-distribution", "eq-one-step"):
+        for _ in range(500):
+            p = generate_problem(node)
+            text = _all_text(p)
+            if "+ -" in text or "- -" in text:
+                bad.append((node, p.get("problem_text", "")[:100]))
+                break
+    assert not bad, f"'+ -' / '- -' artifacts found: {bad}"
+
+
+def test_exp_no_exponent_one_or_zero_in_problem():
+    """exp-* problem_text must never show ^{1} or ^{0} (Item 8)."""
+    bad = []
+    for node in ("exp-combined", "exp-product", "exp-power", "exp-negative"):
+        for _ in range(500):
+            p = generate_problem(node)
+            pt = p.get("problem_text", "")
+            if "^{1}" in pt or "^{0}" in pt:
+                bad.append((node, pt[:100]))
+                break
+    assert not bad, f"^{{1}} / ^{{0}} artifacts in problem_text: {bad}"
+
+
 # ── main ───────────────────────────────────────────────────────────────────────
 
 def main():

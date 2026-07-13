@@ -20,6 +20,20 @@ from fractions import Fraction
 from math import factorial as math_factorial, comb as math_comb, gcd
 
 
+def _fmt_signed(value) -> str:
+    """
+    Render a signed additive term for display: ' + 3', ' - 2', or '' for 0.
+
+    Prevents artifacts like 'x + -2' when a constant is negative. Use as
+    f"x{_fmt_signed(a)}" to get 'x + 3', 'x - 2', or bare 'x'.
+    """
+    if value == 0:
+        return ""
+    if value > 0:
+        return f" + {value}"
+    return f" - {abs(value)}"
+
+
 # ─── Fraction generators ──────────────────────────────────────────────────────
 
 def _gen_frac_simplify():
@@ -515,7 +529,7 @@ def _gen_exp_product():
         }
     elif variant == "numeric_base":
         base = random.randint(2, 4)
-        a, b = random.randint(1, 4), random.randint(1, 4)
+        a, b = random.randint(2, 4), random.randint(2, 4)  # >= 2: no ^{1} in display
         result = base ** (a + b)
         return {
             "problem_text": f"Simplify: \\({base}^{{{a}}} \\cdot {base}^{{{b}}}\\)",
@@ -641,7 +655,9 @@ def _gen_exp_negative():
 def _gen_exp_combined():
     variant = random.choice(["quotient_sym", "numeric_quotient", "mixed_rules"])
     if variant == "quotient_sym":
-        a, b = random.randint(3, 6), random.randint(1, 3)
+        # exponents >= 2 (no ^{1} in display) and net >= 2 (clean, non-trivial)
+        b = random.randint(2, 3)
+        a = random.randint(b + 2, 7)
         net = a - b
         ans = f"x**{net}" if net != 1 else "x"
         return {
@@ -657,7 +673,9 @@ def _gen_exp_combined():
         }
     elif variant == "numeric_quotient":
         base = random.randint(2, 4)
-        a, b = random.randint(3, 5), random.randint(1, 2)
+        # exponents >= 2 (no ^{1} in display) and net >= 2 (no ^{1} in hints)
+        b = random.randint(2, 3)
+        a = random.randint(b + 2, 6)
         net = a - b
         result = base ** net
         return {
@@ -672,7 +690,7 @@ def _gen_exp_combined():
             ],
         }
     else:  # mixed_rules: x^a * x^b / x^c
-        a, b, c = random.randint(2, 4), random.randint(2, 4), random.randint(1, 3)
+        a, b, c = random.randint(2, 4), random.randint(2, 4), random.randint(2, 3)  # c>=2: no x^{1}
         net = a + b - c
         ans = f"x**{net}" if net != 1 else "x"
         return {
@@ -865,23 +883,22 @@ def _gen_eq_fractions():
             ],
         }
     elif variant == "sum_num":
-        # (x + a)/b = c → x = bc - a
+        # (x + a)/b = c → x = bc - a. Keep 0 < a < bc so x stays a positive
+        # integer and the numerator renders naturally (no "x + -2" artifact).
         b = random.randint(2, 5)
         c = random.randint(2, 8)
-        a = random.randint(1, 6)
+        a = random.randint(1, b * c - 1)
         x = b * c - a
-        if x <= 0:
-            x = b * c + 2
-            a = b * c - x
+        num = f"x{_fmt_signed(a)}"
         return {
-            "problem_text": f"Solve for \\(x\\): \\(\\frac{{x + {a}}}{{{b}}} = {c}\\)",
+            "problem_text": f"Solve for \\(x\\): \\(\\frac{{{num}}}{{{b}}} = {c}\\)",
             "correct_answer": str(x),
             "answer_type": "numeric",
             "difficulty": 0.6,
             "hints": [
                 {"level": 1, "text": "Multiply both sides by the denominator first, then isolate x."},
-                {"level": 2, "text": f"Multiply both sides by {b}: \\(x + {a} = {b*c}\\). Then subtract {a}."},
-                {"level": 3, "text": f"\\(\\frac{{x + {a}}}{{{b}}} = {c} \\Rightarrow x + {a} = {b*c} \\Rightarrow x = {x}\\)"},
+                {"level": 2, "text": f"Multiply both sides by {b}: \\({num} = {b*c}\\). Then subtract {a}."},
+                {"level": 3, "text": f"\\(\\frac{{{num}}}{{{b}}} = {c} \\Rightarrow {num} = {b*c} \\Rightarrow x = {x}\\)"},
             ],
         }
     else:  # var_denom
