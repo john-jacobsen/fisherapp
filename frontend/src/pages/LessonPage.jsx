@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
 import MasteryMeter from '../components/MasteryMeter';
 import AIChat from '../components/AIChat';
-import MathDisplay from '../components/MathDisplay';
 import { useAI } from '../contexts/AIContext';
 import { theme } from '../theme';
 
@@ -155,20 +157,17 @@ export default function LessonPage() {
           {contentMarkdown ? (
             <div style={{ lineHeight: 1.8, color: theme.colors.text, fontSize: 15 }}>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
                 components={{
                   p: ({ children }) => (
-                    <p style={{ margin: '0 0 12px' }}>
-                      {processMarkdownChildren(children)}
-                    </p>
+                    <p style={{ margin: '0 0 12px' }}>{children}</p>
                   ),
                   li: ({ children }) => (
-                    <li style={{ marginBottom: 6 }}>
-                      {processMarkdownChildren(children)}
-                    </li>
+                    <li style={{ marginBottom: 6 }}>{children}</li>
                   ),
                   code: ({ inline, children }) => inline
-                    ? <MathDisplay content={String(children)} />
+                    ? <code style={{ background: theme.colors.surfaceAlt, padding: '1px 5px', borderRadius: 4, fontSize: '0.92em' }}>{children}</code>
                     : <pre style={{ background: theme.colors.surfaceAlt, padding: '12px 16px', borderRadius: theme.radius.sm, overflow: 'auto' }}><code>{children}</code></pre>,
                   table: ({ children }) => (
                     <div style={{ overflowX: 'auto', marginBottom: 12 }}>
@@ -246,19 +245,4 @@ function extractYouTubeId(url) {
   m = url.match(/[?&/](?:v=|embed\/)([a-zA-Z0-9_-]{11})/);
   if (m) return m[1];
   return null;
-}
-
-// Helper: if a child is a string containing LaTeX, wrap it in MathDisplay
-function processMarkdownChildren(children) {
-  if (typeof children === 'string') {
-    return <MathDisplay content={children} />;
-  }
-  if (Array.isArray(children)) {
-    return children.map((child, i) =>
-      typeof child === 'string'
-        ? <MathDisplay key={i} content={child} />
-        : child
-    );
-  }
-  return children;
 }
