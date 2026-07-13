@@ -1,0 +1,204 @@
+{
+  "node_id": "prob-bayes",
+  "title": "Applying Bayes' Theorem",
+
+  "intro": {
+    "body": "**Bayes' theorem** tells us how to update a probability in light of new evidence. The classic application is a medical screening test: if you test positive for a rare disease, what is the actual probability you have it?\n\nThe answer depends on three numbers:\n1. **Base rate** (prevalence): how common is the disease in the population?\n2. **Sensitivity**: what fraction of truly sick people does the test correctly flag? ($P(+\\mid D)$)\n3. **False positive rate**: what fraction of healthy people does the test incorrectly flag? ($P(+\\mid \\neg D)$)\n\nThe formal formula is:\n$$P(D \\mid +) = \\frac{P(+\\mid D)\\,P(D)}{P(+\\mid D)\\,P(D) + P(+\\mid \\neg D)\\,P(\\neg D)}$$\n\n**Natural frequency approach — a worked example**\n\nInstead of plugging fractions into the formula, imagine testing 10,000 people. Suppose the disease affects 1 in 100 people (1% prevalence), the test has 95% sensitivity, and a 10% false positive rate (90% specificity).\n\n- 100 of the 10,000 people have the disease. The 95% sensitive test correctly flags **95** of them (true positives).\n- The remaining 9,900 are healthy. The 10% false positive rate incorrectly flags **990** of them (false positives).\n- Total positive tests: 95 + 990 = **1,085**.\n- Of those 1,085 positive results, only 95 are genuine: $\\frac{95}{1{,}085} \\approx 8.8\\%$.\n\n**The key insight:** When a disease is rare, the large pool of healthy people produces many false positives — even at a low false positive rate — that overwhelm the true positives. A sensitive test does not guarantee that a positive result means you are sick. This surprising result is called the **base rate fallacy** and is exactly what Bayes' theorem quantifies.",
+    "key_formula": "P(D\\mid+) = \\frac{P(+\\mid D)\\,P(D)}{P(+\\mid D)\\,P(D)\\;+\\;P(+\\mid\\neg D)\\,P(\\neg D)}"
+  },
+
+  "problem_generator": {
+    "description": "Medical screening scenario. Prevalence = prev_num/prev_den; sensitivity and specificity chosen so all intermediate population counts are whole numbers.",
+    "params": {
+      "prev_num": { "type": "choice", "values": [1, 1, 1, 2, 5] },
+      "prev_den": { "type": "choice", "values": [100, 200, 500, 100, 1000] },
+      "sensitivity": { "type": "choice", "values": [90, 95, 98, 99] },
+      "specificity": { "type": "choice", "values": [90, 95, 98, 99] }
+    },
+    "derived": {
+      "false_pos_rate": "100 - specificity",
+      "num_diseased": "population * prev_num / prev_den",
+      "num_healthy": "population - num_diseased",
+      "true_positives": "num_diseased * sensitivity / 100",
+      "false_positives": "num_healthy * false_pos_rate / 100",
+      "total_positives": "true_positives + false_positives",
+      "ppv_percent": "round(true_positives * 100 / total_positives, 1)",
+      "ppv_fraction_num": "true_positives / gcd(true_positives, total_positives)",
+      "ppv_fraction_den": "total_positives / gcd(true_positives, total_positives)"
+    },
+    "display_problem": "A disease has prevalence {prev_num}/{prev_den}. A test has {sensitivity}% sensitivity and {false_pos_rate}% false positive rate. Given a positive test, what is P(Disease)?"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Count the diseased people",
+      "prompt": "A disease has a prevalence of {prev_num}/{prev_den} — meaning {prev_num} in every {prev_den} people has the disease. In a population of {population} people, how many have the disease?",
+      "input_type": "numeric",
+      "correct_answer": "{num_diseased}",
+      "hint": "Multiply the population by the prevalence fraction: {population} × {prev_num}/{prev_den}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == population",
+          "feedback": "That's the entire population, not just those with the disease. Multiply by the prevalence fraction: {population} × {prev_num}/{prev_den} = {num_diseased}."
+        },
+        {
+          "condition": "answer == prev_num",
+          "feedback": "{prev_num} is the numerator of the prevalence fraction, not a count of people. Scale it up to the full population: {population} × {prev_num}/{prev_den} = {num_diseased}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the population by the prevalence: {population} × {prev_num}/{prev_den} = {num_diseased}."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Count the healthy people",
+      "prompt": "Of the {population} people in the population, {num_diseased} have the disease. How many do NOT have the disease?",
+      "input_type": "numeric",
+      "correct_answer": "{num_healthy}",
+      "hint": "Subtract the diseased count from the total: {population} − {num_diseased}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == num_diseased",
+          "feedback": "That's the number who have the disease. You need the number who are healthy: {population} − {num_diseased} = {num_healthy}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Subtract: {population} − {num_diseased} = {num_healthy}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Compute true positives",
+      "prompt": "The test has {sensitivity}% sensitivity — it correctly detects {sensitivity}% of people who have the disease. Of the {num_diseased} people with the disease, how many will test positive (true positives)?",
+      "input_type": "numeric",
+      "correct_answer": "{true_positives}",
+      "hint": "Multiply the diseased count by the sensitivity: {num_diseased} × {sensitivity}/100.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == num_diseased",
+          "feedback": "That assumes every diseased person tests positive (100% sensitivity). But the test has {sensitivity}% sensitivity, so it misses {false_pos_rate}% — wait, that's the false positive rate. The miss rate is {sensitivity}% subtracted from 100%. Apply the sensitivity: {num_diseased} × {sensitivity}/100 = {true_positives}."
+        },
+        {
+          "condition": "answer == sensitivity",
+          "feedback": "{sensitivity} is the sensitivity as a percentage, not a count of people. Multiply it against the diseased population: {num_diseased} × {sensitivity}/100 = {true_positives}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the number of diseased people by the sensitivity: {num_diseased} × {sensitivity}/100 = {true_positives}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Compute false positives",
+      "prompt": "The test has a {false_pos_rate}% false positive rate — it incorrectly flags {false_pos_rate}% of healthy people as positive. Of the {num_healthy} healthy people, how many will test positive (false positives)?",
+      "input_type": "numeric",
+      "correct_answer": "{false_positives}",
+      "hint": "Multiply the healthy count by the false positive rate: {num_healthy} × {false_pos_rate}/100.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == specificity",
+          "feedback": "{specificity} is the specificity percentage — the fraction of healthy people who correctly test negative. The false positive rate is the complement: 100 − {specificity} = {false_pos_rate}%. Apply it to the healthy population: {num_healthy} × {false_pos_rate}/100 = {false_positives}."
+        },
+        {
+          "condition": "answer == false_pos_rate",
+          "feedback": "{false_pos_rate} is the false positive rate as a percentage, not a count. Apply it to the {num_healthy} healthy people: {num_healthy} × {false_pos_rate}/100 = {false_positives}."
+        },
+        {
+          "condition": "answer == num_healthy",
+          "feedback": "That would mean every healthy person tests positive (100% false positive rate). The actual false positive rate is {false_pos_rate}%: {num_healthy} × {false_pos_rate}/100 = {false_positives}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The false positive rate is {false_pos_rate}% (= 100 − {specificity}%). Apply it to the {num_healthy} healthy people: {num_healthy} × {false_pos_rate}/100 = {false_positives}."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Total positive tests",
+      "prompt": "Add the true positives and false positives to find the total number of positive test results.",
+      "input_type": "numeric",
+      "correct_answer": "{total_positives}",
+      "hint": "Add: {true_positives} (true positives) + {false_positives} (false positives).",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == true_positives",
+          "feedback": "That's only the true positives. Don't forget the false positives — healthy people who also test positive: {true_positives} + {false_positives} = {total_positives}."
+        },
+        {
+          "condition": "answer == false_positives",
+          "feedback": "That's only the false positives. Add the true positives as well: {true_positives} + {false_positives} = {total_positives}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Total positives = true positives + false positives = {true_positives} + {false_positives} = {total_positives}."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Compute P(Disease | Positive test)",
+      "prompt": "Of all {total_positives} people who tested positive, only {true_positives} actually have the disease. What percentage of positive tests are true positives? Round to 1 decimal place.",
+      "input_type": "numeric",
+      "correct_answer": "{ppv_percent}",
+      "hint": "Divide the true positives by total positives, then multiply by 100: ({true_positives} ÷ {total_positives}) × 100.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == sensitivity",
+          "feedback": "{sensitivity}% is the test's sensitivity — the fraction of sick people who test positive. But you're asked for the reverse: of the people who tested positive, what fraction are actually sick? With prevalence {prev_num}/{prev_den}, there are far more healthy people, so most positives are false alarms. The correct answer is ({true_positives} ÷ {total_positives}) × 100 ≈ {ppv_percent}%. This is why rare diseases make screening counterintuitive."
+        },
+        {
+          "condition": "answer == false_pos_rate",
+          "feedback": "{false_pos_rate}% is the false positive rate, not the positive predictive value. Divide the true positives by total positives: ({true_positives} ÷ {total_positives}) × 100 ≈ {ppv_percent}%."
+        },
+        {
+          "condition": "answer == specificity",
+          "feedback": "{specificity}% is the specificity (the true negative rate). To find what fraction of positive tests are genuine, divide: ({true_positives} ÷ {total_positives}) × 100 ≈ {ppv_percent}%."
+        },
+        {
+          "condition": "default",
+          "feedback": "Divide the true positives by the total number of positive results: ({true_positives} ÷ {total_positives}) × 100 ≈ {ppv_percent}%. Notice how low this is — the large number of healthy people creates many false positives that dilute the true positives."
+        }
+      ]
+    },
+    {
+      "step_number": 7,
+      "title": "Check your understanding",
+      "prompt": "Why is P(Disease | Positive test) often much lower than the test's sensitivity?",
+      "input_type": "multiple_choice",
+      "options": [
+        "When the disease is rare, the large pool of healthy people produces many false positives that overwhelm the true positives, even with a highly sensitive test.",
+        "Because the test is unreliable — high sensitivity does not actually mean the test works well.",
+        "Bayes' theorem only gives accurate results when the disease is common; it breaks down for rare diseases."
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what happens when you apply even a small false positive rate to a very large number of healthy people.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "A {sensitivity}% sensitivity test is quite reliable at detecting sick people — it only misses {false_pos_rate}% of them (wait, that number is the false positive rate, not the miss rate). The surprise has nothing to do with the test being unreliable. It comes from arithmetic: even a small false positive rate ({false_pos_rate}%) applied to {num_healthy} healthy people yields {false_positives} false positives, which swamp the {true_positives} true positives."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Bayes' theorem is a mathematical identity that holds for any probability values — it never 'breaks down.' The counterintuitive result is specifically a consequence of a low base rate: when a disease is rare, healthy people vastly outnumber sick people, so even a low false positive rate produces more false alarms than true detections."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct answer is the first option. With prevalence {prev_num}/{prev_den}, there are {num_healthy} healthy people for every {num_diseased} sick people. Even though only {false_pos_rate}% of healthy people test false positive, that rate applied to {num_healthy} people yields {false_positives} false positives — swamping the {true_positives} true positives."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You applied Bayes' theorem using natural frequencies. With {prev_num}/{prev_den} disease prevalence, {sensitivity}% sensitivity, and a {false_pos_rate}% false positive rate, only {true_positives} of {total_positives} positive tests are genuine — a positive predictive value of {ppv_percent}%. This is the base rate fallacy in action: even good tests produce mostly false positives when the disease is rare. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}

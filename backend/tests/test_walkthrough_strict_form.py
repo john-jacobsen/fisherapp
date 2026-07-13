@@ -22,6 +22,10 @@ if _backend not in sys.path:
 from app.routers.walkthrough import _check_strict_form, _check_answer, _eval_condition
 from app.services.walkthrough_generators.eq_one_step import generate as eq_generate
 from app.services.walkthrough_generators.frac_simplify import generate as frac_generate
+from app.services.walkthrough_generators.calc_deriv_power import generate as calc_deriv_power_generate
+from app.services.walkthrough_generators.linalg_row_reduce import generate as rr_generate
+from app.services.walkthrough_generators.prob_bayes import generate as bayes_generate
+from app.services.walkthrough_generators.stat_ci_z import generate as stat_ci_z_generate
 from app.services.walkthrough_generator import generate_walkthrough
 
 PASS = "\033[92mPASS\033[0m"
@@ -316,7 +320,7 @@ def _find_placeholders(obj, variable_keys: set) -> list:
 def test_hydration():
     print("\n[hydration — no remaining placeholders]")
 
-    for node_id in ('frac-simplify', 'eq-one-step'):
+    for node_id in ('frac-simplify', 'eq-one-step', 'calc-deriv-power', 'linalg-row-reduce', 'prob-bayes', 'stat-ci-z'):
         result = generate_walkthrough(node_id)
         check(f"{node_id}: generate_walkthrough returns non-None", result is not None, True)
         if result is None:
@@ -332,6 +336,85 @@ def test_hydration():
 
         check(f"{node_id}: 'variables' key present", 'variables' in result, True)
         check(f"{node_id}: 'steps' key present", 'steps' in result, True)
+
+
+# ── calc-deriv-power generator ────────────────────────────────────────────────
+
+def test_calc_deriv_power_generator():
+    print("\n[calc-deriv-power generator]")
+
+    required_keys = {'a', 'n', 'new_coeff', 'new_exp', 'abs_a', 'abs_new_coeff',
+                     'display_original', 'display_derivative'}
+    valid_a = set(range(-8, 9)) - {0, 1, -1}
+
+    for i in range(20):
+        v = calc_deriv_power_generate()
+        missing = required_keys - set(v.keys())
+        check(f"Run {i+1}: all required keys present", missing, set())
+
+        a, n = v['a'], v['n']
+        check(f"Run {i+1}: a in valid range (not 0, ±1)", a in valid_a, True)
+        check(f"Run {i+1}: n in [2, 7]", 2 <= n <= 7, True)
+        check(f"Run {i+1}: new_coeff = a * n", v['new_coeff'], a * n)
+        check(f"Run {i+1}: new_exp = n - 1", v['new_exp'], n - 1)
+        check(f"Run {i+1}: abs_a = abs(a)", v['abs_a'], abs(a))
+        check(f"Run {i+1}: abs_new_coeff = abs(new_coeff)", v['abs_new_coeff'], abs(a * n))
+
+        # display_derivative must not contain '^1' (new_exp==1 case uses plain 'x')
+        deriv = v['display_derivative']
+        if v['new_exp'] == 1:
+            check(f"Run {i+1}: display_derivative has no ^1 when new_exp==1",
+                  '^1' not in deriv, True)
+            check(f"Run {i+1}: display_derivative ends with 'x' when new_exp==1",
+                  deriv.endswith('x'), True)
+        else:
+            check(f"Run {i+1}: display_derivative contains 'x^' when new_exp>1",
+                  'x^' in deriv, True)
+
+        # display_original must always show the coefficient (a is never ±1)
+        orig = v['display_original']
+        check(f"Run {i+1}: display_original contains str(a)",
+              str(a) in orig, True)
+
+
+# ── calc-deriv-power MC distinctness (100 runs) ────────────────────────────────
+
+def test_calc_deriv_power_mc_distinctness():
+    print("\n[calc-deriv-power MC distinctness — 100 runs]")
+
+    for i in range(100):
+        v = calc_deriv_power_generate()
+        a, n, new_coeff, new_exp = v['a'], v['n'], v['new_coeff'], v['new_exp']
+
+        # Primary guard: a != n prevents the most common Step 1 duplicate
+        check(f"Run {i+1}: a != n ({a} != {n})", a != n, True)
+
+        # Full guard: all four MC option values must be distinct
+        four = {n, a, new_coeff, new_exp}
+        check(f"Run {i+1}: all four MC values distinct (n={n}, a={a}, new_coeff={new_coeff}, new_exp={new_exp})",
+              len(four), 4)
+
+
+# ── calc-deriv-power step-4 strict_form rejects decimals ──────────────────────
+
+def test_calc_deriv_power_exact_form():
+    print("\n[calc-deriv-power step 4 exact_form rejects decimals]")
+
+    ok, _ = sf("exact_form", "15x^{2}")
+    check("15x^{2} (integer coeff) → accept", ok, True)
+
+    ok, _ = sf("exact_form", "-12x^{3}")
+    check("-12x^{3} → accept", ok, True)
+
+    ok, _ = sf("exact_form", "4x")
+    check("4x (new_exp==1) → accept", ok, True)
+
+    ok, fb = sf("exact_form", "15.0x^{2}", rejection="No decimals allowed.")
+    check("15.0x^{2} (decimal) → reject", ok, False)
+    check("rejection feedback returned", fb, "No decimals allowed.")
+
+    ok, _ = sf("exact_form", "14.999x^{2}")
+    check("14.999x^{2} (decimal) → reject", ok, False)
 
 
 # ── _eval_condition generic variable lookup ───────────────────────────────────
@@ -357,6 +440,367 @@ def test_eval_condition_variable_lookup():
     check("answer == -4 (literal negative): '4' doesn't match", ok, False)
 
 
+# ── linalg-row-reduce generator (50 runs) ────────────────────────────────────
+
+def test_linalg_row_reduce_generator():
+    print("\n[linalg-row-reduce generator — 50 runs]")
+
+    required_keys = {
+        'a1', 'b1', 'c1', 'a2', 'b2', 'c2',
+        'multiplier', 'new_b2', 'new_c2', 'x_sol', 'y_sol', 'abs_multiplier',
+    }
+
+    for i in range(50):
+        v = rr_generate()
+
+        missing = required_keys - set(v.keys())
+        check(f"Run {i+1}: all required keys present", missing, set())
+
+        a1, b1, c1 = v['a1'], v['b1'], v['c1']
+        a2, b2, c2 = v['a2'], v['b2'], v['c2']
+        multiplier = v['multiplier']
+        new_b2, new_c2 = v['new_b2'], v['new_c2']
+        x_sol, y_sol = v['x_sol'], v['y_sol']
+
+        # a1 divides a2 (multiplier is an integer)
+        check(f"Run {i+1}: a1 divides a2", a2 % a1, 0)
+        check(f"Run {i+1}: multiplier == a2/a1", multiplier, a2 // a1)
+
+        # All main coefficients nonzero and in range
+        for name, val in [('a1', a1), ('b1', b1), ('a2', a2), ('b2', b2)]:
+            check(f"Run {i+1}: {name} != 0", val != 0, True)
+            check(f"Run {i+1}: {name} in [-6,6]", -6 <= val <= 6, True)
+
+        # Derived values correct
+        check(f"Run {i+1}: new_b2 == b2 - mult*b1", new_b2, b2 - multiplier * b1)
+        check(f"Run {i+1}: new_c2 == c2 - mult*c1", new_c2, c2 - multiplier * c1)
+
+        # new_b2 != 0 (unique solution guarantee)
+        check(f"Run {i+1}: new_b2 != 0", new_b2 != 0, True)
+
+        # Arithmetic consistency: new_c2 == new_b2 * y_sol
+        check(f"Run {i+1}: new_c2 == new_b2 * y_sol", new_c2, new_b2 * y_sol)
+
+        # Back-substitution works
+        check(f"Run {i+1}: y_sol == new_c2 / new_b2", y_sol, new_c2 // new_b2)
+        check(f"Run {i+1}: x_sol back-sub", x_sol, (c1 - b1 * y_sol) // a1)
+
+        # Solutions in range
+        check(f"Run {i+1}: x_sol in [-5,5]", -5 <= x_sol <= 5, True)
+        check(f"Run {i+1}: y_sol in [-5,5]", -5 <= y_sol <= 5, True)
+
+        # Unique solution: det = a1*(b2 - mult*b1) = a1*new_b2 != 0
+        det = a1 * b2 - a2 * b1
+        check(f"Run {i+1}: determinant != 0", det != 0, True)
+
+        # Step 2 MC options distinct: {multiplier, a2, a1} all different
+        check(f"Run {i+1}: MC option values distinct",
+              len({multiplier, a2, a1}), 3)
+
+        # abs_multiplier correct
+        check(f"Run {i+1}: abs_multiplier == abs(multiplier)",
+              v['abs_multiplier'], abs(multiplier))
+
+
+# ── linalg-row-reduce check-step (numeric + MC) ───────────────────────────────
+
+def test_linalg_row_reduce_check_steps():
+    print("\n[linalg-row-reduce check-step — numeric and MC correctness]")
+
+    # Use the fallback problem: 2x+3y=8, 4x+y=6
+    v = rr_generate.__wrapped__() if hasattr(rr_generate, '__wrapped__') else None
+
+    # Generate until we get the fallback-like values or just use a fresh sample
+    v = rr_generate()
+
+    mult = v['multiplier']
+    new_b2, new_c2 = v['new_b2'], v['new_c2']
+    x_sol, y_sol = v['x_sol'], v['y_sol']
+    a1, a2 = v['a1'], v['a2']
+
+    # Step 2 — multiple_choice: correct answer is index 0 (multiplier)
+    ok = _check_answer("0", "0", "multiple_choice")
+    check("Step 2 MC: answer index 0 == correct 0", ok, True)
+
+    ok = _check_answer("1", "0", "multiple_choice")
+    check("Step 2 MC: answer index 1 != correct 0", ok, False)
+
+    # Step 3 — numeric: new_b2
+    ok = _check_answer(str(new_b2), str(new_b2), "numeric")
+    check("Step 3 numeric: correct new_b2 accepted", ok, True)
+
+    ok = _check_answer(str(new_b2 + 1), str(new_b2), "numeric")
+    check("Step 3 numeric: wrong value rejected", ok, False)
+
+    # Step 4 — numeric: new_c2
+    ok = _check_answer(str(new_c2), str(new_c2), "numeric")
+    check("Step 4 numeric: correct new_c2 accepted", ok, True)
+
+    # Step 5 — numeric: y_sol
+    ok = _check_answer(str(y_sol), str(y_sol), "numeric")
+    check("Step 5 numeric: correct y_sol accepted", ok, True)
+
+    ok = _check_answer(str(y_sol + 1 if y_sol != 5 else y_sol - 1), str(y_sol), "numeric")
+    check("Step 5 numeric: wrong y rejected", ok, False)
+
+    # Step 6 — numeric: x_sol
+    ok = _check_answer(str(x_sol), str(x_sol), "numeric")
+    check("Step 6 numeric: correct x_sol accepted", ok, True)
+
+    # Step 7 — multiple_choice: correct is index 0
+    ok = _check_answer("0", "0", "multiple_choice")
+    check("Step 7 MC: answer 0 == correct 0", ok, True)
+
+    ok = _check_answer("2", "0", "multiple_choice")
+    check("Step 7 MC: answer 2 != correct 0", ok, False)
+
+
+# ── prob-bayes generator (30 runs) ────────────────────────────────────────────
+
+def test_prob_bayes_generator():
+    print("\n[prob-bayes generator — 30 runs]")
+
+    required_keys = {
+        'prev_num', 'prev_den', 'sensitivity', 'specificity', 'false_pos_rate',
+        'population', 'num_diseased', 'num_healthy', 'true_positives',
+        'false_positives', 'total_positives', 'ppv_percent',
+        'ppv_fraction_num', 'ppv_fraction_den',
+    }
+
+    for i in range(30):
+        v = bayes_generate()
+
+        missing = required_keys - set(v.keys())
+        check(f"Run {i+1}: all required keys present", missing, set())
+
+        pop = v['population']
+        nd = v['num_diseased']
+        nh = v['num_healthy']
+        tp = v['true_positives']
+        fp = v['false_positives']
+        tot = v['total_positives']
+        sens = v['sensitivity']
+        fpr = v['false_pos_rate']
+        ppv = v['ppv_percent']
+        pn = v['ppv_fraction_num']
+        pd_ = v['ppv_fraction_den']
+
+        # Whole-number counts
+        check(f"Run {i+1}: num_diseased is int", nd, int(nd))
+        check(f"Run {i+1}: num_healthy is int", nh, int(nh))
+        check(f"Run {i+1}: true_positives is int", tp, int(tp))
+        check(f"Run {i+1}: false_positives is int", fp, int(fp))
+        check(f"Run {i+1}: total_positives is int", tot, int(tot))
+
+        # Partition consistency
+        check(f"Run {i+1}: num_diseased + num_healthy == population", nd + nh, pop)
+        check(f"Run {i+1}: true_positives + false_positives == total_positives", tp + fp, tot)
+
+        # Derivation consistency
+        check(f"Run {i+1}: false_pos_rate == 100 - specificity",
+              fpr, 100 - v['specificity'])
+        check(f"Run {i+1}: true_positives == num_diseased * sensitivity / 100",
+              tp, nd * sens // 100)
+        check(f"Run {i+1}: false_positives == num_healthy * fpr / 100",
+              fp, nh * fpr // 100)
+
+        # PPV bounds: strictly between 0 and 100
+        check(f"Run {i+1}: ppv_percent > 0", ppv > 0, True)
+        check(f"Run {i+1}: ppv_percent < 100", ppv < 100, True)
+
+        # PPV fraction is in lowest terms (GCD == 1)
+        from math import gcd as _gcd2
+        check(f"Run {i+1}: ppv fraction in lowest terms", _gcd2(pn, pd_), 1)
+
+        # PPV fraction matches ppv_percent (within 0.05 of a percentage point)
+        ppv_from_frac = round(pn * 100 / pd_, 1)
+        check(f"Run {i+1}: ppv_fraction consistent with ppv_percent",
+              abs(ppv_from_frac - ppv) <= 0.05, True)
+
+
+# ── prob-bayes check-step (numeric + MC) ──────────────────────────────────────
+
+def test_prob_bayes_check_steps():
+    print("\n[prob-bayes check-step — numeric and MC correctness]")
+
+    v = bayes_generate()
+
+    nd = v['num_diseased']
+    nh = v['num_healthy']
+    tp = v['true_positives']
+    fp = v['false_positives']
+    tot = v['total_positives']
+    ppv = v['ppv_percent']
+
+    # Steps 1-5: numeric
+    ok = _check_answer(str(nd), str(nd), "numeric")
+    check("Step 1 numeric: correct num_diseased accepted", ok, True)
+
+    ok = _check_answer(str(nd + 1), str(nd), "numeric")
+    check("Step 1 numeric: wrong value rejected", ok, False)
+
+    ok = _check_answer(str(nh), str(nh), "numeric")
+    check("Step 2 numeric: correct num_healthy accepted", ok, True)
+
+    ok = _check_answer(str(tp), str(tp), "numeric")
+    check("Step 3 numeric: correct true_positives accepted", ok, True)
+
+    ok = _check_answer(str(fp), str(fp), "numeric")
+    check("Step 4 numeric: correct false_positives accepted", ok, True)
+
+    ok = _check_answer(str(tot), str(tot), "numeric")
+    check("Step 5 numeric: correct total_positives accepted", ok, True)
+
+    # Step 6: numeric with 1 decimal — ppv_percent
+    ok = _check_answer(str(ppv), str(ppv), "numeric")
+    check("Step 6 numeric: correct ppv_percent accepted", ok, True)
+
+    # A clearly wrong percentage (0%) is rejected
+    ok = _check_answer("0", str(ppv), "numeric")
+    check("Step 6 numeric: 0 rejected when ppv != 0", ok, ppv <= 0.01)
+
+    # Step 7: multiple_choice
+    ok = _check_answer("0", "0", "multiple_choice")
+    check("Step 7 MC: answer 0 == correct 0", ok, True)
+
+    ok = _check_answer("1", "0", "multiple_choice")
+    check("Step 7 MC: answer 1 != correct 0", ok, False)
+
+    ok = _check_answer("2", "0", "multiple_choice")
+    check("Step 7 MC: answer 2 != correct 0", ok, False)
+
+
+# ── stat-ci-z generator (30 runs) ────────────────────────────────────────────
+
+def test_stat_ci_z_generator():
+    print("\n[stat-ci-z generator — 30 runs]")
+
+    required_keys = {
+        'xbar', 'sigma', 'n', 'sqrt_n', 'conf_level', 'z_star', 'z_star_index',
+        'standard_error', 'margin_of_error', 'lower', 'upper', 'alpha', 'alpha_half',
+    }
+    z_stars = {90: 1.645, 95: 1.96, 99: 2.576}
+    z_star_indices = {90: 0, 95: 1, 99: 2}
+    valid_n = {36, 49, 64, 100, 144, 225, 400}
+
+    for i in range(30):
+        v = stat_ci_z_generate()
+
+        missing = required_keys - set(v.keys())
+        check(f"Run {i+1}: all required keys present", missing, set())
+
+        xbar = v['xbar']
+        sigma = v['sigma']
+        n = v['n']
+        sqrt_n = v['sqrt_n']
+        conf_level = v['conf_level']
+        z_star = v['z_star']
+        z_star_index = v['z_star_index']
+        se = v['standard_error']
+        moe = v['margin_of_error']
+        lower = v['lower']
+        upper = v['upper']
+        alpha = v['alpha']
+        alpha_half = v['alpha_half']
+
+        check(f"Run {i+1}: n in valid set", n in valid_n, True)
+        check(f"Run {i+1}: sqrt_n² == n", sqrt_n * sqrt_n, n)
+        check(f"Run {i+1}: sigma % sqrt_n == 0", sigma % sqrt_n, 0)
+        check(f"Run {i+1}: standard_error == sigma // sqrt_n", se, sigma // sqrt_n)
+        check(f"Run {i+1}: conf_level in {{90, 95, 99}}", conf_level in {90, 95, 99}, True)
+        check(f"Run {i+1}: z_star matches conf_level", z_star, z_stars[conf_level])
+        check(f"Run {i+1}: z_star_index matches conf_level", z_star_index, z_star_indices[conf_level])
+
+        expected_moe = round(z_star * se, 2)
+        check(f"Run {i+1}: margin_of_error within 0.01 of z_star*se",
+              abs(moe - expected_moe) <= 0.01, True)
+
+        moe_str = str(moe)
+        dp = len(moe_str.split('.')[-1]) if '.' in moe_str else 0
+        check(f"Run {i+1}: margin_of_error has at most 2 decimal places", dp <= 2, True)
+
+        check(f"Run {i+1}: lower > 0", lower > 0, True)
+        check(f"Run {i+1}: lower == xbar - moe",
+              abs(lower - (xbar - moe)) <= 0.001, True)
+        check(f"Run {i+1}: upper == xbar + moe",
+              abs(upper - (xbar + moe)) <= 0.001, True)
+
+        check(f"Run {i+1}: alpha == 100 - conf_level", alpha, 100 - conf_level)
+        check(f"Run {i+1}: alpha_half == alpha / 2", alpha_half, alpha / 2)
+
+
+# ── stat-ci-z check-step (numeric + MC) ──────────────────────────────────────
+
+def test_stat_ci_z_check_steps():
+    print("\n[stat-ci-z check-step — numeric and MC correctness]")
+
+    v = stat_ci_z_generate()
+    z_star_index = v['z_star_index']
+    sqrt_n = v['sqrt_n']
+    se = v['standard_error']
+    moe = v['margin_of_error']
+    lower = v['lower']
+    upper = v['upper']
+
+    # Step 1 — multiple_choice: correct is z_star_index
+    ok = _check_answer(str(z_star_index), str(z_star_index), "multiple_choice")
+    check("Step 1 MC: correct z_star_index accepted", ok, True)
+
+    wrong_idx = (z_star_index + 1) % 3
+    ok = _check_answer(str(wrong_idx), str(z_star_index), "multiple_choice")
+    check("Step 1 MC: wrong index rejected", ok, False)
+
+    # Step 2 — numeric: sqrt_n
+    ok = _check_answer(str(sqrt_n), str(sqrt_n), "numeric")
+    check("Step 2 numeric: correct sqrt_n accepted", ok, True)
+
+    ok = _check_answer(str(sqrt_n + 1), str(sqrt_n), "numeric")
+    check("Step 2 numeric: wrong value rejected", ok, False)
+
+    # Step 3 — numeric: standard_error
+    ok = _check_answer(str(se), str(se), "numeric")
+    check("Step 3 numeric: correct standard_error accepted", ok, True)
+
+    ok = _check_answer(str(se + 1), str(se), "numeric")
+    check("Step 3 numeric: wrong value rejected", ok, False)
+
+    # Step 4 — numeric: margin_of_error with 0.01 tolerance
+    ok = _check_answer(str(moe), str(moe), "numeric")
+    check("Step 4 numeric: exact moe accepted", ok, True)
+
+    within = str(round(moe + 0.005, 3))
+    ok = _check_answer(within, str(moe), "numeric")
+    check("Step 4 numeric: answer within 0.01 accepted (moe+0.005)", ok, True)
+
+    outside = str(round(moe + 0.02, 3))
+    ok = _check_answer(outside, str(moe), "numeric")
+    check("Step 4 numeric: answer outside 0.01 rejected (moe+0.02)", ok, False)
+
+    # Step 5 — numeric: lower (upper is always far outside 0.01 tolerance)
+    ok = _check_answer(str(lower), str(lower), "numeric")
+    check("Step 5 numeric: correct lower accepted", ok, True)
+
+    ok = _check_answer(str(upper), str(lower), "numeric")
+    check("Step 5 numeric: upper rejected as lower bound", ok, False)
+
+    # Step 6 — numeric: upper
+    ok = _check_answer(str(upper), str(upper), "numeric")
+    check("Step 6 numeric: correct upper accepted", ok, True)
+
+    ok = _check_answer(str(lower), str(upper), "numeric")
+    check("Step 6 numeric: lower rejected as upper bound", ok, False)
+
+    # Step 7 — multiple_choice: correct is always 0
+    ok = _check_answer("0", "0", "multiple_choice")
+    check("Step 7 MC: answer 0 == correct 0", ok, True)
+
+    ok = _check_answer("1", "0", "multiple_choice")
+    check("Step 7 MC: answer 1 != correct 0", ok, False)
+
+    ok = _check_answer("2", "0", "multiple_choice")
+    check("Step 7 MC: answer 2 != correct 0", ok, False)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -369,8 +813,17 @@ if __name__ == "__main__":
     test_expression_normalization()
     test_eq_generator()
     test_frac_generator()
+    test_calc_deriv_power_generator()
+    test_calc_deriv_power_mc_distinctness()
+    test_calc_deriv_power_exact_form()
     test_hydration()
     test_eval_condition_variable_lookup()
+    test_linalg_row_reduce_generator()
+    test_linalg_row_reduce_check_steps()
+    test_prob_bayes_generator()
+    test_prob_bayes_check_steps()
+    test_stat_ci_z_generator()
+    test_stat_ci_z_check_steps()
 
     print()
     if _failures:

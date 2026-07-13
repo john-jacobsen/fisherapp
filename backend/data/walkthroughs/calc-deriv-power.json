@@ -1,0 +1,155 @@
+{
+  "node_id": "calc-deriv-power",
+  "title": "Differentiating Power Functions",
+
+  "intro": {
+    "body": "The **derivative** measures the instantaneous rate of change of a function — how fast the output is changing at a given input.\n\nFor **power functions** of the form $cx^k$, the **power rule** gives the derivative directly:\n\n$$\\frac{d}{dx}[cx^k] = ckx^{k-1}$$\n\nFor example:\n- The derivative of $x^3$ is $3x^2$ — bring the 3 down: $1 \\cdot 3 \\cdot x^{3-1} = 3x^2$\n- The derivative of $5x^4$ is $20x^3$ — bring the 4 down: $5 \\cdot 4 \\cdot x^{4-1} = 20x^3$\n- The derivative of $-2x^5$ is $-10x^4$ — bring the 5 down: $-2 \\cdot 5 \\cdot x^{5-1} = -10x^4$\n\n**Why does this work?** The power rule comes from the limit definition of the derivative:\n$$f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$\nWhen you expand $(x+h)^k$ using the binomial theorem, the leading term is $kx^{k-1}h$. After dividing by $h$ and taking the limit as $h \\to 0$, all terms with $h$ vanish, leaving $kx^{k-1}$. Multiplying by the coefficient $c$ gives $ckx^{k-1}$.",
+    "key_formula": "\\frac{d}{dx}[cx^k] = ckx^{k-1}"
+  },
+
+  "problem_generator": {
+    "description": "Generate f(x) = ax^n where a is a nonzero integer in [-8, 8] (not ±1), n is an integer in [2, 7]",
+    "params": {
+      "a": { "type": "random_int", "min": -8, "max": 8, "constraint": "not 0, not 1, not -1" },
+      "n": { "type": "random_int", "min": 2, "max": 7 }
+    },
+    "derived": {
+      "new_coeff": "a * n",
+      "new_exp": "n - 1",
+      "display_original": "formatted LaTeX string for ax^n",
+      "display_derivative": "formatted LaTeX string for the derivative"
+    },
+    "display_problem": "Find the derivative of $f(x) = {display_original}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify the exponent",
+      "prompt": "In the function $f(x) = {display_original}$, identify the exponent — the power that $x$ is raised to.",
+      "input_type": "multiple_choice",
+      "options": [
+        "{a}",
+        "{n}",
+        "{new_coeff}",
+        "{new_exp}"
+      ],
+      "correct_answer": "1",
+      "hint": "The exponent is the superscript on $x$. In $cx^k$, the coefficient $c$ multiplies $x$, while the exponent $k$ is the power $x$ is raised to. Look for the number written as a superscript.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 0",
+          "feedback": "{a} is the **coefficient** — the number multiplying $x$. The **exponent** is the superscript on $x$, not the multiplier out front. In $f(x) = {display_original}$, the exponent is {n}."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "{new_coeff} is what you get when you multiply the coefficient by the exponent — that calculation comes in the next step. Right now, just read off the exponent (the superscript on $x$) in $f(x) = {display_original}$. It is {n}."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "{new_exp} is the exponent **after** applying the power rule (you subtract 1 as part of the process). The original exponent in $f(x) = {display_original}$ — before any differentiation — is {n}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Look at the superscript on $x$ in $f(x) = {display_original}$. The exponent is {n}."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Multiply the coefficient by the exponent",
+      "prompt": "The power rule says to bring the exponent down as a multiplier. Multiply the current coefficient ({a}) by the exponent ({n}). What is {a} × {n}?",
+      "input_type": "numeric",
+      "correct_answer": "{new_coeff}",
+      "hint": "Compute {a} × {n}. Recall the sign rules: negative × positive = negative, negative × negative = positive.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == abs_new_coeff",
+          "feedback": "{abs_new_coeff} has the right magnitude, but the sign is wrong. Since {a} is negative, {a} × {n} = {new_coeff}. A negative times a positive is negative."
+        },
+        {
+          "condition": "answer == n",
+          "feedback": "That is just the exponent {n}. You need to multiply the coefficient by the exponent: {a} × {n} = {new_coeff}."
+        },
+        {
+          "condition": "answer == a",
+          "feedback": "That is just the coefficient {a}. You need to multiply: {a} × {n} = {new_coeff}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Not quite. {a} × {n} = {new_coeff}. Double-check your arithmetic and pay attention to the sign."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Reduce the exponent by 1",
+      "prompt": "Now reduce the exponent by 1. What is {n} - 1?",
+      "input_type": "numeric",
+      "correct_answer": "{new_exp}",
+      "hint": "Simply subtract 1 from {n}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == n",
+          "feedback": "You need to subtract 1 from the exponent. {n} - 1 = {new_exp}. Do not keep the original exponent — the power rule reduces it by 1."
+        },
+        {
+          "condition": "default",
+          "feedback": "Not quite. {n} - 1 = {new_exp}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the complete derivative",
+      "prompt": "Using the new coefficient ({new_coeff}) and the new exponent ({new_exp}), write the complete derivative $f'(x)$.",
+      "input_type": "expression",
+      "correct_answer": "{display_derivative}",
+      "strict_form": {
+        "type": "exact_form",
+        "rejection_feedback": "Write the exact answer — no decimal approximations. Express the derivative as a polynomial term (e.g., {display_derivative})."
+      },
+      "hint": "Combine the results from steps 2 and 3: the new coefficient is {new_coeff} and the new exponent is {new_exp}. Write it as a power of $x$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Not quite. From steps 2 and 3: the coefficient becomes {new_coeff} and the exponent becomes {new_exp}, so $f'(x) = {display_derivative}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "Why does the power rule multiply by the exponent and reduce it by 1?",
+      "input_type": "multiple_choice",
+      "options": [
+        "It comes from expanding $(x+h)^n$ in the limit definition — the leading term of the binomial expansion produces the factor of $n$ and reduces the power by 1",
+        "Because exponents always decrease when you take derivatives",
+        "It is an arbitrary rule that must be memorized"
+      ],
+      "correct_answer": "0",
+      "hint": "Think about the limit definition: $f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$. What happens when you expand $(x+h)^n$ using the binomial theorem?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "Not true in general — some derivatives preserve or increase the exponent. The derivative of $e^x$ is still $e^x$ (the exponent does not change), and the derivative of $\\sin x$ is $\\cos x$ (a completely different function). The reduction-by-1 behavior is specific to $x^n$ and follows from the binomial expansion in the limit definition."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The power rule is not arbitrary — it is rigorously derived from the limit definition. When you compute $\\lim_{h \\to 0} \\frac{(x+h)^n - x^n}{h}$ and apply the binomial theorem, the $nx^{n-1}h$ term dominates: after dividing by $h$ and taking the limit, every remaining term has a factor of $h$ and vanishes, leaving exactly $nx^{n-1}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct answer is the first option. Expanding $(x+h)^n$ via the binomial theorem gives $x^n + nx^{n-1}h + \\text{(terms with } h^2 \\text{ or higher)}$. Subtracting $x^n$, dividing by $h$, and taking the limit leaves $nx^{n-1}$."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You differentiated $f(x) = {display_original}$ using the power rule and found $f'(x) = {display_derivative}$. Key steps: multiply the coefficient by the exponent ({a} × {n} = {new_coeff}), then reduce the exponent by 1 ({n} - 1 = {new_exp}). Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}

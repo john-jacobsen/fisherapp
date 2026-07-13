@@ -1,0 +1,198 @@
+{
+  "node_id": "stat-ci-z",
+  "title": "Constructing a Z Confidence Interval",
+
+  "intro": {
+    "body": "A **confidence interval** gives a range of plausible values for a population parameter. Rather than estimating the true mean as a single number, a CI says: 'the true mean is plausibly somewhere in this range.'\n\nWhen the population standard deviation σ is **known** and the sample size is large, we use the **one-sample z-interval**:\n$$\\bar{x} \\pm z^* \\cdot \\frac{\\sigma}{\\sqrt{n}}$$\nThe interval is centered at the sample mean $\\bar{x}$ and extends by a **margin of error** in each direction.\n\n**Three factors control the width:**\n1. **Confidence level** — higher confidence requires a larger $z^*$, making the interval wider (a 99% CI is wider than a 90% CI for the same data)\n2. **Population variability** (σ) — more variable populations produce wider intervals\n3. **Sample size** (n) — larger samples reduce the standard error σ/√n, narrowing the interval\n\n**Worked example:** Suppose $\\bar{x} = 100$, $\\sigma = 15$, $n = 25$, and we want 95% confidence.\n- $\\sqrt{n} = \\sqrt{25} = 5$\n- Standard error: $\\sigma/\\sqrt{n} = 15/5 = 3$\n- For 95% confidence: $z^* = 1.96$ (the value where the middle 95% of the standard normal distribution lies)\n- Margin of error: $1.96 \\times 3 = 5.88$\n- Confidence interval: $100 \\pm 5.88 = (94.12,\\ 105.88)$\n\n**What does '95% confidence' mean?** It does **not** mean there is a 95% probability that the true mean falls in the specific interval $(94.12,\\ 105.88)$. The true mean $\\mu$ is a fixed constant — it either is or isn't in that interval. What '95% confidence' really means: if we used this procedure repeatedly with many different random samples, **95% of the resulting intervals would contain $\\mu$**. The confidence is a long-run property of the method, not a probability statement about this particular interval.",
+    "key_formula": "\\bar{x} \\pm z^* \\cdot \\frac{\\sigma}{\\sqrt{n}}"
+  },
+
+  "problem_generator": {
+    "description": "Z confidence interval for a population mean. n is a perfect square so sqrt(n) is clean; sigma is divisible by sqrt(n) so the standard error is a whole number.",
+    "params": {
+      "xbar": { "type": "random_int", "min": 40, "max": 200 },
+      "sigma": { "type": "random_int", "min": 5, "max": 30 },
+      "n": { "type": "choice", "values": [36, 49, 64, 100, 144, 225, 400] },
+      "conf_level": { "type": "choice", "values": [90, 95, 99] }
+    },
+    "derived": {
+      "sqrt_n": "isqrt(n)",
+      "z_star": "lookup: 90→1.645, 95→1.96, 99→2.576",
+      "z_star_index": "0-based index of z_star in options list [1.645, 1.96, 2.576, 1.28]",
+      "standard_error": "sigma // sqrt_n",
+      "margin_of_error": "round(z_star * standard_error, 2)",
+      "lower": "round(xbar - margin_of_error, 2)",
+      "upper": "round(xbar + margin_of_error, 2)",
+      "alpha": "100 - conf_level",
+      "alpha_half": "alpha / 2"
+    },
+    "display_problem": "A random sample of n = {n} observations has sample mean $\\bar{{x}} = {xbar}$. The population standard deviation is known: $\\sigma = {sigma}$. Construct a {conf_level}% confidence interval for the population mean."
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Look up the critical value z*",
+      "prompt": "For a {conf_level}% confidence interval, which critical value z* should you use?",
+      "input_type": "multiple_choice",
+      "options": [
+        "1.645",
+        "1.96",
+        "2.576",
+        "1.28"
+      ],
+      "correct_answer": "{z_star_index}",
+      "hint": "z* comes from the standard normal table — it is the value where the middle {conf_level}% of the area falls between −z* and z*. Common values: 90% → 1.645, 95% → 1.96, 99% → 2.576.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 0",
+          "feedback": "1.645 is the critical value for a **90%** confidence interval. You need z* for a {conf_level}% interval. For {conf_level}% confidence, z* = {z_star}."
+        },
+        {
+          "condition": "answer == 1",
+          "feedback": "1.96 is the critical value for a **95%** confidence interval. You need z* for a {conf_level}% interval. For {conf_level}% confidence, z* = {z_star}."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "2.576 is the critical value for a **99%** confidence interval. You need z* for a {conf_level}% interval. For {conf_level}% confidence, z* = {z_star}."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "1.28 is the critical value for an 80% confidence interval. For a {conf_level}% confidence interval, z* = {z_star}."
+        },
+        {
+          "condition": "default",
+          "feedback": "For a {conf_level}% confidence interval, z* = {z_star}."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Find the square root of n",
+      "prompt": "The formula uses σ/√n as the standard error. First compute √n. What is √{n}?",
+      "input_type": "numeric",
+      "correct_answer": "{sqrt_n}",
+      "hint": "Find the perfect square root of {n}. Check: {sqrt_n} × {sqrt_n} = {n}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == n",
+          "feedback": "{n} is the sample size itself. You need the square root: √{n} = {sqrt_n}. Check: {sqrt_n}² = {n}."
+        },
+        {
+          "condition": "default",
+          "feedback": "√{n} = {sqrt_n}. Verify: {sqrt_n} × {sqrt_n} = {n}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Compute the standard error",
+      "prompt": "The standard error is σ/√n = {sigma}/{sqrt_n}. What is {sigma} ÷ {sqrt_n}?",
+      "input_type": "numeric",
+      "correct_answer": "{standard_error}",
+      "hint": "Divide: {sigma} ÷ {sqrt_n} = {standard_error}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == sigma",
+          "feedback": "You gave σ = {sigma} without dividing by √n. The standard error is σ/√n = {sigma}/{sqrt_n} = {standard_error}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Standard error = σ/√n = {sigma}/{sqrt_n} = {standard_error}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Compute the margin of error",
+      "prompt": "The margin of error is z* × (standard error) = {z_star} × {standard_error}. What is the margin of error?",
+      "input_type": "numeric",
+      "correct_answer": "{margin_of_error}",
+      "hint": "Multiply: {z_star} × {standard_error} = {margin_of_error}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == standard_error",
+          "feedback": "That is the standard error, not the margin of error. Multiply by z*: {z_star} × {standard_error} = {margin_of_error}."
+        },
+        {
+          "condition": "answer == z_star",
+          "feedback": "That is z* itself, not the margin of error. Multiply z* by the standard error: {z_star} × {standard_error} = {margin_of_error}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Margin of error = z* × SE = {z_star} × {standard_error} = {margin_of_error}."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Find the lower bound",
+      "prompt": "The confidence interval is $\\bar{x} \\pm$ margin of error. The **lower** bound is $\\bar{x}$ − margin of error = {xbar} − {margin_of_error}. What is the lower bound?",
+      "input_type": "numeric",
+      "correct_answer": "{lower}",
+      "hint": "Subtract: {xbar} − {margin_of_error} = {lower}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == upper",
+          "feedback": "You added the margin of error instead of subtracting. The **lower** bound is x̄ − MOE = {xbar} − {margin_of_error} = {lower}. The **upper** bound (which you found) would be {xbar} + {margin_of_error} = {upper}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Lower bound = x̄ − MOE = {xbar} − {margin_of_error} = {lower}."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Find the upper bound",
+      "prompt": "The **upper** bound is $\\bar{x}$ + margin of error = {xbar} + {margin_of_error}. What is the upper bound?",
+      "input_type": "numeric",
+      "correct_answer": "{upper}",
+      "hint": "Add: {xbar} + {margin_of_error} = {upper}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == lower",
+          "feedback": "You subtracted the margin of error instead of adding. The **upper** bound is x̄ + MOE = {xbar} + {margin_of_error} = {upper}. The **lower** bound (which you found) is {xbar} − {margin_of_error} = {lower}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Upper bound = x̄ + MOE = {xbar} + {margin_of_error} = {upper}."
+        }
+      ]
+    },
+    {
+      "step_number": 7,
+      "title": "Interpret the confidence level",
+      "prompt": "Which statement correctly describes what '{conf_level}% confidence' means?",
+      "input_type": "multiple_choice",
+      "options": [
+        "If we repeated this sampling procedure many times, {conf_level}% of the resulting intervals would contain the true population mean.",
+        "There is a {conf_level}% probability that the true mean is in this specific interval ({lower}, {upper}).",
+        "The sample mean {xbar} is within {conf_level}% of the true population mean."
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what is random: the interval is constructed from a random sample (so it varies), but the true population mean μ is a fixed constant.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "This is the most common misconception. Once the interval ({lower}, {upper}) has been computed, the true mean μ is either in it or it isn't — there's no probability involved. The '{conf_level}% confidence' refers to the **procedure**: if you took many random samples and built a CI from each one, {conf_level}% of those intervals would capture the true mean. The randomness is in the sampling, not in μ."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The confidence level doesn't describe how close x̄ is to μ as a percentage. It describes the long-run reliability of the method: {conf_level}% of all intervals constructed by this procedure (across repeated random samples) would contain the true population mean."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct interpretation is frequentist: '{conf_level}% confidence' means that {conf_level}% of all intervals constructed this way — across repeated random samples — would contain the true mean. It is a property of the method, not a probability about this specific interval."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You constructed a {conf_level}% z confidence interval: ({lower}, {upper}). The key steps: look up z* = {z_star} for {conf_level}% confidence, compute the standard error σ/√n = {sigma}/{sqrt_n} = {standard_error}, multiply by z* to get the margin of error {margin_of_error}, then subtract and add from x̄ = {xbar}. Remember: '{conf_level}% confidence' means the procedure captures the true mean {conf_level}% of the time — not that there is a {conf_level}% chance this specific interval is correct. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}

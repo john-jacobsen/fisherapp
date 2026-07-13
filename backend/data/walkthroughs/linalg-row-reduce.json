@@ -1,0 +1,210 @@
+{
+  "node_id": "linalg-row-reduce",
+  "title": "Solving Linear Systems by Row Reduction",
+
+  "intro": {
+    "body": "A system of linear equations can be represented as an **augmented matrix** $[A \\mid b]$, where each row holds the coefficients of one equation and the last column (after the bar) holds the right-hand side constants.\n\nFor example:\n$$\\begin{cases} 2x + 3y = 8 \\\\ 4x + y = 6 \\end{cases} \\quad \\Longrightarrow \\quad \\left[\\begin{array}{cc|c} 2 & 3 & 8 \\\\ 4 & 1 & 6 \\end{array}\\right]$$\n\nThe three **legal row operations** — each is reversible, so the solution set is preserved at every step:\n1. **Swap two rows:** $R_i \\leftrightarrow R_j$\n2. **Scale a row by a nonzero constant:** $R_i \\leftarrow c\\,R_i$ $(c \\neq 0)$\n3. **Add a multiple of one row to another:** $R_i \\leftarrow R_i + c\\,R_j$\n\n**Gaussian elimination** uses operation 3 to place zeros below each pivot (the leading nonzero entry in each row), producing upper triangular form. For the example above, the pivot in column 1 is 2. To eliminate the 4 below it, compute the multiplier: $4 \\div 2 = 2$, then apply $R_2 \\leftarrow R_2 - 2R_1$:\n$$\\left[\\begin{array}{cc|c} 2 & 3 & 8 \\\\ 4 & 1 & 6 \\end{array}\\right] \\xrightarrow{R_2 - 2R_1} \\left[\\begin{array}{cc|c} 2 & 3 & 8 \\\\ 0 & -5 & -10 \\end{array}\\right]$$\n\n**Back-substitution:** Row 2 gives $-5y = -10$, so $y = 2$. Substitute into Row 1: $2x + 3(2) = 8$, giving $x = 1$.\n\nThe key idea: because every row operation is reversible, applying one to both sides of an augmented matrix is like doing the same legal step to both sides of the original equations — the solution set never changes.",
+    "key_formula": "[A \\mid b] \\xrightarrow{\\text{row ops}} \\left[\\begin{array}{cc|c} * & * & * \\\\ 0 & * & * \\end{array}\\right] \\xrightarrow{\\text{back-sub}} \\mathbf{x}"
+  },
+
+  "problem_generator": {
+    "description": "Generate a 2x2 linear system with integer coefficients in [-6,6] and integer solutions in [-5,5] that row-reduces cleanly via a single integer multiplier step",
+    "params": {
+      "a1": { "type": "random_int", "min": -6, "max": 6, "constraint": "not 0" },
+      "b1": { "type": "random_int", "min": -6, "max": 6, "constraint": "not 0, not equal to a1" },
+      "multiplier": { "type": "random_int", "constraint": "nonzero, |a1 * multiplier| <= 6, distinct from a1 and a2" },
+      "b2": { "type": "random_int", "min": -6, "max": 6, "constraint": "not 0, b2 != multiplier*b1" },
+      "x_sol": { "type": "random_int", "min": -5, "max": 5 },
+      "y_sol": { "type": "random_int", "min": -5, "max": 5 }
+    },
+    "derived": {
+      "a2": "a1 * multiplier",
+      "c1": "a1*x_sol + b1*y_sol",
+      "c2": "a2*x_sol + b2*y_sol",
+      "new_b2": "b2 - multiplier*b1",
+      "new_c2": "c2 - multiplier*c1  (= new_b2 * y_sol)",
+      "abs_multiplier": "abs(multiplier)"
+    },
+    "display_problem": "Solve the system by row reduction: ${a1}x + {b1}y = {c1}$ and ${a2}x + {b2}y = {c2}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Write the augmented matrix",
+      "prompt": "Write this system as an augmented matrix. Which matrix correctly represents the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Row 1: [ {a1}  {b1} | {c1} ]   Row 2: [ {a2}  {b2} | {c2} ]",
+        "Row 1: [ {a2}  {b2} | {c2} ]   Row 2: [ {a1}  {b1} | {c1} ]",
+        "Row 1: [ {b1}  {a1} | {c1} ]   Row 2: [ {b2}  {a2} | {c2} ]",
+        "Row 1: [ {a1}  {b1} ]   Row 2: [ {a2}  {b2} ]  (coefficients only)"
+      ],
+      "correct_answer": "0",
+      "hint": "Each row of the augmented matrix corresponds to one equation. The first column holds the x-coefficients, the second column holds the y-coefficients, and the column after the bar holds the right-hand side constants.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The rows are in reverse order. The first equation {a1}x + {b1}y = {c1} should form Row 1, giving [ {a1}  {b1} | {c1} ]. The second equation becomes Row 2."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The columns are swapped. The x-coefficients belong in column 1 ({a1} and {a2}) and the y-coefficients belong in column 2 ({b1} and {b2}). The order follows the order of variables in the equations."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "This is just the coefficient matrix, missing the right-hand side. An augmented matrix includes a third column (after the vertical bar) for the constants from the right-hand side: {c1} and {c2}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct augmented matrix puts x-coefficients in column 1, y-coefficients in column 2, and the right-hand side constants after the bar: Row 1: [ {a1}  {b1} | {c1} ], Row 2: [ {a2}  {b2} | {c2} ]."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Find the elimination multiplier",
+      "prompt": "To eliminate x from Row 2, we subtract a multiple of Row 1 from Row 2. We need the x-entry in Row 2 to become 0: {a2} − multiplier × {a1} = 0. What is the multiplier?",
+      "input_type": "multiple_choice",
+      "options": [
+        "{multiplier}",
+        "{a2}",
+        "{a1}"
+      ],
+      "correct_answer": "0",
+      "hint": "Solve for the multiplier: {a2} − multiplier × {a1} = 0, so multiplier = {a2} ÷ {a1}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "{a2} is the x-coefficient in Row 2, not the multiplier. To find the multiplier, divide the Row 2 x-coefficient by the Row 1 x-coefficient (the pivot): {a2} ÷ {a1} = {multiplier}."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "{a1} is the pivot (the x-coefficient in Row 1), not the multiplier. The multiplier is the ratio: Row 2 x-coefficient ÷ Row 1 x-coefficient = {a2} ÷ {a1} = {multiplier}."
+        },
+        {
+          "condition": "default",
+          "feedback": "We need {a2} − multiplier × {a1} = 0. Solving: multiplier = {a2} ÷ {a1} = {multiplier}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Compute the new y-coefficient in Row 2",
+      "prompt": "Apply the row operation R2 ← R2 − {multiplier}·R1. What is the new coefficient of y in Row 2? (The y-entry of Row 2 minus {multiplier} times the y-entry of Row 1.)",
+      "input_type": "numeric",
+      "correct_answer": "{new_b2}",
+      "hint": "Compute the y-entry of Row 2 minus {multiplier} times the y-entry of Row 1: {b2} − {multiplier} × {b1}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == b2",
+          "feedback": "You kept the original Row 2 y-coefficient. You need to subtract {multiplier} times the Row 1 y-coefficient: {b2} − {multiplier} × {b1} = {new_b2}."
+        },
+        {
+          "condition": "answer == b1",
+          "feedback": "That is the Row 1 y-coefficient, not the updated Row 2 y-coefficient. Apply the operation to Row 2: {b2} − {multiplier} × {b1} = {new_b2}."
+        },
+        {
+          "condition": "default",
+          "feedback": "After R2 ← R2 − {multiplier}·R1, the y-coefficient in Row 2 becomes {b2} − {multiplier} × {b1} = {new_b2}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Compute the new right-hand side of Row 2",
+      "prompt": "After the same row operation R2 ← R2 − {multiplier}·R1, what is the new right-hand side of Row 2? (The RHS of Row 2 minus {multiplier} times the RHS of Row 1.)",
+      "input_type": "numeric",
+      "correct_answer": "{new_c2}",
+      "hint": "Compute the RHS of Row 2 minus {multiplier} times the RHS of Row 1: {c2} − {multiplier} × {c1}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c2",
+          "feedback": "You kept the original Row 2 right-hand side. Subtract {multiplier} times the Row 1 right-hand side: {c2} − {multiplier} × {c1} = {new_c2}."
+        },
+        {
+          "condition": "answer == c1",
+          "feedback": "That is the Row 1 right-hand side, not the updated Row 2 value. Apply the operation: {c2} − {multiplier} × {c1} = {new_c2}."
+        },
+        {
+          "condition": "default",
+          "feedback": "After R2 ← R2 − {multiplier}·R1, the right-hand side of Row 2 becomes {c2} − {multiplier} × {c1} = {new_c2}."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Solve for y",
+      "prompt": "Row 2 now reads {new_b2}y = {new_c2}. Solve for y.",
+      "input_type": "numeric",
+      "correct_answer": "{y_sol}",
+      "hint": "Divide both sides by {new_b2}: y = {new_c2} ÷ {new_b2}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == new_c2",
+          "feedback": "That is the right-hand side {new_c2}, not y. Divide both sides by the coefficient {new_b2}: y = {new_c2} ÷ {new_b2} = {y_sol}."
+        },
+        {
+          "condition": "answer == new_b2",
+          "feedback": "That is the coefficient of y, not the solution. Divide both sides by {new_b2}: y = {new_c2} ÷ {new_b2} = {y_sol}."
+        },
+        {
+          "condition": "default",
+          "feedback": "From {new_b2}y = {new_c2}: divide both sides by {new_b2} to get y = {new_c2} ÷ {new_b2} = {y_sol}."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Back-substitute to find x",
+      "prompt": "Substitute y = {y_sol} back into the first equation {a1}x + {b1}y = {c1} and solve for x.",
+      "input_type": "numeric",
+      "correct_answer": "{x_sol}",
+      "hint": "Replace y with {y_sol}: {a1}x + {b1}({y_sol}) = {c1}. Compute {b1} × {y_sol}, subtract from {c1}, then divide by {a1}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == y_sol",
+          "feedback": "That is y, not x. Substitute y = {y_sol} into the first equation: {a1}x + {b1}·{y_sol} = {c1}. Solve for x to get x = {x_sol}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Substitute y = {y_sol}: {a1}x + {b1}·{y_sol} = {c1}. Solving for x gives x = {x_sol}."
+        }
+      ]
+    },
+    {
+      "step_number": 7,
+      "title": "Check your understanding",
+      "prompt": "Why do row operations preserve the solution set of the system?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Each row operation is reversible — you can undo it to recover the original system, so no solutions are gained or lost.",
+        "Because the numbers get smaller, making the system easier to solve.",
+        "Row operations only work for 2×2 systems — for larger systems a different method is needed."
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what 'reversible' means. If you can always undo every step, what does that tell you about the solutions?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The numbers do not always get smaller — for example, scaling a row by 5 makes the numbers larger. The real reason is reversibility: every row operation can be undone, so each transformed system has exactly the same solutions as the original."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Row operations (Gaussian elimination) work for any size matrix — 3×3, 4×4, or 1000×1000. The reason they preserve solutions is that each operation is reversible: you can always undo it to get back the original system."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct answer is the first option. Every row operation has an inverse: you can swap rows back, scale by the reciprocal, or subtract the multiple you added. Because every step is undoable, the solution set stays the same throughout."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You solved the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2} by row reduction. The operation R2 ← R2 − {multiplier}·R1 eliminated x from Row 2, leaving {new_b2}y = {new_c2}, so y = {y_sol}. Back-substitution then gave x = {x_sol}. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
