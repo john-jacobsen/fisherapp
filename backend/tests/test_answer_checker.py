@@ -163,6 +163,19 @@ TEST_CASES = [
 ]
 
 
+import pytest
+
+
+@pytest.mark.parametrize(
+    "desc,student,correct,expected",
+    TEST_CASES,
+    ids=[c[0] for c in TEST_CASES],
+)
+def test_answer_checker_case(desc, student, correct, expected):
+    """Pytest-collectable version of the answer-checker cases."""
+    assert check_answer(student, correct, "symbolic") == expected, desc
+
+
 def run_tests():
     passed = 0
     failed = 0

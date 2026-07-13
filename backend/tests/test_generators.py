@@ -275,6 +275,23 @@ def test_exp_no_exponent_one_or_zero_in_problem():
     assert not bad, f"^{{1}} / ^{{0}} artifacts in problem_text: {bad}"
 
 
+# ── Pytest-collectable wrappers (FIXES-15 Item 9) ─────────────────────────────
+
+def test_tier1_structural():
+    """All 176 generators produce well-formed problems with no artifacts."""
+    assert run_tier1(iters=10)
+
+
+def test_tier2_answer_roundtrip():
+    """Every generator's own correct_answer passes the answer checker."""
+    assert run_tier2(iters=10)
+
+
+def test_tier3_hint_fidelity():
+    """Hints stay conceptual/problem-specific (informational — always passes)."""
+    assert run_tier3(iters=3)
+
+
 # ── main ───────────────────────────────────────────────────────────────────────
 
 def main():
