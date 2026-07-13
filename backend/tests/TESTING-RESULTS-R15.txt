@@ -1,0 +1,236 @@
+================================================================================
+FIXES-15 — TESTING RESULTS
+Date: 2026-07-13
+Repo base at start: 907640d
+All FIXES-15 commits pushed to origin/main; GitHub Actions "tests" run: SUCCESS
+================================================================================
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 1 — git status at start + rescued files
+--------------------------------------------------------------------------------
+`git status` at start (branch main, up to date with origin/main) showed these
+UNCOMMITTED files (git stash list: empty):
+
+  Modified (tracked):
+    backend/tests/test_walkthrough_strict_form.py   (added generator/check-step
+        tests for calc-deriv-power, linalg-row-reduce, prob-bayes, stat-ci-z)
+    backend/app/__pycache__/main.cpython-311.pyc     (build artifact — NOT committed)
+
+  Untracked:
+    FIXES-14.md
+    FIXES-15.md
+    tonight-session-prompts.md
+    backend/app/services/walkthrough_generators/calc_deriv_power.py
+    backend/app/services/walkthrough_generators/linalg_row_reduce.py
+    backend/app/services/walkthrough_generators/prob_bayes.py
+    backend/app/services/walkthrough_generators/stat_ci_z.py
+    backend/data/walkthroughs/calc-deriv-power.json
+    backend/data/walkthroughs/linalg-row-reduce.json
+    backend/data/walkthroughs/prob-bayes.json
+    backend/data/walkthroughs/stat-ci-z.json
+    frontend/dist/                                    (build artifact — NOT committed)
+    *.pyc / __pycache__                               (gitignored — NOT committed)
+
+RESCUED AND COMMITTED (pushed immediately):
+  Commit db44f53 "Add calc-deriv-power, linalg-row-reduce, prob-bayes walkthroughs"
+    - 4 walkthrough JSON templates + 4 Python generators + the updated
+      test_walkthrough_strict_form.py. All 4 generators import and produce the
+      expected variable keys; all 4 JSON files are valid.
+    - stat-ci-z was included to preserve the local work (its remaining polish
+      is deferred / out of scope per FIXES-15).
+  Commit 27a6e2d "Add FIXES-14, FIXES-15 plans and session prompts"
+    - FIXES-14.md, FIXES-15.md, tonight-session-prompts.md.
+
+  => NO walkthrough work was lost. Everything local was rescued and pushed.
+
+FIXES-14 SUMMARY (was local-only, never on GitHub; now committed):
+  FIXES-14 was a planning document for walkthrough polish + outstanding items.
+  Status of its items in the current codebase:
+    - 14-3 Completed-steps stay fully visible: IMPLEMENTED (WalkthroughPage
+      renderCompletedAnswer; verified in Item 10 flow).
+    - 14-6 /complete endpoint: EXISTS in backend (routers/practice.py).
+    - Walkthrough system itself: IMPLEMENTED (commit 907640d) — the 4 rescued
+      gold-standard walkthroughs are part of the 14-11 scaling groundwork.
+    - 14-1 walkthrough matrix rendering, 14-2 row-reduce phrasing, 14-4 MathLive
+      virtual keyboard, 14-5 video slots, 14-7 free-topic access (PermissionError
+      gate still present in practice.py), 14-8 log-rules form, 14-9 knowledge-
+      graph color, 14-10 review enforcement, 14-12 video population: NOT done.
+  Net: FIXES-14 was PARTIALLY implemented via the walkthrough-system commit;
+  several remaining items overlap FIXES-15's explicit OUT OF SCOPE list
+  (MathLive keyboard, walkthrough video slots, review system, placement/BKT).
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 2 — strict form: 0.75 rejected on frac-simplify step 4
+(real POST to /api/walkthrough/frac-simplify/check-step, bearer auth)
+--------------------------------------------------------------------------------
+Variables forced correct answer = 3/4 (numerator 6, denominator 8, gcf 2,
+simplified_num 3, simplified_den 4).
+
+  answer="0.75"  -> {"correct": false, "feedback": "Your value is right, but
+      write it as a simplified fraction (like 3/4), not a decimal or an unreduced
+      fraction. Put your new numerator over your new denominator and make sure
+      they share no common factor."}
+
+  => 0.75 (mathematically equal to 3/4) is REJECTED as wrong form. Bypass closed.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 3 — 3/4 accepted, 6/8 rejected, \frac{6}{8} rejected (same endpoint)
+--------------------------------------------------------------------------------
+  answer="3/4"          -> {"correct": true,  "feedback": null}
+  answer="6/8"          -> {"correct": false, "feedback": "...simplified fraction..."}
+  answer="\frac{6}{8}"  -> {"correct": false, "feedback": "...simplified fraction..."}
+  answer="\frac{3}{4}"  -> {"correct": true,  "feedback": null}
+  => PASS.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 4 — MC shuffle: GET frac-simplify x10, position of correct option
+--------------------------------------------------------------------------------
+Conceptual step (step 5) correct-option DISPLAY index across 10 GETs:
+  run  1: index 1   (order [2,0,1])
+  run  2: index 0   (order [0,1,2])
+  run  3: index 0   (order [0,2,1])
+  run  4: index 2   (order [2,1,0])
+  run  5: index 2   (order [2,1,0])
+  run  6: index 1   (order [1,0,2])
+  run  7: index 1   (order [2,0,1])
+  run  8: index 2   (order [2,1,0])
+  run  9: index 2   (order [2,1,0])
+  run 10: index 1   (order [2,0,1])
+  Distinct positions observed: {0, 1, 2}  => correct option VARIES position. PASS.
+
+  Submit the displayed-correct index -> {"correct": true, "feedback": null}. PASS.
+  Submit a wrong displayed index -> correct=false with the correct position-based
+  feedback (translation display->template index verified). PASS.
+
+  eq-one-step step 1 (options shuffled to [Multiplication, Division, Subtraction,
+  Addition], order [2,3,1,0]): submitting each display index returns the CORRECT
+  option's result AND the matching per-option feedback (Division option -> Division
+  feedback, etc.) — confirming position-based MC feedback conditions translate
+  correctly after shuffling.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 5 — condition evaluator: malicious inputs + migration parity
+--------------------------------------------------------------------------------
+Malicious inputs (pytest test_condition_evaluator_rejects_malicious): all raise
+ConditionError in evaluate_condition (never execute) and return False via
+_eval_condition; sentinel side-effect file never created. Cases:
+  "__import__('os').system('ls')", "open('/etc/passwd')", "answer.__class__",
+  "[x for x in range(9**9)]", "(1).__class__.__bases__", "answer if answer else 0",
+  and an os.system(...>sentinel) probe.  => all rejected, no side effects. PASS.
+
+Migration parity — frac-simplify migrated "divides" conditions still produce the
+SAME specific feedback as before (via real POST, correct gcf=2, num 6, den 8):
+  answer=1 -> "A GCF of 1 would mean the fraction is already simplified..."
+  answer=3 -> "3 is a factor of 6, but it doesn't divide evenly into 8..."
+  answer=4 -> "4 is a factor of 8, but it doesn't divide evenly into 6..."
+Also test_condition_migration_equivalence asserts new expression == legacy result
+across answers {1,2,3,4,6,9,0,-2,abc,12,18} for all three conditions. PASS.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 6 — validation harness output table (all templates PASS)
+--------------------------------------------------------------------------------
+$ python scripts/validate_walkthroughs.py
+
+  Walkthrough validation (6 templates)
+    [PASS] calc-deriv-power   ok (25 hydrations)
+    [PASS] eq-one-step        ok (25 hydrations)
+    [PASS] frac-simplify      ok (25 hydrations)
+    [PASS] linalg-row-reduce  ok (25 hydrations)
+    [PASS] prob-bayes         ok (25 hydrations)
+    [PASS] stat-ci-z          ok (25 hydrations)
+  All 6 templates passed.
+
+Two real issues surfaced and fixed by the harness:
+  - frac-simplify step 4 stored answer used triple braces -> hydrated to
+    \frac{{9}}{{4}} which failed its own simplified_fraction form. Fixed to
+    double braces -> \frac{9}{4}.
+  - stat-ci-z step 1 MC correct_answer is a placeholder {z_star_index}; the
+    schema check now defers integer-index validation to hydration.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 7 — linalg-row-reduce lesson: stacked matrix rows
+--------------------------------------------------------------------------------
+Route taken: remark-math + rehype-katex (KaTeX). KaTeX natively renders
+\begin{pmatrix}, augmented \left[\begin{array}{cc|c}...\right], and
+\xrightarrow{...}, so NO lesson-file arrow rewrites (\to fallback) were needed.
+
+Verified two ways (no browser automation tool available; DOM-text confirmation):
+  1. katex.renderToString on the row-reduce matrix + xrightarrow lines:
+     rendered OK, contains-error: false, for pmatrix, augmented array, and the
+     full "matrix -> xrightarrow -> matrix" line.
+  2. Rendered lesson markdown through the EXACT LessonPage pipeline
+     (ReactMarkdown + remarkGfm + remarkMath + rehypeKatex) via
+     react-dom/server:
+       - FIXED pipeline: KaTeX output present; matrix cell values 1,2,3,4 all
+         present as separate <mn> MathML nodes  => the \\ row separators SURVIVE
+         and rows stack (not collapsed to one row).
+       - OLD pipeline (remarkGfm only): no KaTeX, raw "$$" text passes through
+         (demonstrates the pre-fix corruption path).
+       - row-reduce line (xrightarrow + two 2-row matrices): renders via KaTeX,
+         has-katex-error: false, all cells present.
+Frontend dev server serves GET / -> 200 and LessonPage.jsx transforms with no
+import errors (katex.min.css and rehype-katex resolve 200 via Vite).
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 8 — eq-fractions and exp-* 500-run artifact scans
+--------------------------------------------------------------------------------
+  eq-* (eq-fractions, eq-two-step, eq-distribution, eq-one-step), problem_text
+      + ALL hints, 500 runs each (2000 total): "+ -" / "- -" hits = 0/2000
+  exp-* (exp-combined, exp-product, exp-power, exp-negative), problem_text,
+      500 runs each (2000 total): "^{1}" / "^{0}" hits = 0/2000
+  Also covered by pytest: test_eq_no_plus_minus_artifact,
+  test_exp_no_exponent_one_or_zero_in_problem.  => PASS.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 9 — full pytest suite green locally; GitHub Actions green
+--------------------------------------------------------------------------------
+Local (container, CI-equivalent invocation from repo root with PYTHONPATH):
+  python -m pytest backend/tests/ --ignore=backend/tests/test_e2e_submission.py -q
+  => 84 passed, 1 warning.
+
+GitHub Actions "tests" workflow (.github/workflows/tests.yml) on push to main:
+  Run 29239179308 — completed / SUCCESS.
+
+test_answer_checker.py and test_generators.py are now BOTH pytest-collectable
+(parametrized cases / tier wrappers) AND runnable as scripts.
+
+--------------------------------------------------------------------------------
+CHECKLIST ITEM 10 — full walkthrough end-to-end (frac-simplify + eq-one-step)
+--------------------------------------------------------------------------------
+Note: no browser-automation tool is available in this environment, so the flow
+was driven end-to-end against the REAL check-step API (identical backend path to
+the UI), and the frontend was confirmed to compile and serve. Every step's
+correct answer (numeric, expression, and shuffled multiple_choice display index)
+was submitted in sequence:
+
+  frac-simplify (5 steps): step1 numeric OK, step2 numeric OK, step3 numeric OK,
+    step4 expression (\frac{15}{4}) OK, step5 multiple_choice OK
+    -> ALL correct -> completion reached; completion_message present;
+       transition target = practice (Skip to Practice).
+
+  eq-one-step (5 steps): step1 MC OK, step2 MC OK, step3 numeric OK,
+    step4 expression OK, step5 MC OK
+    -> ALL correct -> completion reached; completion_message present;
+       transition target = practice.
+
+Frontend: WalkthroughPage sends the full `variables` object back (confirmed in
+source), which now carries the _mc_order_N shuffle keys; renderCompletedAnswer
+uses options[displayIndex] so completed MC answers show the correct chosen text
+after shuffling. Completed steps remain fully visible (14-3).
+
+================================================================================
+COMMITS (this round)
+================================================================================
+  db44f53  Add calc-deriv-power, linalg-row-reduce, prob-bayes walkthroughs   (Item 1)
+  27a6e2d  Add FIXES-14, FIXES-15 plans and session prompts                   (Item 1)
+  b6290f8  FIXES-15 Items 2+3: close strict-form bypass, shuffle MC options
+  41d1cbf  FIXES-15 Item 4: generalize wrong-answer feedback conditions
+  515e6f8  FIXES-15 Item 5: walkthrough validation harness
+  4d4435f  FIXES-15 Item 6: fix matrix rendering in lessons via remark-math + KaTeX
+  5b2ed14  FIXES-15 Items 7+8: fix eq-fractions '+ -' and exp-* exponent-of-1 artifacts
+  a68e9c6  FIXES-15 Item 9: run the test suite in CI on every push
+
+OUT OF SCOPE (not done, per plan): stat-ci-z gold-standard polish, MathLive
+virtual keyboard, walkthrough video slots, medieval rebrand, placement/BKT/
+review/AI-chat changes.
+================================================================================
