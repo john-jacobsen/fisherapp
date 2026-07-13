@@ -86,16 +86,71 @@ def test_simplified_fraction():
     ok, _ = sf("simplified_fraction", r"\frac{-6}{8}")
     check(r"\frac{-6}{8} GCD=2 → reject", ok, False)
 
-    # Non-fraction input — no regex match, so form passes through
+    # Non-fraction input — allowlist logic REJECTS anything that isn't a
+    # fraction, so a decimal equal to the correct value can't bypass the form.
     ok, _ = sf("simplified_fraction", "0.75")
-    check("0.75 no fraction structure → accept (math check guards this)", ok, True)
+    check("0.75 (decimal) → reject (allowlist)", ok, False)
 
     ok, _ = sf("simplified_fraction", "3")
-    check("plain integer 3 → accept (math check guards this)", ok, True)
+    check("plain integer 3 → reject (not a fraction)", ok, False)
+
+    # Trailing garbage must not slip through the anchored pattern
+    ok, _ = sf("simplified_fraction", "3/4 + 0")
+    check("3/4 + 0 (trailing garbage) → reject", ok, False)
 
     # Verify rejection message is returned
     _, fb = sf("simplified_fraction", "6/8", rejection="Not simplified!")
     check("rejection_feedback is returned", fb, "Not simplified!")
+
+
+def test_simplified_fraction_rejects_decimal():
+    ok, _ = _check_strict_form("0.75", {"type": "simplified_fraction",
+                                        "rejection_feedback": "r"})
+    check("0.75 decimal rejected", ok, False)
+
+
+def test_simplified_fraction_rejects_unparseable():
+    for bad in ["3/4 + 0", "three fourths", "0.5", "1.0", ".5"]:
+        ok, _ = _check_strict_form(bad, {"type": "simplified_fraction",
+                                         "rejection_feedback": "r"})
+        check(f"{bad!r} rejected", ok, False)
+
+
+def test_simplified_fraction_accepts_valid():
+    for good in ["3/4", "-3/4", r"\frac{3}{4}", r"\frac{-3}{4}"]:
+        ok, _ = _check_strict_form(good, {"type": "simplified_fraction",
+                                          "rejection_feedback": "r"})
+        check(f"{good!r} accepted", ok, True)
+
+
+def test_exact_form_rejects_scientific():
+    for bad in ["1.5e3", "2E4", "3e-2", "1.0e10"]:
+        ok, _ = _check_strict_form(bad, {"type": "exact_form",
+                                         "rejection_feedback": "r"})
+        check(f"{bad!r} (sci-notation/decimal) rejected", ok, False)
+    for good in ["5", "-4", "1/2", r"\sqrt{2}", "42"]:
+        ok, _ = _check_strict_form(good, {"type": "exact_form",
+                                          "rejection_feedback": "r"})
+        check(f"{good!r} accepted", ok, True)
+
+
+def test_log_form_token_boundary():
+    # log/ln must appear as a token, not buried in a variable name
+    ok, _ = _check_strict_form("balloon", {"type": "log_form", "rejection_feedback": "r"})
+    check("'balloon' (contains 'ln'? no) → reject", ok, False)
+    ok, _ = _check_strict_form("salon + 3", {"type": "log_form", "rejection_feedback": "r"})
+    check("'salon' (substring 'lo' not log) → reject", ok, False)
+    for good in [r"\log_3(20)", "log(20)/log(3)", "ln(x)", r"\ln x"]:
+        ok, _ = _check_strict_form(good, {"type": "log_form", "rejection_feedback": "r"})
+        check(f"{good!r} accepted", ok, True)
+
+
+def test_custom_regex_bad_pattern_no_500():
+    # An invalid regex pattern must not raise — accept rather than crash
+    ok, fb = _check_strict_form("anything", {"type": "custom_regex",
+                                             "pattern": "([unbalanced",
+                                             "rejection_feedback": "r"})
+    check("bad regex pattern → accept (no exception)", ok, True)
 
 
 # ── log_form ──────────────────────────────────────────────────────────────────
@@ -801,15 +856,72 @@ def test_stat_ci_z_check_steps():
     check("Step 7 MC: answer 2 != correct 0", ok, False)
 
 
+# ── MC option shuffling (Item 3) ──────────────────────────────────────────────
+
+def test_mc_shuffle_varies_position():
+    print("\n[MC shuffle — correct conceptual option varies position]")
+
+    positions = []
+    translate_ok = True
+    for _ in range(20):
+        result = generate_walkthrough('frac-simplify')
+        # Step 5 is the conceptual multiple_choice step; template correct == 0
+        step5 = next(s for s in result['steps'] if s['step_number'] == 5)
+        check_type = step5['input_type'] == 'multiple_choice'
+        if not check_type:
+            continue
+        display_correct = int(step5['correct_answer'])
+        positions.append(display_correct)
+
+        order = result['variables'].get('_mc_order_5')
+        # The order list must translate the displayed-correct index back to the
+        # template index 0 (mirrors check_step's translation).
+        if not order or order[display_correct] != 0:
+            translate_ok = False
+
+    check("correct option appears at >1 distinct position across 20 runs",
+          len(set(positions)) > 1, True)
+    check("check-step translation maps displayed-correct -> template index 0",
+          translate_ok, True)
+
+
+def test_mc_shuffle_reorders_options_consistently():
+    print("\n[MC shuffle — options reordered to match order list]")
+
+    from app.services.walkthrough_generators.frac_simplify import generate as _frac
+    # Compare a raw template's option set to the hydrated (shuffled) one: same
+    # multiset of options, order key present, and displayed correct option text
+    # is the known correct concept.
+    result = generate_walkthrough('frac-simplify')
+    step5 = next(s for s in result['steps'] if s['step_number'] == 5)
+    order = result['variables'].get('_mc_order_5')
+    check("order list present for step 5", order is not None, True)
+    check("order is a permutation of range(len(options))",
+          sorted(order), list(range(len(step5['options']))))
+    # Displayed correct option must be the "dividing by 1" concept (contains "1")
+    displayed_correct = step5['options'][int(step5['correct_answer'])]
+    check("displayed correct option is the equivalence concept",
+          'dividing by 1' in displayed_correct or "doesn't change the value" in displayed_correct,
+          True)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     test_simplified_fraction()
+    test_simplified_fraction_rejects_decimal()
+    test_simplified_fraction_rejects_unparseable()
+    test_simplified_fraction_accepts_valid()
+    test_exact_form_rejects_scientific()
+    test_log_form_token_boundary()
+    test_custom_regex_bad_pattern_no_500()
     test_log_form()
     test_factored_form()
     test_expanded_form()
     test_exact_form()
     test_custom_regex()
+    test_mc_shuffle_varies_position()
+    test_mc_shuffle_reorders_options_consistently()
     test_expression_normalization()
     test_eq_generator()
     test_frac_generator()

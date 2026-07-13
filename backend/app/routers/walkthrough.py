@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from math import gcd
@@ -11,6 +12,8 @@ from app.routers.auth import get_current_user
 from app.models.user import User
 from app.services.walkthrough_generator import generate_walkthrough
 from app.services.answer_checker import check_answer
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/walkthrough", tags=["walkthrough"])
 
@@ -80,7 +83,24 @@ def check_step(
         correct_answer = correct_answer.replace('{' + key + '}', val)
 
     input_type = step.get("input_type", "numeric")
-    is_correct = _check_answer(body.answer, correct_answer, input_type)
+
+    # For multiple_choice, the client submits a *display* index into the shuffled
+    # options. Translate it back to the *template* index (the order the raw JSON
+    # lists options in) before comparing to the template's correct_answer and
+    # before evaluating position-based feedback conditions ("answer == 2").
+    # The order list is passed back by the client in `variables` (see
+    # walkthrough_generator._shuffle_multiple_choice). Stateless by design —
+    # tampering is possible but walkthroughs don't affect mastery.
+    answer_for_check = body.answer
+    if input_type == "multiple_choice":
+        order = body.variables.get(f"_mc_order_{body.step_number}")
+        if order:
+            try:
+                answer_for_check = str(order[int(body.answer)])
+            except (ValueError, IndexError, TypeError):
+                answer_for_check = body.answer  # malformed → falls through as wrong
+
+    is_correct = _check_answer(answer_for_check, correct_answer, input_type)
 
     if is_correct:
         # Check strict_form if present on this step
@@ -94,7 +114,7 @@ def check_step(
         return {"correct": True, "feedback": None}
 
     feedback_list = step.get("wrong_answer_feedback", [])
-    feedback_text = _evaluate_feedback(feedback_list, body.answer, body.variables, variables_str)
+    feedback_text = _evaluate_feedback(feedback_list, answer_for_check, body.variables, variables_str)
     return {"correct": False, "feedback": feedback_text}
 
 
@@ -133,61 +153,79 @@ def _check_strict_form(student: str, strict_form: dict) -> tuple:
     s = student.strip()
 
     if form_type == "simplified_fraction":
-        # Accept \frac{n}{d} and n/d formats; reject if GCD > 1
-        m = re.match(r'\\frac\{(-?\d+)\}\{(-?\d+)\}', s)
+        # ALLOWLIST: the answer MUST match a fraction pattern. Anything else
+        # (decimals like 0.75, bare integers, malformed input) is rejected as
+        # wrong form — a decimal that happens to equal the fraction must not
+        # slip through. Anchored patterns (^...$) prevent trailing garbage.
+        m = re.match(r'^\\frac\{(-?\d+)\}\{(-?\d+)\}$', s)
         if not m:
             m = re.match(r'^(-?\d+)\s*/\s*(-?\d+)$', s)
-        if m:
-            n, d = int(m.group(1)), int(m.group(2))
-            g = gcd(abs(n), abs(d))
-            if g > 1:
-                return False, rejection
+        if not m:
+            return False, rejection          # no fraction match = wrong form
+        n, d = int(m.group(1)), int(m.group(2))
+        g = gcd(abs(n), abs(d))
+        if g > 1:
+            return False, rejection
         return True, ""
 
     if form_type == "log_form":
-        # Answer must contain log or ln notation (any variant)
-        has_log = any(tok in s for tok in ('log', 'ln', r'\log', r'\ln'))
-        if not has_log:
+        # Require log/ln as a token: a word boundary BEFORE the token (so a bare
+        # backslash or string start qualifies, but a variable like "catalog" or
+        # "kiln" does not). No boundary AFTER, so log_3, log2, \log_{2} all pass.
+        if not re.search(r'\b(log|ln)', s):
             return False, rejection
         return True, ""
 
     if form_type == "factored_form":
         # Must have balanced parentheses with a multiplication-like structure.
-        # Patterns: )( or digit( or letter( or )digit or )letter
-        open_count = s.count('(')
-        close_count = s.count(')')
+        # Strip function heads first so \sin(x)/f(x)-style input isn't
+        # misclassified as a product of factors.
+        stripped = re.sub(r'\\?(sin|cos|tan|log|ln|exp|sqrt|frac)\s*', '', s)
+        open_count = stripped.count('(')
+        close_count = stripped.count(')')
         if open_count == 0 or open_count != close_count:
             return False, rejection
         factor_pattern = re.compile(
             r'\)\s*\(|\d\s*\(|[a-zA-Z]\s*\(|\)\s*[a-zA-Z]|\)\s*\d'
         )
-        if not factor_pattern.search(s):
+        if not factor_pattern.search(stripped):
             return False, rejection
         return True, ""
 
     if form_type == "expanded_form":
-        # Must NOT look like a product of factors.
-        # If there are balanced parens with a multiplication-like structure, reject.
-        open_count = s.count('(')
-        close_count = s.count(')')
+        # Must NOT look like a product of factors. Strip function heads first
+        # so \sin(x) etc. isn't misread as a factor group and wrongly rejected.
+        stripped = re.sub(r'\\?(sin|cos|tan|log|ln|exp|sqrt|frac)\s*', '', s)
+        open_count = stripped.count('(')
+        close_count = stripped.count(')')
         if open_count == close_count and open_count > 0:
             factor_pattern = re.compile(
                 r'\)\s*\(|\d\s*\(|[a-zA-Z]\s*\(|\)\s*[a-zA-Z]|\)\s*\d'
             )
-            if factor_pattern.search(s):
+            if factor_pattern.search(stripped):
                 return False, rejection
         return True, ""
 
     if form_type == "exact_form":
-        # Reject any answer containing a decimal point
+        # Reject decimal points AND scientific notation (e.g. 1.5e3, 2E-4).
         if '.' in s:
+            return False, rejection
+        if re.search(r'\d[eE][+-]?\d', s):
             return False, rejection
         return True, ""
 
     if form_type == "custom_regex":
         pattern = strict_form.get("pattern", "")
-        if pattern and not re.search(pattern, s):
-            return False, rejection
+        if not pattern:
+            return True, ""
+        try:
+            if not re.search(pattern, s):
+                return False, rejection
+        except re.error:
+            # A bad (possibly hydrated) pattern must never 500 the endpoint;
+            # log and accept rather than crash the student's submission.
+            logger.warning("Invalid custom_regex pattern %r; accepting answer", pattern)
+            return True, ""
         return True, ""
 
     # Unknown type — allow through

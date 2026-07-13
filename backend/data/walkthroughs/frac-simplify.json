@@ -97,7 +97,7 @@
       "correct_answer": "\\frac{{{simplified_num}}}{{{simplified_den}}}",
       "strict_form": {
         "type": "simplified_fraction",
-        "rejection_feedback": "That fraction is equivalent to the correct answer, but it is not fully simplified. Divide both the numerator and denominator by their GCF to reduce it to lowest terms."
+        "rejection_feedback": "Your value is right, but write it as a simplified fraction (like 3/4), not a decimal or an unreduced fraction. Put your new numerator over your new denominator and make sure they share no common factor."
       },
       "hint": "Put your new numerator ({simplified_num}) over your new denominator ({simplified_den}).",
       "wrong_answer_feedback": [

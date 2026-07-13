@@ -6,6 +6,7 @@ strings, and return the fully-hydrated dict.
 import importlib
 import json
 import os
+import random
 from typing import Optional
 
 _WALKTHROUGHS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "walkthroughs")
@@ -64,6 +65,54 @@ def generate_walkthrough(node_id: str) -> Optional[dict]:
     variables = generator()
     variables_str = {k: str(v) for k, v in variables.items()}
     hydrated = _substitute(template, variables_str)
-    hydrated['variables'] = variables
+
+    # Shuffle multiple-choice options so the correct answer isn't always at the
+    # same position (many templates have the conceptual answer at index 0).
+    # The shuffle order is passed back to the client inside `variables` and used
+    # by check-step to translate the student's display-index answer back to the
+    # template index. This is a stateless design consistent with the existing
+    # variables passback: a student could tamper with the order via devtools,
+    # but walkthroughs don't affect mastery, so that's an acceptable tradeoff.
+    # NOTE: if walkthrough completion ever gates anything, move MC ordering to
+    # server-side session state instead of trusting the client.
+    mc_orders = _shuffle_multiple_choice(hydrated)
+
+    result_variables = dict(variables)
+    result_variables.update(mc_orders)
+    hydrated['variables'] = result_variables
 
     return hydrated
+
+
+def _shuffle_multiple_choice(hydrated: dict) -> dict:
+    """
+    In-place shuffle the `options` of every multiple_choice step and remap its
+    `correct_answer` to the new position. Returns a dict of
+    {"_mc_order_{step_number}": [display_index -> template_index, ...]} so the
+    check-step endpoint can translate a submitted display index back to the
+    original template index.
+    """
+    orders = {}
+    for step in hydrated.get("steps", []):
+        if step.get("input_type") != "multiple_choice":
+            continue
+        options = step.get("options")
+        if not options or len(options) < 2:
+            continue
+
+        order = list(range(len(options)))          # order[display] = template idx
+        random.shuffle(order)
+
+        step["options"] = [options[t] for t in order]
+
+        try:
+            old_correct = int(step.get("correct_answer", 0))
+        except (ValueError, TypeError):
+            old_correct = 0
+        # New display index of the old correct option
+        new_correct = order.index(old_correct) if old_correct in order else 0
+        step["correct_answer"] = str(new_correct)
+
+        orders[f"_mc_order_{step['step_number']}"] = order
+
+    return orders
