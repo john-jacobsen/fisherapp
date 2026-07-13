@@ -36,15 +36,15 @@
           "feedback": "A GCF of 1 would mean the fraction is already simplified. But both {numerator} and {denominator} are divisible by {smallest_common_factor} — try finding their largest shared factor."
         },
         {
-          "condition": "answer divides numerator but not denominator",
+          "condition": "answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int != 0",
           "feedback": "{answer} is a factor of {numerator}, but it doesn't divide evenly into {denominator}. The GCF must divide both numbers."
         },
         {
-          "condition": "answer divides denominator but not numerator",
+          "condition": "answer_int is not None and answer_int > 1 and denominator % answer_int == 0 and numerator % answer_int != 0",
           "feedback": "{answer} is a factor of {denominator}, but it doesn't divide evenly into {numerator}. The GCF must divide both numbers."
         },
         {
-          "condition": "answer divides both but is not the greatest",
+          "condition": "answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int == 0 and answer_int < gcf",
           "feedback": "{answer} is a common factor, but it's not the greatest one. Keep looking — is there a larger number that divides both {numerator} and {denominator}?"
         },
         {

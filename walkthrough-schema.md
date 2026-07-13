@@ -254,3 +254,60 @@ After the pilot is working:
 1. Write 4-5 more walkthroughs by hand across different subjects (one calc, one linalg, one prob, one stat) to establish quality patterns
 2. AI-generate the remaining ~170 templates using the hand-written ones as few-shot examples
 3. Review and iterate
+
+---
+
+## Wrong-answer feedback conditions
+
+Each entry in a step's `wrong_answer_feedback` array has a `condition` and a
+`feedback` string. The backend evaluates conditions top-to-bottom and returns
+the first match. Conditions are **safe boolean expressions** evaluated by
+`backend/app/services/walkthrough_conditions.py` — NOT arbitrary Python. Never
+use named prose conditions like `"answer divides numerator"` in new templates;
+write an expression instead.
+
+### Variables available in a condition
+
+| Name         | Meaning                                                        |
+|--------------|----------------------------------------------------------------|
+| `answer`     | Student's answer as a float, or `None` if non-numeric          |
+| `answer_int` | Student's answer as an int, or `None` if not a whole number    |
+| `answer_str` | Raw stripped answer string                                     |
+| *(any variable)* | Every numeric key the generator returns (e.g. `numerator`, `gcf`, `new_b2`) is available by name |
+
+For **multiple_choice** steps, `answer`/`answer_int` is the **template option
+index** (the order options appear in the JSON), even though options are shuffled
+before display — the backend translates the student's displayed index back to
+the template index first. So `"answer == 0"` always refers to the first option
+as written in the file.
+
+### Allowed grammar
+
+- Boolean: `and`, `or`, `not`
+- Comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`, `is None`, `is not None`
+- Arithmetic: `+`, `-`, `*`, `/`, `//`, `%`, `**` (exponent capped at 64)
+- Names (the variables above), integer/float/`None` constants, parentheses
+
+Disallowed (raises internally, condition treated as non-matching): function
+calls, attribute access, subscripts, comprehensions, lambdas, ternaries.
+
+### Examples
+
+```
+"default"                              # always matches — the fallthrough entry
+"answer == 1"
+"answer == numerator"
+"answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int != 0"
+"answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int == 0 and answer_int < gcf"
+```
+
+### Reserved named conditions
+
+Two conditions are handled specially and are NOT expressions:
+
+- `"default"` — always true; use it for the final catch-all feedback entry.
+- `"answer == original fraction"` — symbolic-equivalence check (SymPy) used by
+  `frac-simplify` step 4 to detect a student re-entering the original fraction.
+  It can't be expressed in the arithmetic grammar, so it stays a named
+  condition. Prefer a `strict_form` block for form enforcement; use this only
+  when you need true symbolic equivalence.

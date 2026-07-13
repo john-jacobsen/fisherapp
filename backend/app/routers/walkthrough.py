@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from app.routers.auth import get_current_user
 from app.models.user import User
 from app.services.walkthrough_generator import generate_walkthrough
+from app.services.walkthrough_conditions import evaluate_condition, ConditionError
 from app.services.answer_checker import check_answer
 
 logger = logging.getLogger(__name__)
@@ -280,33 +281,59 @@ def _evaluate_feedback(
 
 
 def _eval_condition(condition: str, student_answer: str, variables: dict) -> bool:
-    """Evaluate a condition string against the student's answer and template variables."""
+    """
+    Evaluate a wrong-answer feedback condition against the student's answer and
+    the walkthrough's variables.
+
+    Conditions are safe boolean expressions (see walkthrough_conditions.py).
+    Two named conditions are reserved and handled specially:
+      - "default" always matches (fallthrough feedback).
+      - "answer == original fraction" is a symbolic equivalence check (SymPy),
+        which the expression grammar can't express — documented in
+        walkthrough-schema.md.
+    A small set of legacy named conditions is still supported as a fallback so
+    any un-migrated template keeps working; new templates must use expressions.
+    """
     cond = condition.strip()
 
     if cond == "default":
         return True
 
-    # Pre-compute numeric answer representations
+    # Reserved symbolic helper — needs SymPy, not arithmetic over variables.
+    if cond == "answer == original fraction":
+        try:
+            num = int(variables.get("numerator", 0))
+            den = int(variables.get("denominator", 0))
+            return check_answer(student_answer, f"\\frac{{{num}}}{{{den}}}", "symbolic")
+        except Exception:
+            return False
+
+    # Legacy no-op kept for backwards compatibility (superseded by strict_form).
+    if cond == "answer is equivalent but not fully simplified":
+        return False
+
+    # Primary path: safe expression evaluator. Malicious or malformed input
+    # raises ConditionError (never executes) and falls through to the legacy
+    # branches below, which don't match hostile strings either → False.
+    try:
+        return evaluate_condition(cond, student_answer, variables)
+    except ConditionError:
+        pass
+
+    return _eval_legacy_condition(cond, student_answer, variables)
+
+
+def _eval_legacy_condition(cond: str, student_answer: str, variables: dict) -> bool:
+    """Backwards-compatible named-condition handling for un-migrated templates."""
     try:
         ans_float = float(student_answer.strip())
         ans_int = int(ans_float) if ans_float == int(ans_float) else None
     except (ValueError, AttributeError):
-        ans_float = None
         ans_int = None
 
-    # frac-simplify–specific named conditions
     num = int(variables.get("numerator", 0))
     den = int(variables.get("denominator", 0))
     g = int(variables.get("gcf", 0))
-
-    if cond == "answer == 1":
-        return ans_int == 1
-
-    if cond == "answer == numerator":
-        return ans_float is not None and abs(ans_float - num) <= 0.01
-
-    if cond == "answer == denominator":
-        return ans_float is not None and abs(ans_float - den) <= 0.01
 
     if cond == "answer divides numerator but not denominator":
         if ans_int and ans_int > 1:
@@ -322,33 +349,5 @@ def _eval_condition(condition: str, student_answer: str, variables: dict) -> boo
         if ans_int and ans_int > 1:
             return num % ans_int == 0 and den % ans_int == 0 and ans_int < g
         return False
-
-    if cond == "answer == original fraction":
-        try:
-            return check_answer(student_answer, f"\\frac{{{num}}}{{{den}}}", "symbolic")
-        except Exception:
-            return False
-
-    if cond == "answer is equivalent but not fully simplified":
-        # Handled by strict_form now; this condition is a no-op kept for
-        # backwards compatibility with existing JSON templates.
-        return False
-
-    # Generic "answer == N" — literal integer (supports negatives)
-    m = re.match(r"^answer\s*==\s*(-?\d+)$", cond)
-    if m:
-        n = int(m.group(1))
-        return ans_int == n
-
-    # Generic "answer == variable_name" — look up value in the variables dict
-    m = re.match(r"^answer\s*==\s*([a-zA-Z_]\w*)$", cond)
-    if m:
-        var_name = m.group(1)
-        if var_name in variables:
-            try:
-                expected = float(str(variables[var_name]))
-                return ans_float is not None and abs(ans_float - expected) <= 0.01
-            except (ValueError, TypeError):
-                return False
 
     return False

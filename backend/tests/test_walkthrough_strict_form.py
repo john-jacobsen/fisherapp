@@ -20,6 +20,7 @@ if _backend not in sys.path:
     sys.path.insert(0, _backend)
 
 from app.routers.walkthrough import _check_strict_form, _check_answer, _eval_condition
+from app.services.walkthrough_conditions import evaluate_condition, ConditionError
 from app.services.walkthrough_generators.eq_one_step import generate as eq_generate
 from app.services.walkthrough_generators.frac_simplify import generate as frac_generate
 from app.services.walkthrough_generators.calc_deriv_power import generate as calc_deriv_power_generate
@@ -856,6 +857,95 @@ def test_stat_ci_z_check_steps():
     check("Step 7 MC: answer 2 != correct 0", ok, False)
 
 
+# ── Condition evaluator security (Item 4) ─────────────────────────────────────
+
+def test_condition_evaluator_rejects_malicious():
+    print("\n[condition evaluator — malicious input rejected, no execution]")
+
+    import os as _os
+    sentinel = os.path.join(_here, "_condition_pwned.txt")
+    if os.path.exists(sentinel):
+        os.remove(sentinel)
+
+    malicious = [
+        "__import__('os').system('ls')",
+        "open('/etc/passwd')",
+        "answer.__class__",
+        "[x for x in range(9**9)]",
+        f"__import__('os').system('echo x > {sentinel}')",
+        "(1).__class__.__bases__",
+        "answer if answer else 0",
+    ]
+    for expr in malicious:
+        # evaluate_condition must raise ConditionError (never execute)
+        raised = False
+        try:
+            evaluate_condition(expr, "6", {"numerator": 12, "denominator": 18})
+        except ConditionError:
+            raised = True
+        check(f"evaluate_condition rejects {expr!r}", raised, True)
+
+        # _eval_condition must return False (safe fallback), not blow up
+        result = _eval_condition(expr, "6", {"numerator": 12, "denominator": 18})
+        check(f"_eval_condition({expr!r}) → False", result, False)
+
+    check("no side-effect file was created", os.path.exists(sentinel), False)
+
+
+def test_condition_evaluator_valid_expressions():
+    print("\n[condition evaluator — valid expressions]")
+
+    v = {"numerator": 12, "denominator": 18, "gcf": 6}
+    check("answer == 1 with answer=1", evaluate_condition("answer == 1", "1", v), True)
+    check("answer == 1 with answer=2", evaluate_condition("answer == 1", "2", v), False)
+    check("answer == numerator", evaluate_condition("answer == numerator", "12", v), True)
+    check("divides num not den (answer=4)",
+          evaluate_condition("answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int != 0", "4", v),
+          True)
+    check("divides both not greatest (answer=2 < gcf 6)",
+          evaluate_condition("answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int == 0 and answer_int < gcf", "2", v),
+          True)
+    check("divides both not greatest (answer=6 == gcf, not <)",
+          evaluate_condition("answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int == 0 and answer_int < gcf", "6", v),
+          False)
+    # Non-numeric answer → answer_int is None → guarded expression is False
+    check("non-numeric answer guarded",
+          evaluate_condition("answer_int is not None and numerator % answer_int == 0", "abc", v),
+          False)
+
+
+def test_condition_migration_equivalence():
+    print("\n[condition migration — new expressions match legacy behavior]")
+
+    # Legacy reference implementation of the three frac-simplify "divides" rules
+    def legacy(cond_kind, ans, num, den, gcf):
+        try:
+            f = float(ans); ai = int(f) if f == int(f) else None
+        except ValueError:
+            ai = None
+        if cond_kind == "num_not_den":
+            return bool(ai and ai > 1 and num % ai == 0 and den % ai != 0)
+        if cond_kind == "den_not_num":
+            return bool(ai and ai > 1 and den % ai == 0 and num % ai != 0)
+        if cond_kind == "both_not_greatest":
+            return bool(ai and ai > 1 and num % ai == 0 and den % ai == 0 and ai < gcf)
+        return False
+
+    exprs = {
+        "num_not_den": "answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int != 0",
+        "den_not_num": "answer_int is not None and answer_int > 1 and denominator % answer_int == 0 and numerator % answer_int != 0",
+        "both_not_greatest": "answer_int is not None and answer_int > 1 and numerator % answer_int == 0 and denominator % answer_int == 0 and answer_int < gcf",
+    }
+
+    num, den, gcf = 12, 18, 6
+    v = {"numerator": num, "denominator": den, "gcf": gcf}
+    for ans in ["1", "2", "3", "4", "6", "9", "0", "-2", "abc", "12", "18"]:
+        for kind, expr in exprs.items():
+            new = evaluate_condition(expr, ans, v)
+            old = legacy(kind, ans, num, den, gcf)
+            check(f"{kind} @ answer={ans!r}: new==legacy ({new})", new, old)
+
+
 # ── MC option shuffling (Item 3) ──────────────────────────────────────────────
 
 def test_mc_shuffle_varies_position():
@@ -930,6 +1020,9 @@ if __name__ == "__main__":
     test_calc_deriv_power_exact_form()
     test_hydration()
     test_eval_condition_variable_lookup()
+    test_condition_evaluator_rejects_malicious()
+    test_condition_evaluator_valid_expressions()
+    test_condition_migration_equivalence()
     test_linalg_row_reduce_generator()
     test_linalg_row_reduce_check_steps()
     test_prob_bayes_generator()
