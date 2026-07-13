@@ -7,9 +7,51 @@ import importlib
 import json
 import os
 import random
+import re
 from typing import Optional
 
 _WALKTHROUGHS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "walkthroughs")
+
+# A leftover {token} is treated as an UNRESOLVED VARIABLE (not incidental LaTeX
+# like \text{then} or \frac{d}{c}) when its name is a known template variable OR
+# it is clearly variable-shaped: contains an underscore or a digit. This avoids
+# false positives on LaTeX brace-words while catching snake_case / indexed names
+# (simplified_num, new_b2, z_star, a1, ...). The bare runtime token {answer} is
+# substituted later at check-step time, so it is never flagged here.
+_PLACEHOLDER_RE = re.compile(r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}')
+_RUNTIME_TOKENS = {"answer"}
+
+
+def _looks_like_variable(name: str, variable_keys: set) -> bool:
+    if name in _RUNTIME_TOKENS:
+        return False
+    if name in variable_keys:
+        return True
+    return '_' in name or any(c.isdigit() for c in name)
+
+
+def find_unresolved_placeholders(obj, variables: dict) -> list:
+    """
+    Recursively collect any {variable}-style placeholders left in a hydrated
+    structure. Returns the list of offending '{name}' strings (empty if clean).
+    """
+    variable_keys = set(variables.keys())
+    found = []
+
+    def _walk(node):
+        if isinstance(node, str):
+            for m in _PLACEHOLDER_RE.finditer(node):
+                if _looks_like_variable(m.group(1), variable_keys):
+                    found.append(m.group(0))
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
+        elif isinstance(node, dict):
+            for v in node.values():
+                _walk(v)
+
+    _walk(obj)
+    return found
 
 
 def _substitute(obj, variables: dict):
@@ -65,6 +107,15 @@ def generate_walkthrough(node_id: str) -> Optional[dict]:
     variables = generator()
     variables_str = {k: str(v) for k, v in variables.items()}
     hydrated = _substitute(template, variables_str)
+
+    # Fail loudly in dev if the generator didn't supply a variable the template
+    # references — better than silently serving a student a prompt with a raw
+    # {gcf} in it. (Checked before the variables key is attached.)
+    unresolved = find_unresolved_placeholders(hydrated, variables)
+    if unresolved:
+        raise ValueError(
+            f"Unresolved placeholders in {node_id}: {sorted(set(unresolved))}"
+        )
 
     # Shuffle multiple-choice options so the correct answer isn't always at the
     # same position (many templates have the conceptual answer at index 0).
