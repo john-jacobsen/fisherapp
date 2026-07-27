@@ -1,0 +1,169 @@
+{
+  "node_id": "eq-two-step",
+  "title": "Solving Two-Step Equations",
+
+  "intro": {
+    "body": "A **two-step equation** has the form $ax + b = c$: the variable is first multiplied by a number and then a constant is added. For example, $2x + 3 = 11$ says that twice some number, plus 3, equals 11.\n\nTo **solve** it, you peel the operations off $x$ one at a time — and you do this in the **reverse of the order of operations.** Multiplication happens before addition when you *evaluate* $ax + b$, so when you *undo* it you reverse that: undo the addition first, then the multiplication.\n\n**The method:**\n1. **Subtract $b$ from both sides** to undo the $+b$. This isolates the term $ax$.\n2. **Divide both sides by $a$** to undo the multiplication. This leaves $x$ by itself.\n\nEach move is applied to *both* sides, so the equation stays balanced the whole way.\n\n**Worked example:** $2x + 3 = 11$.\n$$2x + 3 = 11 \\implies 2x = 11 - 3 = 8 \\implies x = \\frac{8}{2} = 4$$\nCheck: $2 \\cdot 4 + 3 = 8 + 3 = 11$ ✓",
+    "key_formula": "\\text{If } ax + b = c,\\;\\text{then}\\; x = \\frac{c - b}{a}\\quad (a \\neq 0)"
+  },
+
+  "problem_generator": {
+    "description": "Generate ax + b = c where a is an integer in [2,9], b is a positive integer in [1,9], solution is a non-zero integer in [-8,8], and c = a*solution + b so all arithmetic is clean integers.",
+    "params": {
+      "a": { "type": "random_int", "min": 2, "max": 9 },
+      "b": { "type": "random_int", "min": 1, "max": 9 },
+      "solution": { "type": "random_int", "min": -8, "max": 8, "constraint": "not 0" }
+    },
+    "derived": {
+      "c": "a * solution + b",
+      "c_minus_b": "c - b",
+      "c_plus_b": "c + b"
+    },
+    "display_problem": "Solve for $x$: $\\;{a}x + {b} = {c}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Choose the first move",
+      "prompt": "Look at ${a}x + {b} = {c}$. To start isolating $x$, what should you do to **both sides** first?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Subtract {b} from both sides",
+        "Add {b} to both sides",
+        "Divide both sides by {a}",
+        "Multiply both sides by {a}"
+      ],
+      "correct_answer": "0",
+      "hint": "Undo the operations on $x$ in reverse order. The last thing done to $x$ was adding {b}, so undo that first — subtract {b} from both sides to isolate the ${a}x$ term.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "Adding {b} gives ${a}x + {b} + {b} = {c} + {b}$, which moves you further from isolating $x$. To undo $+{b}$ you need its inverse: subtract {b} from both sides."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Dividing by {a} now would force you to divide the ${b}$ term too, creating fractions like $\\frac{{b}}{{a}}$. Undo the addition first: subtract {b} from both sides, then divide."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "Multiplying by {a} makes the coefficient larger (${a}^2 x$) instead of removing it. Start by undoing the $+{b}$: subtract {b} from both sides."
+        },
+        {
+          "condition": "default",
+          "feedback": "Undo the addition first: subtract {b} from both sides to isolate the ${a}x$ term."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Subtract from both sides",
+      "prompt": "Subtract {b} from both sides of ${a}x + {b} = {c}$. The left side becomes ${a}x$. What is the new **right** side, ${c} - {b}$?",
+      "input_type": "numeric",
+      "correct_answer": "{c_minus_b}",
+      "hint": "Compute ${c} - {b}$. The equation becomes ${a}x = {c_minus_b}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c_plus_b",
+          "feedback": "It looks like you added {b} instead of subtracting it. To undo $+{b}$ you subtract: ${c} - {b} = {c_minus_b}$."
+        },
+        {
+          "condition": "answer == c",
+          "feedback": "That is the original right side. You still need to subtract {b}: ${c} - {b} = {c_minus_b}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "Subtract {b} from {c}: ${c} - {b} = {c_minus_b}$, so the equation becomes ${a}x = {c_minus_b}$."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Divide by the coefficient",
+      "prompt": "You now have ${a}x = {c_minus_b}$. Divide both sides by {a} to undo the multiplication. What is ${c_minus_b} \\div {a}$?",
+      "input_type": "numeric",
+      "correct_answer": "{solution}",
+      "hint": "Divide the right side by the coefficient: ${c_minus_b} \\div {a}$. Watch the signs — a negative divided by a positive is negative.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c_minus_b",
+          "feedback": "That is the right side before dividing. To undo multiplying by {a}, divide by {a}: ${c_minus_b} \\div {a} = {solution}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "Divide by the coefficient: ${c_minus_b} \\div {a} = {solution}$. Double-check the sign of the result."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the solution",
+      "prompt": "State the solution to ${a}x + {b} = {c}$. You can write just the number or $x = $ the number.",
+      "input_type": "expression",
+      "correct_answer": "{solution}",
+      "strict_form": {
+        "type": "exact_form",
+        "rejection_feedback": "Write the exact answer — no decimal approximations. Since the solution is a whole number, write it as an integer (e.g., {solution})."
+      },
+      "hint": "From steps 2 and 3, ${a}x = {c_minus_b}$ and then $x = {c_minus_b} \\div {a} = {solution}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "From the previous steps, ${a}x = {c_minus_b}$, so $x = {solution}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Verify by substituting",
+      "prompt": "Check the solution by substituting $x = {solution}$ back into the left side: ${a}({solution}) + {b}$. What value do you get?",
+      "input_type": "numeric",
+      "correct_answer": "{c}",
+      "hint": "Multiply first, then add: ${a} \\times ({solution})$, then add {b}. A correct solution makes this equal the right side, {c}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c_minus_b",
+          "feedback": "That is ${a} \\times ({solution}) = {c_minus_b}$, but you still have to add the ${b}$: ${c_minus_b} + {b} = {c}$, which matches the right side."
+        },
+        {
+          "condition": "default",
+          "feedback": "Substitute and follow the order of operations: ${a}({solution}) + {b} = {c_minus_b} + {b} = {c}$. It equals the right side, so the solution checks out."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Check your understanding",
+      "prompt": "In a two-step equation like ${a}x + {b} = {c}$, why do we subtract {b} before dividing by {a}?",
+      "input_type": "multiple_choice",
+      "options": [
+        "We undo the operations on $x$ in reverse order — undo the addition first to isolate ${a}x$, then undo the multiplication — which keeps the arithmetic in whole numbers.",
+        "Subtraction must always be performed before division in any calculation.",
+        "Dividing by {a} first is not allowed while a $+{b}$ term is present."
+      ],
+      "correct_answer": "0",
+      "hint": "Think about the order of operations used to *build* $ax + b$, then reverse it to *take it apart*.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "That is not a general rule — order of operations says multiplication comes before addition when evaluating. When *solving*, we reverse that order, so we undo the addition first."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "You actually can divide first if you divide *every* term (giving $x + \\frac{{b}}{{a}} = \\frac{{c}}{{a}}$), but that introduces fractions. Subtracting {b} first keeps the numbers whole, which is why we do it in that order."
+        },
+        {
+          "condition": "default",
+          "feedback": "The first option is correct: we reverse the order of operations, undoing the $+{b}$ before the $\\times {a}$, which keeps the arithmetic clean."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You solved ${a}x + {b} = {c}$ by subtracting {b} from both sides to get ${a}x = {c_minus_b}$, then dividing by {a} to get $x = {solution}$ — and you verified that ${a}({solution}) + {b} = {c}$. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
