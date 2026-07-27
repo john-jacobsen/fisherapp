@@ -51,6 +51,17 @@ def _schema_check(template: dict) -> None:
         if key not in template:
             raise ValidationError(f"missing top-level key '{key}'")
 
+    # Optional intro.video_id: a YouTube ID string shown above the intro body.
+    # Unset in the six pilot templates; populated in FIXES-17. When present it
+    # must be a non-empty string (an int/list/etc. would break the iframe embed).
+    intro = template.get("intro")
+    if isinstance(intro, dict) and "video_id" in intro:
+        vid = intro["video_id"]
+        if not isinstance(vid, str) or not vid.strip():
+            raise ValidationError(
+                f"intro.video_id must be a non-empty string, got {vid!r}"
+            )
+
     steps = template["steps"]
     if not isinstance(steps, list) or not steps:
         raise ValidationError("'steps' must be a non-empty list")

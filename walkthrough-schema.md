@@ -24,7 +24,8 @@ Each node gets one file: `backend/data/walkthroughs/{node_id}.json`
 
   "intro": {
     "body": "Markdown string — conceptual overview with LaTeX math. As long as needed for genuine understanding, but every sentence must earn its place.",
-    "key_formula": "LaTeX string — the central formula or rule, displayed prominently"
+    "key_formula": "LaTeX string — the central formula or rule, displayed prominently",
+    "video_id": "OPTIONAL YouTube video ID string (e.g. \"dQw4w9WgXcQ\"). When present, WalkthroughPage embeds the video above the intro body. Omit it entirely to show no video. Left unset in the pilot templates; populated in FIXES-17."
   },
 
   "problem_generator": {

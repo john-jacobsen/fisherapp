@@ -277,6 +277,21 @@ export default function WalkthroughPage() {
             {walkthrough.title}
           </h1>
 
+          {/* Optional intro video (YouTube). Populated in FIXES-17; unset in pilots. */}
+          {walkthrough.intro.video_id && (
+            <div style={{ marginBottom: 24, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.md }}>
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${walkthrough.intro.video_id}`}
+                  title={walkthrough.title}
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Intro body — markdown with LaTeX */}
           <div style={{
             background: theme.colors.card,
