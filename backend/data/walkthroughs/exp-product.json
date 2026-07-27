@@ -1,0 +1,146 @@
+{
+  "node_id": "exp-product",
+  "title": "The Product Rule for Exponents",
+
+  "intro": {
+    "body": "A power like $x^m$ is just shorthand for **$m$ copies of $x$ multiplied together**. So $x^3 = x \\cdot x \\cdot x$ and $x^2 = x \\cdot x$.\n\nWhen you multiply two powers of the **same base**, you can simply line up all the factors and count them:\n$$x^3 \\cdot x^2 = (x \\cdot x \\cdot x)(x \\cdot x) = x^5.$$\nThere are $3 + 2 = 5$ factors of $x$ in total — so you **add the exponents** and keep the base. You do **not** multiply the exponents.\n\n**With coefficients** out front, handle the two parts separately: multiply the coefficients together, and add the exponents.\n\n**The method:**\n1. Keep the common base $x$.\n2. Add the exponents: $m + n$.\n3. Multiply the coefficients: $a \\cdot b$.\n4. Write the result as $(a\\,b)\\,x^{m+n}$.\n\n**Worked example:** $(2x^3)(4x^2)$. Multiply the coefficients: $2 \\cdot 4 = 8$. Add the exponents: $3 + 2 = 5$. The result is $8x^5$.",
+    "key_formula": "(a\\,x^m)(b\\,x^n) = (a\\,b)\\,x^{m+n}"
+  },
+
+  "problem_generator": {
+    "description": "Multiply two single-term powers with the same base x and integer coefficients: (a x^m)(b x^n), with a,b in [2,5] and m,n in [2,6]. The simplified power is (a*b) x^(m+n); the exponent sum is always >= 4 so no x^1/x^0 artifact.",
+    "params": {
+      "a": { "type": "random_int", "min": 2, "max": 5 },
+      "b": { "type": "random_int", "min": 2, "max": 5 },
+      "m": { "type": "random_int", "min": 2, "max": 6 },
+      "n": { "type": "random_int", "min": 2, "max": 6 }
+    },
+    "derived": {
+      "new_coeff": "a * b",
+      "new_exp": "m + n",
+      "sum_coeff": "a + b",
+      "prod_exp": "m * n",
+      "display_original": "LaTeX for (a x^m)(b x^n)",
+      "display_answer": "LaTeX for (a*b) x^(m+n)"
+    },
+    "display_problem": "Simplify $ {display_original} $, writing the result as a single power of $x$."
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify the rule for the exponents",
+      "prompt": "You are simplifying $ {display_original} $. Both factors have the same base, $x$. What does the product rule tell you to do with the exponents ${m}$ and ${n}$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Add them and keep the base: $x^{{m}} \\cdot x^{{n}} = x^{{m}+{n}}$",
+        "Multiply them and keep the base: $x^{{m}} \\cdot x^{{n}} = x^{{m} \\cdot {n}}$",
+        "Multiply the bases and keep the exponents unchanged"
+      ],
+      "correct_answer": "0",
+      "hint": "Write each power out as repeated factors of $x$: $x^{{m}}$ is {m} copies of $x$ and $x^{{n}}$ is {n} copies. When you multiply them, how many factors of $x$ are there in all?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "That is the most common mistake. Count the factors: $x^{{m}}$ is {m} copies of $x$ and $x^{{n}}$ is {n} copies, giving {m} + {n} = {new_exp} copies in all — so you ADD the exponents, not multiply them."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The base stays as a single $x$ — you don't multiply the bases together. Because $x^{{m}}$ and $x^{{n}}$ are repeated factors of the same $x$, you keep the base and ADD the exponents."
+        },
+        {
+          "condition": "default",
+          "feedback": "Powers of the same base combine by ADDING the exponents: $x^{{m}} \\cdot x^{{n}} = x^{{m}+{n}}$. Keep the base $x$."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Add the exponents",
+      "prompt": "Apply the rule to the exponents. What is ${m} + {n}$?",
+      "input_type": "numeric",
+      "correct_answer": "{new_exp}",
+      "hint": "Add the two exponents together: {m} + {n}. This becomes the exponent of $x$ in the answer.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == prod_exp",
+          "feedback": "It looks like you multiplied the exponents ({m} × {n} = {prod_exp}). The product rule ADDS them: {m} + {n} = {new_exp}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Add the exponents: {m} + {n} = {new_exp}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Multiply the coefficients",
+      "prompt": "Now handle the numbers out front. The coefficients are ${a}$ and ${b}$. Multiply them: what is ${a} \\times {b}$?",
+      "input_type": "numeric",
+      "correct_answer": "{new_coeff}",
+      "hint": "The coefficients multiply (they are not added). Compute {a} × {b}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == sum_coeff",
+          "feedback": "You added the coefficients, but they multiply: {a} × {b} = {new_coeff}. (Only the exponents are added.)"
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the coefficients: {a} × {b} = {new_coeff}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the simplified power",
+      "prompt": "Combine your results: coefficient {new_coeff} and exponent {new_exp}. Write the simplified expression as a single power of $x$.",
+      "input_type": "expression",
+      "correct_answer": "{display_answer}",
+      "strict_form": {
+        "type": "exact_form",
+        "rejection_feedback": "Write the exact answer with an integer coefficient and exponent — no decimals. It should look like ${display_answer}$."
+      },
+      "hint": "Put the product of the coefficients in front and the sum of the exponents on $x$: ${new_coeff}x^{{new_exp}}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "From steps 2 and 3: the coefficient is {new_coeff} and the exponent is {new_exp}, so the answer is ${display_answer}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "Why do you ADD the exponents (rather than multiply them) when multiplying powers of the same base?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Because $x^{{m}}$ means ${m}$ factors of $x$ and $x^{{n}}$ means ${n}$ factors; multiplying them lines up ${m}+{n}$ factors in total, so the exponents add.",
+        "Because multiplying the powers means you multiply everything about them, including the exponents.",
+        "Because addition always gives a smaller, simpler exponent than multiplication."
+      ],
+      "correct_answer": "0",
+      "hint": "Think of an exponent as a count of how many times the base is used as a factor. What happens to that count when you multiply the two powers together?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "Not quite — the exponents count factors, and multiplying $x^{{m}}$ by $x^{{n}}$ just puts {m} factors next to {n} factors. You total the counts by ADDING: {m} + {n} = {new_exp}. Multiplying the exponents would count something that isn't there."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The reason isn't about which result is smaller — in fact adding often gives a larger exponent than the originals. It's that $x^{{m}} \\cdot x^{{n}}$ places {m} factors of $x$ beside {n} more, for {m} + {n} = {new_exp} factors in total, so the exponents add."
+        },
+        {
+          "condition": "default",
+          "feedback": "The exponent counts factors of $x$. Multiplying $x^{{m}}$ by $x^{{n}}$ gives {m} + {n} = {new_exp} factors in all, so you add the exponents."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You simplified $ {display_original} $ by multiplying the coefficients ({a} × {b} = {new_coeff}) and adding the exponents ({m} + {n} = {new_exp}), giving ${display_answer}$. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
