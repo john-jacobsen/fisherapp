@@ -2,24 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import api from '../api/client';
 import NavBar from '../components/NavBar';
 import MathDisplay from '../components/MathDisplay';
 import MathInput from '../components/MathInput';
 import { theme } from '../theme';
-
-// ── Helper: wrap markdown string children in MathDisplay ─────────────────────
-function processMarkdownChildren(children) {
-  if (typeof children === 'string') {
-    return <MathDisplay content={children} />;
-  }
-  if (Array.isArray(children)) {
-    return children.map((child, i) =>
-      typeof child === 'string' ? <MathDisplay key={i} content={child} /> : child
-    );
-  }
-  return children;
-}
 
 // ── Per-step input renderer ───────────────────────────────────────────────────
 function StepInput({ step, answer, setAnswer, onSubmit, disabled }) {
@@ -300,16 +290,17 @@ export default function WalkthroughPage() {
             fontSize: 15,
           }}>
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
               components={{
                 p: ({ children }) => (
-                  <p style={{ margin: '0 0 12px' }}>{processMarkdownChildren(children)}</p>
+                  <p style={{ margin: '0 0 12px' }}>{children}</p>
                 ),
                 li: ({ children }) => (
-                  <li style={{ marginBottom: 6 }}>{processMarkdownChildren(children)}</li>
+                  <li style={{ marginBottom: 6 }}>{children}</li>
                 ),
                 code: ({ inline, children }) => inline
-                  ? <MathDisplay content={String(children)} />
+                  ? <code style={{ background: '#F5F4F2', padding: '1px 5px', borderRadius: 4, fontSize: '0.92em' }}>{children}</code>
                   : <pre style={{ background: '#F5F4F2', padding: '12px 16px', borderRadius: theme.radius.sm, overflow: 'auto' }}><code>{children}</code></pre>,
               }}
             >
