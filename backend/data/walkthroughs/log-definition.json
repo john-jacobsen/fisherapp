@@ -1,0 +1,156 @@
+{
+  "node_id": "log-definition",
+  "title": "The Definition of a Logarithm",
+
+  "intro": {
+    "body": "A **logarithm** answers a single question: *to what power must I raise the base to get this number?* That's all it is — a logarithm is an exponent.\n\nThe definition connects a logarithm directly to an exponential equation:\n$$\\log_b(x) = y \\quad\\Longleftrightarrow\\quad b^y = x$$\nRead the left side as \"log base $b$ of $x$ equals $y$.\" It says: *the power you raise $b$ to in order to get $x$ is $y$.* The right side, $b^y = x$, says exactly the same thing in exponential form. The two equations are two views of one relationship — the base $b$ stays the base, and the logarithm $y$ is the exponent.\n\n**Worked example.** Consider $\\log_2(8)$. Ask: *what power of 2 gives 8?* Since $2^3 = 8$, the answer is $3$, so $\\log_2(8) = 3$. In definition form, $\\log_2(8) = 3$ is just another way of writing $2^3 = 8$.\n\n**Going the other way.** Any exponential equation can be rewritten as a logarithm. For instance, $10^4 = 10000$ becomes $\\log_{10}(10000) = 4$. The base of the power ($10$) becomes the base of the log, the result ($10000$) goes inside the log, and the exponent ($4$) is what the log equals.",
+    "key_formula": "\\log_b(x) = y \\iff b^y = x"
+  },
+
+  "problem_generator": {
+    "description": "Three independent clean logarithm examples. Each pair is an exact power val = base^exp with base in {2,3,5,10} (distinct across the three pairs) and exp in {2,3,4}, so every logarithm is a whole-number exponent.",
+    "params": {
+      "bases": { "type": "sample_without_replacement", "from": [2, 3, 5, 10], "count": 3 },
+      "exp_a": { "type": "random_int", "min": 2, "max": 4 },
+      "exp_b": { "type": "random_int", "min": 2, "max": 4 },
+      "exp_c": { "type": "random_int", "min": 2, "max": 4 }
+    },
+    "derived": {
+      "val_a": "base_a ** exp_a",
+      "val_b": "base_b ** exp_b",
+      "val_c": "base_c ** exp_c"
+    },
+    "display_problem": "Use the definition $\\log_b(x) = y \\iff b^y = x$ to evaluate logarithms and convert between exponential and logarithmic form."
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "The definition",
+      "prompt": "The definition of a logarithm says $\\log_b(x) = y$ is just another way of writing an exponential equation. Which exponential equation is equivalent to $\\log_b(x) = y$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "$b^y = x$",
+        "$y^b = x$",
+        "$x^y = b$",
+        "$b^x = y$"
+      ],
+      "correct_answer": "0",
+      "hint": "In $\\log_b(x) = y$, the base $b$ stays the base and the logarithm $y$ is the exponent. So $b$ raised to the power $y$ must give $x$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The base and the exponent are swapped. In $\\log_b(x) = y$ the base is $b$ (not $y$), and $y$ is the exponent. The correct exponential form is $b^y = x$."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Here $x$ — the number inside the log — is the *result*, not the base. The base $b$ raised to the exponent $y$ produces $x$: $b^y = x$."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "Close, but the exponent and the result are swapped. The logarithm $y$ is the exponent and $x$ is the result: $b^y = x$."
+        },
+        {
+          "condition": "default",
+          "feedback": "By the definition, $\\log_b(x) = y$ means $b^y = x$: the base $b$ raised to the power $y$ gives $x$."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Evaluate a logarithm",
+      "prompt": "Now use that idea to evaluate $\\log_{{base_a}}({val_a})$. Ask yourself: what power of {base_a} gives {val_a}?",
+      "input_type": "numeric",
+      "correct_answer": "{exp_a}",
+      "hint": "You need the exponent $y$ with ${base_a}^y = {val_a}$. Try multiplying {base_a} by itself until you reach {val_a}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == val_a",
+          "feedback": "{val_a} is the number inside the logarithm, not its value. The logarithm is the *exponent*: since ${base_a}^{exp_a} = {val_a}$, we have $\\log_{{base_a}}({val_a}) = {exp_a}$."
+        },
+        {
+          "condition": "answer == base_a",
+          "feedback": "{base_a} is the base, not the answer. You want the power you raise {base_a} to in order to get {val_a}: ${base_a}^{exp_a} = {val_a}$, so the logarithm is {exp_a}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Ask what power of {base_a} gives {val_a}. Since ${base_a}^{exp_a} = {val_a}$, we get $\\log_{{base_a}}({val_a}) = {exp_a}$."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Evaluate another one",
+      "prompt": "Try one with a different base. Evaluate $\\log_{{base_b}}({val_b})$ — what power of {base_b} equals {val_b}?",
+      "input_type": "numeric",
+      "correct_answer": "{exp_b}",
+      "hint": "Find the exponent $y$ with ${base_b}^y = {val_b}$. Count how many factors of {base_b} it takes to reach {val_b}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == val_b",
+          "feedback": "That's the value inside the log. The logarithm is the exponent: ${base_b}^{exp_b} = {val_b}$, so $\\log_{{base_b}}({val_b}) = {exp_b}$."
+        },
+        {
+          "condition": "answer == base_b",
+          "feedback": "That's the base. The logarithm is the power you raise {base_b} to: ${base_b}^{exp_b} = {val_b}$, so the answer is {exp_b}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Since ${base_b}^{exp_b} = {val_b}$, the exponent is {exp_b}, so $\\log_{{base_b}}({val_b}) = {exp_b}$."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Rewrite in logarithmic form",
+      "prompt": "Now go the other way. The exponential equation ${base_c}^{exp_c} = {val_c}$ can be rewritten in logarithmic form. Enter the logarithm of {val_c} to base {base_c} — the expression that equals the exponent {exp_c}. Write it using log notation.",
+      "input_type": "expression",
+      "correct_answer": "\\log_{{base_c}}({val_c})",
+      "strict_form": {
+        "type": "log_form",
+        "rejection_feedback": "Write your answer using logarithm notation, not just the exponent. The exponent {exp_c} is the *value* of the log — but here we want the logarithm itself: $\\log_{{base_c}}({val_c})$."
+      },
+      "hint": "In $b^y = x$ the base $b$ becomes the base of the log and $x$ goes inside: $\\log_b(x)$. So ${base_c}^{exp_c} = {val_c}$ gives the logarithm $\\log_{{base_c}}({val_c})$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "The exponential equation ${base_c}^{exp_c} = {val_c}$ becomes $\\log_{{base_c}}({val_c}) = {exp_c}$ in logarithmic form. Enter the logarithm on the left: $\\log_{{base_c}}({val_c})$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "In the equation $\\log_b(x) = y$, what does the value $y$ actually represent?",
+      "input_type": "multiple_choice",
+      "options": [
+        "The exponent — the power you must raise the base $b$ to in order to get $x$.",
+        "The product of the base $b$ and the number $x$.",
+        "The number of times $x$ can be divided by $b$ before reaching zero."
+      ],
+      "correct_answer": "0",
+      "hint": "Remember the one-line idea: a logarithm is an exponent. What role does $y$ play in $b^y = x$?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "A logarithm isn't a product. It's an exponent: $y$ is the power you raise $b$ to in order to reach $x$, which is why $\\log_b(x) = y$ means $b^y = x$."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Not quite — that describes repeated division, which never reaches zero anyway. The logarithm $y$ is the exponent in $b^y = x$: the power that turns $b$ into $x$."
+        },
+        {
+          "condition": "default",
+          "feedback": "A logarithm is an exponent. In $\\log_b(x) = y$, the value $y$ is the power you raise the base $b$ to in order to get $x$: $b^y = x$."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You used the definition $\\log_b(x) = y \\iff b^y = x$ to evaluate $\\log_{{base_a}}({val_a}) = {exp_a}$ and $\\log_{{base_b}}({val_b}) = {exp_b}$, then rewrote ${base_c}^{exp_c} = {val_c}$ as $\\log_{{base_c}}({val_c}) = {exp_c}$. The key idea: a logarithm is just an exponent — the power you raise the base to. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
