@@ -1,0 +1,171 @@
+{
+  "node_id": "prob-conditional",
+  "title": "Conditional Probability",
+
+  "intro": {
+    "body": "**Conditional probability** answers the question: *given that one event has already happened, how likely is another?* We write $P(A \\mid B)$ — read \"the probability of $A$ given $B$.\"\n\nThe key idea is that knowing $B$ occurred **shrinks the sample space**. We no longer look at everyone — we look only at the outcomes inside $B$, and ask what fraction of *those* are also in $A$:\n\n$$P(A \\mid B) = \\frac{P(A \\cap B)}{P(B)} = \\frac{\\#(A \\cap B)}{\\#(B)}$$\n\nWhen the data come from counts, the probabilities of $A\\cap B$ and $B$ share the same denominator (the total number of people), so it cancels — you can work directly with the **counts**: divide the number of outcomes in *both* $A$ and $B$ by the number of outcomes in $B$.\n\n**Worked example.** A gym surveys 40 members about whether they swim and whether they do yoga:\n\n| | Yoga | No yoga | Total |\n|---|---|---|---|\n| **Swim** | 8 | 12 | 20 |\n| **No swim** | 6 | 14 | 20 |\n| **Total** | 14 | 26 | 40 |\n\nTo find $P(\\text{Yoga} \\mid \\text{Swim})$, restrict to the **20 swimmers** (the row where Swim is true) — they are the new sample space. Of those 20, exactly **8** also do yoga. So\n$$P(\\text{Yoga} \\mid \\text{Swim}) = \\frac{8}{20} = \\frac{2}{5}.$$\nNotice we divided by 20 (the swimmers), **not** by 40 (everyone). Conditioning on \"Swim\" threw away the 20 non-swimmers entirely.",
+    "key_formula": "P(A \\mid B) = \\dfrac{P(A \\cap B)}{P(B)} = \\dfrac{\\#(A \\cap B)}{\\#(B)}"
+  },
+
+  "problem_generator": {
+    "description": "Two-way count table on two yes/no attributes (owns a dog = B, plays a sport = A). All four cells are positive integers; #(A∩B) < #(B) so P(A|B) is a proper non-integer fraction, and #(A∩B) shares a factor > 1 with #(B) so the final fraction genuinely reduces to lowest terms.",
+    "params": {
+      "both": { "type": "random_int", "min": 2, "max": 15 },
+      "dog_only": { "type": "random_int", "min": 1, "max": 15, "constraint": "gcd(both, both+dog_only) > 1" },
+      "sport_only": { "type": "random_int", "min": 1, "max": 15 },
+      "neither": { "type": "random_int", "min": 1, "max": 15 }
+    },
+    "derived": {
+      "count_B": "both + dog_only",
+      "count_A": "both + sport_only",
+      "grand_total": "both + dog_only + sport_only + neither",
+      "gcf": "gcd(both, count_B)",
+      "simp_num": "both // gcf",
+      "simp_den": "count_B // gcf"
+    },
+    "display_problem": "A school surveys its students about two things: whether they own a dog and whether they play a sport. The results: ${both}$ students own a dog **and** play a sport; ${dog_only}$ own a dog but do **not** play a sport; ${sport_only}$ play a sport but do **not** own a dog; and ${neither}$ do neither. Find $P(\\text{plays a sport} \\mid \\text{owns a dog})$ — the probability that a randomly chosen dog owner plays a sport."
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Count everyone surveyed",
+      "prompt": "Start with the full picture. Adding up all four groups — {both} (dog and sport), {dog_only} (dog only), {sport_only} (sport only), and {neither} (neither) — how many students were surveyed in total?",
+      "input_type": "numeric",
+      "correct_answer": "{grand_total}",
+      "hint": "Add the four disjoint groups: {both} + {dog_only} + {sport_only} + {neither}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == count_B",
+          "feedback": "{count_B} is just the dog owners ({both} + {dog_only}). The total also includes students without a dog. Add all four groups: {both} + {dog_only} + {sport_only} + {neither} = {grand_total}."
+        },
+        {
+          "condition": "answer == count_A",
+          "feedback": "{count_A} counts only the sport players. Include everyone: {both} + {dog_only} + {sport_only} + {neither} = {grand_total}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Add all four disjoint groups: {both} + {dog_only} + {sport_only} + {neither} = {grand_total}."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Restrict to the conditioning event B",
+      "prompt": "We want $P(\\text{sport} \\mid \\text{dog})$, so we condition on owning a dog: we look only at dog owners. This restricted group is our new sample space. How many students own a dog?",
+      "input_type": "numeric",
+      "correct_answer": "{count_B}",
+      "hint": "The dog owners are the {both} who also play a sport plus the {dog_only} who don't: {both} + {dog_only}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == grand_total",
+          "feedback": "{grand_total} is everyone surveyed. But conditioning on \"owns a dog\" throws away the students without a dog — the new sample space is only the dog owners: {both} + {dog_only} = {count_B}."
+        },
+        {
+          "condition": "answer == both",
+          "feedback": "{both} is the dog owners who ALSO play a sport, not all dog owners. Every dog owner counts here, whether or not they play a sport: {both} + {dog_only} = {count_B}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The dog owners are those who play a sport plus those who don't: {both} + {dog_only} = {count_B}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Count A and B together",
+      "prompt": "Now, inside that group of {count_B} dog owners, how many also play a sport? This is $\\#(A \\cap B)$ — the students who own a dog **and** play a sport.",
+      "input_type": "numeric",
+      "correct_answer": "{both}",
+      "hint": "You need students who are in BOTH categories at once — own a dog and play a sport. That count is given directly in the problem.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == count_A",
+          "feedback": "{count_A} is every sport player in the whole school, including {sport_only} who don't own a dog. We've already restricted to dog owners, so count only the dog owners who play a sport: {both}."
+        },
+        {
+          "condition": "answer == count_B",
+          "feedback": "{count_B} is ALL dog owners. We want just the dog owners who also play a sport — the overlap of the two groups: {both}."
+        },
+        {
+          "condition": "default",
+          "feedback": "$\\#(A \\cap B)$ is the count in both categories at once — own a dog and play a sport: {both}."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Simplify: find the GCF",
+      "prompt": "So $P(\\text{sport} \\mid \\text{dog}) = \\dfrac{\\#(A \\cap B)}{\\#(B)} = \\frac{{{both}}}{{{count_B}}}$. Before writing this in lowest terms, find the greatest common factor (GCF) of {both} and {count_B}.",
+      "input_type": "numeric",
+      "correct_answer": "{gcf}",
+      "hint": "What is the largest number that divides both {both} and {count_B} evenly?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "A GCF of 1 would mean the fraction is already in lowest terms, but {both} and {count_B} do share a larger common factor. Their greatest common factor is {gcf}."
+        },
+        {
+          "condition": "answer_int is not None and answer_int > 1 and both % answer_int == 0 and count_B % answer_int == 0 and answer_int < gcf",
+          "feedback": "{answer} divides both {both} and {count_B}, but it isn't the GREATEST such factor. Look for a larger one — the GCF is {gcf}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The greatest common factor of {both} and {count_B} is {gcf}."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Write the probability in simplest form",
+      "prompt": "Divide the numerator and denominator of $\\frac{{{both}}}{{{count_B}}}$ by the GCF {gcf}. Write $P(\\text{sport} \\mid \\text{dog})$ as a fraction in simplest form.",
+      "input_type": "expression",
+      "correct_answer": "\\frac{{simp_num}}{{simp_den}}",
+      "strict_form": {
+        "type": "simplified_fraction",
+        "rejection_feedback": "That value is correct, but it isn't a fully simplified fraction. Divide both {both} and {count_B} by their GCF {gcf} to get $\\frac{{{simp_num}}}{{{simp_den}}}$."
+      },
+      "hint": "Compute {both} ÷ {gcf} for the numerator and {count_B} ÷ {gcf} for the denominator, then write the result as a fraction.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Divide top and bottom by {gcf}: {both} ÷ {gcf} = {simp_num} and {count_B} ÷ {gcf} = {simp_den}, so $\\frac{{{both}}}{{{count_B}}} = \\frac{{{simp_num}}}{{{simp_den}}}$. Enter it as a fraction. (Remember: divide by $\\#(B) = {count_B}$, the dog owners — not by the {grand_total} total students.)"
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Check your understanding",
+      "prompt": "When we compute $P(A \\mid B)$ — the probability of playing a sport given owning a dog — what does \"conditioning on $B$\" actually do?",
+      "input_type": "multiple_choice",
+      "options": [
+        "It restricts attention to the outcomes in B only. The dog owners become the new, smaller sample space, and we ask what fraction of them are also in A.",
+        "It asks, out of all students surveyed, what fraction both own a dog and play a sport.",
+        "It adds the probability of owning a dog to the probability of playing a sport, since both can happen."
+      ],
+      "correct_answer": "0",
+      "hint": "We divided by the number of dog owners, not by the total number of students. What did conditioning do to the group we were looking at?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "That describes $P(A \\cap B)$ — the joint probability over EVERYONE, dividing by the {grand_total} total. Conditional probability instead divides by only the {count_B} dog owners: conditioning shrinks the sample space to B."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Adding probabilities isn't what conditioning does. $P(A \\mid B)$ restricts the sample space to just the dog owners (B) and asks what fraction of them are in A — that's why we divided by {count_B}, not the total."
+        },
+        {
+          "condition": "default",
+          "feedback": "The first option is correct: conditioning on B discards everything outside B, making the {count_B} dog owners the new sample space, and asks what fraction of them also play a sport."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You found $P(\\text{plays a sport} \\mid \\text{owns a dog})$ by restricting to the {count_B} dog owners and asking how many of them — {both} — also play a sport: $\\frac{{{both}}}{{{count_B}}} = \\frac{{{simp_num}}}{{{simp_den}}}$. The key move was conditioning: shrinking the sample space from all {grand_total} students down to just B. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
