@@ -1,0 +1,183 @@
+{
+  "node_id": "calc-deriv-chain",
+  "title": "The Chain Rule",
+
+  "intro": {
+    "body": "Many functions are **compositions** — one function tucked inside another. To differentiate them you need the **chain rule**.\n\nThink of $f(x) = (2x+3)^4$ as an **outer** function (raising to the 4th power) wrapped around an **inner** function ($2x+3$). The chain rule says: differentiate the outer function (treating the inner part as a single blob), then **multiply by the derivative of the inner function**.\n\n$$\\frac{d}{dx}\\big[\\,g(u)\\,\\big] = g'(u)\\cdot u'$$\n\nFor a power of a linear expression, $f(x) = (a x + b)^n$, this gives:\n\n$$\\frac{d}{dx}\\big[(a x + b)^n\\big] = n\\,(a x + b)^{n-1}\\cdot a = n\\,a\\,(a x + b)^{n-1}$$\n\nFor example, the derivative of $(2x+3)^4$ is $4(2x+3)^3\\cdot 2 = 8(2x+3)^3$: the outer power rule brings the 4 down and reduces the exponent to 3, and the extra factor of 2 is the derivative of the inner function $2x+3$.\n\n**Why the extra factor?** The inner function changes $x$ at its own rate. A small nudge in $x$ nudges the inner value by a factor of $a$, and that nudge is then amplified by the outer function. The two rates **compound**, so you multiply them together.",
+    "key_formula": "\\frac{d}{dx}\\big[(a x + b)^n\\big] = n\\,a\\,(a x + b)^{n-1}"
+  },
+
+  "problem_generator": {
+    "description": "Generate f(x) = (ax + b)^n with a in [2,5], b in [1,6], n in [2,5] so all numbers are clean. coeff = n*a, new_exp = n-1.",
+    "params": {
+      "a": { "type": "random_int", "min": 2, "max": 5 },
+      "b": { "type": "random_int", "min": 1, "max": 6 },
+      "n": { "type": "random_int", "min": 2, "max": 5 }
+    },
+    "derived": {
+      "coeff": "n * a",
+      "new_exp": "n - 1",
+      "display_inner": "formatted LaTeX string 'ax + b'",
+      "display_original": "formatted LaTeX string '(ax + b)^{n}'",
+      "display_derivative": "formatted LaTeX string for the derivative, dropping ^1 when new_exp == 1"
+    },
+    "display_problem": "Find the derivative of $f(x) = {display_original}$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify the outer and inner functions",
+      "prompt": "Look at $f(x) = {display_original}$. To apply the chain rule you first split it into an **outer** function and an **inner** function. Which choice is correct?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Outer: raise to the power {n}; Inner: ${display_inner}$",
+        "Outer: ${display_inner}$; Inner: raise to the power {n}",
+        "Outer: raise to the power {n}; Inner: ${a}x$",
+        "Outer: ${a}x$; Inner: raise to the power {n}"
+      ],
+      "correct_answer": "0",
+      "hint": "The outer function is the operation applied **last** — here, raising to the power {n}. The inner function is what sits inside the parentheses: ${display_inner}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "You have the outer and inner functions swapped. The operation applied **last** — raising to the power {n} — is the outer function. The expression inside the parentheses, ${display_inner}$, is the inner function."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The outer function (raise to the power {n}) is right, but the inner function is the **whole** expression inside the parentheses: ${display_inner}$, not just ${a}x$. Don't drop the $+ {b}$."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "Both parts are off. The outer function is the operation done last — raising to the power {n} — and the inner function is the full expression ${display_inner}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "Outer function: raise to the power {n}. Inner function: ${display_inner}$ (everything inside the parentheses)."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Differentiate the outer function",
+      "prompt": "Apply the power rule to the outer function. Bring the exponent {n} down and reduce the power by 1. What is the new exponent, ${n} - 1$?",
+      "input_type": "numeric",
+      "correct_answer": "{new_exp}",
+      "hint": "The power rule reduces the exponent by 1: compute ${n} - 1$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == n",
+          "feedback": "That is the original exponent. The power rule **reduces** it by 1: ${n} - 1 = {new_exp}$."
+        },
+        {
+          "condition": "answer == n + 1",
+          "feedback": "The exponent goes **down** by 1, not up. ${n} - 1 = {new_exp}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "Subtract 1 from the exponent: ${n} - 1 = {new_exp}$."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Differentiate the inner function",
+      "prompt": "Now differentiate the inner function ${display_inner}$ with respect to $x$. What is its derivative?",
+      "input_type": "numeric",
+      "correct_answer": "{a}",
+      "hint": "The derivative of ${a}x$ is the coefficient {a}, and the derivative of the constant ${b}$ is 0. So $\\frac{d}{dx}[{display_inner}] = {a}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == b",
+          "feedback": "${b}$ is the constant term, and the derivative of a constant is 0. The derivative of ${display_inner}$ is the coefficient of $x$, which is {a}."
+        },
+        {
+          "condition": "answer == 0",
+          "feedback": "Only the constant ${b}$ differentiates to 0. The ${a}x$ term differentiates to its coefficient, so the derivative of ${display_inner}$ is {a}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The derivative of ${display_inner}$ is the coefficient of $x$: ${a}$. (The constant ${b}$ contributes 0.)"
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Multiply to get the coefficient",
+      "prompt": "The chain rule multiplies the outer derivative by the inner derivative. Multiply the exponent you brought down ({n}) by the inner derivative ({a}). What is ${n} \\times {a}$?",
+      "input_type": "numeric",
+      "correct_answer": "{coeff}",
+      "hint": "Multiply the two rates together: ${n} \\times {a}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == n + a",
+          "feedback": "The chain rule **multiplies** the two rates, it does not add them. ${n} \\times {a} = {coeff}$."
+        },
+        {
+          "condition": "answer == n",
+          "feedback": "That is just the exponent {n}. You still need to multiply it by the inner derivative {a}: ${n} \\times {a} = {coeff}$."
+        },
+        {
+          "condition": "answer == a",
+          "feedback": "That is just the inner derivative {a}. You still need to multiply it by the exponent {n}: ${n} \\times {a} = {coeff}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the exponent by the inner derivative: ${n} \\times {a} = {coeff}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Write the complete derivative",
+      "prompt": "Combine everything: the coefficient is {coeff}, the inner expression ${display_inner}$ stays inside the parentheses, and the new exponent is {new_exp}. Write the complete derivative $f'(x)$.",
+      "input_type": "expression",
+      "correct_answer": "{display_derivative}",
+      "strict_form": {
+        "type": "exact_form",
+        "rejection_feedback": "Write the exact answer with no decimal approximations. Express it as $f'(x) = {display_derivative}$."
+      },
+      "hint": "Put the coefficient {coeff} in front of the parentheses, keep ${display_inner}$ inside, and raise it to the new exponent {new_exp}: $f'(x) = {display_derivative}$.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Combine the pieces from the previous steps: coefficient {coeff}, inner expression ${display_inner}$, new exponent {new_exp}. So $f'(x) = {display_derivative}$."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Check your understanding",
+      "prompt": "Why does the chain rule multiply by the derivative of the inner function (the factor of {a})?",
+      "input_type": "multiple_choice",
+      "options": [
+        "A nudge in $x$ changes the inner value ${display_inner}$ at rate {a}, and that rate compounds with the outer function's rate — so the two rates multiply together.",
+        "Because you must always multiply a derivative by the constant term inside the parentheses.",
+        "Because multiplying by {a} cancels the exponent {n}."
+      ],
+      "correct_answer": "0",
+      "hint": "Think of the composition as two stages of change. How does a small change in $x$ ripple through the inner function and then the outer function?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "It is not the constant term — the derivative of ${display_inner}$ is {a}, the coefficient of $x$ (the constant ${b}$ contributes 0). We multiply by that rate because the inner and outer rates of change compound."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Nothing gets cancelled — the exponent {n} still appears (reduced by 1) in the answer. We multiply by {a} because a change in $x$ moves the inner function at rate {a}, and that compounds with the outer function's rate of change."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct answer is the first option: a change in $x$ moves the inner function ${display_inner}$ at rate {a}, and the chain rule multiplies that rate by the outer function's rate of change."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You differentiated $f(x) = {display_original}$ with the chain rule to get $f'(x) = {display_derivative}$. The steps: bring the exponent {n} down and reduce it to {new_exp}, differentiate the inner function ${display_inner}$ to get {a}, then multiply the rates ({n} × {a} = {coeff}). Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
