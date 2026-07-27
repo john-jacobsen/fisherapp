@@ -27,6 +27,15 @@ from app.services.walkthrough_generators.calc_deriv_power import generate as cal
 from app.services.walkthrough_generators.linalg_row_reduce import generate as rr_generate
 from app.services.walkthrough_generators.prob_bayes import generate as bayes_generate
 from app.services.walkthrough_generators.stat_ci_z import generate as stat_ci_z_generate
+# FIXES-16 Item 10 pilot batch
+from app.services.walkthrough_generators.frac_add_unlike import generate as frac_add_unlike_generate
+from app.services.walkthrough_generators.eq_two_step import generate as eq_two_step_generate
+from app.services.walkthrough_generators.exp_product import generate as exp_product_generate
+from app.services.walkthrough_generators.log_definition import generate as log_definition_generate
+from app.services.walkthrough_generators.alg_factoring_quad import generate as alg_factoring_quad_generate
+from app.services.walkthrough_generators.calc_deriv_chain import generate as calc_deriv_chain_generate
+from app.services.walkthrough_generators.prob_conditional import generate as prob_conditional_generate
+from app.services.walkthrough_generators.stat_hyp_setup import generate as stat_hyp_setup_generate
 from app.services.walkthrough_generator import generate_walkthrough
 
 PASS = "\033[92mPASS\033[0m"
@@ -376,7 +385,9 @@ def _find_placeholders(obj, variable_keys: set) -> list:
 def test_hydration():
     print("\n[hydration — no remaining placeholders]")
 
-    for node_id in ('frac-simplify', 'eq-one-step', 'calc-deriv-power', 'linalg-row-reduce', 'prob-bayes', 'stat-ci-z'):
+    for node_id in ('frac-simplify', 'eq-one-step', 'calc-deriv-power', 'linalg-row-reduce', 'prob-bayes', 'stat-ci-z',
+                    'frac-add-unlike', 'eq-two-step', 'exp-product', 'log-definition',
+                    'alg-factoring-quad', 'calc-deriv-chain', 'prob-conditional', 'stat-hyp-setup'):
         result = generate_walkthrough(node_id)
         check(f"{node_id}: generate_walkthrough returns non-None", result is not None, True)
         if result is None:
@@ -995,6 +1006,109 @@ def test_mc_shuffle_reorders_options_consistently():
           True)
 
 
+# ── FIXES-16 Item 10 pilot batch: generator invariants (30 runs each) ─────────
+
+def test_frac_add_unlike_generator():
+    print("\n[frac-add-unlike generator — 30 runs]")
+    from math import gcd as _gcd, lcm as _lcm
+    for i in range(30):
+        v = frac_add_unlike_generate()
+        check(f"Run {i+1}: b != d", v['b'] != v['d'], True)
+        check(f"Run {i+1}: lcd == lcm(b,d)", v['lcd'], _lcm(v['b'], v['d']))
+        check(f"Run {i+1}: n1 == a*m1", v['n1'], v['a'] * v['m1'])
+        check(f"Run {i+1}: n2 == c*m2", v['n2'], v['c'] * v['m2'])
+        total = v['n1'] + v['n2'] if v['op'] == '+' else v['n1'] - v['n2']
+        check(f"Run {i+1}: total consistent with op", v['total'], total)
+        check(f"Run {i+1}: total > 0", v['total'] > 0, True)
+        check(f"Run {i+1}: simplified fraction reduced", _gcd(v['simp_num'], v['simp_den']), 1)
+        check(f"Run {i+1}: simp_den > 1 (not an integer)", v['simp_den'] > 1, True)
+
+
+def test_eq_two_step_generator():
+    print("\n[eq-two-step generator — 30 runs]")
+    for i in range(30):
+        v = eq_two_step_generate()
+        check(f"Run {i+1}: c == a*solution + b", v['c'], v['a'] * v['solution'] + v['b'])
+        check(f"Run {i+1}: c_minus_b == c - b", v['c_minus_b'], v['c'] - v['b'])
+        check(f"Run {i+1}: a in [2,9]", 2 <= v['a'] <= 9, True)
+        check(f"Run {i+1}: solution != 0", v['solution'] != 0, True)
+
+
+def test_exp_product_generator():
+    print("\n[exp-product generator — 30 runs]")
+    for i in range(30):
+        v = exp_product_generate()
+        check(f"Run {i+1}: new_coeff == a*b", v['new_coeff'], v['a'] * v['b'])
+        check(f"Run {i+1}: new_exp == m+n", v['new_exp'], v['m'] + v['n'])
+        check(f"Run {i+1}: new_exp >= 2 (no ^1/^0)", v['new_exp'] >= 2, True)
+        check(f"Run {i+1}: display_answer has no decimal point", '.' not in v['display_answer'], True)
+
+
+def test_log_definition_generator():
+    print("\n[log-definition generator — 30 runs]")
+    for i in range(30):
+        v = log_definition_generate()
+        for tag in ('a', 'b', 'c'):
+            check(f"Run {i+1}: val_{tag} == base_{tag}**exp_{tag}",
+                  v[f'val_{tag}'], v[f'base_{tag}'] ** v[f'exp_{tag}'])
+
+
+def test_alg_factoring_quad_generator():
+    print("\n[alg-factoring-quad generator — 30 runs]")
+    for i in range(30):
+        v = alg_factoring_quad_generate()
+        check(f"Run {i+1}: b == p+q", v['b'], v['p'] + v['q'])
+        check(f"Run {i+1}: c == p*q", v['c'], v['p'] * v['q'])
+
+
+def test_alg_factoring_quad_factored_form():
+    print("\n[alg-factoring-quad: factored answer passes factored_form + SymPy-equivalent]")
+    for i in range(15):
+        v = alg_factoring_quad_generate()
+        ok, _ = sf("factored_form", v['factored'])
+        check(f"Run {i+1}: {v['factored']!r} passes factored_form", ok, True)
+        # factored form must equal the expanded quadratic
+        check(f"Run {i+1}: factored == quadratic (symbolic)",
+              _check_answer(v['factored'], f"x^2 + {v['b']}*x + {v['c']}", "expression"), True)
+
+
+def test_calc_deriv_chain_generator():
+    print("\n[calc-deriv-chain generator — 30 runs]")
+    for i in range(30):
+        v = calc_deriv_chain_generate()
+        check(f"Run {i+1}: coeff == n*a", v['coeff'], v['n'] * v['a'])
+        check(f"Run {i+1}: new_exp == n-1", v['new_exp'], v['n'] - 1)
+        check(f"Run {i+1}: coeff >= 4 (no 1· artifact)", v['coeff'] >= 4, True)
+
+
+def test_prob_conditional_generator():
+    print("\n[prob-conditional generator — 30 runs]")
+    from math import gcd as _gcd
+    for i in range(30):
+        v = prob_conditional_generate()
+        check(f"Run {i+1}: count_B == both + dog_only", v['count_B'], v['both'] + v['dog_only'])
+        check(f"Run {i+1}: conditional fraction reduced", _gcd(v['simp_num'], v['simp_den']), 1)
+        check(f"Run {i+1}: simp_den > 1 (non-integer prob)", v['simp_den'] > 1, True)
+        check(f"Run {i+1}: all table cells positive",
+              min(v['both'], v['dog_only'], v['sport_only'], v['neither']) > 0, True)
+
+
+def test_stat_hyp_setup_generator():
+    print("\n[stat-hyp-setup generator — 30 runs, all directions]")
+    dirs = set()
+    for i in range(30):
+        v = stat_hyp_setup_generate()
+        dirs.add(v['direction'])
+        check(f"Run {i+1}: ha_index in {{0,1,2}}", v['ha_index'] in (0, 1, 2), True)
+        check(f"Run {i+1}: tail_index in {{0,1,2}}", v['tail_index'] in (0, 1, 2), True)
+        # direction ↔ symbol ↔ tail consistency
+        expected = {'greater': ('>', 1), 'less': ('<', 0), 'different': ('\\neq', 2)}
+        sym, tail = expected[v['direction']]
+        check(f"Run {i+1}: ha_symbol matches direction", v['ha_symbol'], sym)
+        check(f"Run {i+1}: tail_index matches direction", v['tail_index'], tail)
+    check("all three directions appear across 30 runs", dirs, {'greater', 'less', 'different'})
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -1029,6 +1143,17 @@ if __name__ == "__main__":
     test_prob_bayes_check_steps()
     test_stat_ci_z_generator()
     test_stat_ci_z_check_steps()
+
+    # FIXES-16 Item 10 pilot batch
+    test_frac_add_unlike_generator()
+    test_eq_two_step_generator()
+    test_exp_product_generator()
+    test_log_definition_generator()
+    test_alg_factoring_quad_generator()
+    test_alg_factoring_quad_factored_form()
+    test_calc_deriv_chain_generator()
+    test_prob_conditional_generator()
+    test_stat_hyp_setup_generator()
 
     print()
     if _failures:
