@@ -1,0 +1,205 @@
+{
+  "node_id": "stat-hyp-setup",
+  "title": "Setting Up a Hypothesis Test",
+
+  "intro": {
+    "body": "A **hypothesis test** is a structured way to decide whether sample data give convincing evidence for a claim about a population. Before touching any numbers, you have to set the test up correctly — and almost all of the reasoning happens here.\n\nEvery test starts from two competing statements about a **population parameter** (here, the population mean $\\mu$):\n\n- The **null hypothesis** $H_0$ is the 'status quo' or 'no effect' position. It **always** contains an equality: $H_0: \\mu = \\mu_0$, where $\\mu_0$ is the specific hypothesized value. We *assume $H_0$ is true* to start, and only abandon it if the data are surprising enough.\n- The **alternative hypothesis** $H_a$ is the research claim — what we suspect is really going on. Its direction comes from the **wording** of the claim:\n  - claim says the mean is **greater** → $H_a: \\mu > \\mu_0$ (right-tailed)\n  - claim says the mean is **less** → $H_a: \\mu < \\mu_0$ (left-tailed)\n  - claim says the mean is merely **different** → $H_a: \\mu \\neq \\mu_0$ (two-tailed)\n\n**One-tailed vs. two-tailed:** if $H_a$ points in a single direction ($<$ or $>$), the test is **one-tailed**. If $H_a$ only says 'not equal' ($\\neq$), evidence in *either* direction counts, so the test is **two-tailed**.\n\n**Why does $H_0$ always get the equality?** Because we need a single, definite value to build the test around — a probability model we can compute with. 'The mean is exactly $\\mu_0$' is a precise, testable anchor; 'the mean is bigger than $\\mu_0$' is not a single value. So equality lives in $H_0$, and the inequality we hope to demonstrate lives in $H_a$.\n\n**Worked example:** A maker claims its light bulbs last **longer** than 1000 hours. Parameter: $\\mu$ = mean bulb life. Hypothesized value: $\\mu_0 = 1000$. Since 'longer' means greater, $H_0: \\mu = 1000$ versus $H_a: \\mu > 1000$ — a one-tailed (right-tailed) test.",
+    "key_formula": "H_0: \\mu = \\mu_0 \\quad \\text{versus} \\quad H_a: \\mu > \\mu_0,\\ \\ \\mu < \\mu_0,\\ \\text{or}\\ \\mu \\neq \\mu_0"
+  },
+
+  "problem_generator": {
+    "description": "Set up H0/Ha for a one-sample mean test from a worded claim. The scenario direction (greater/less/different) is randomized, which changes the correct Ha symbol, the Ha correct-option index, and the tail type. mu0 is a whole number.",
+    "params": {
+      "context": { "type": "choice", "values": ["battery life", "commute time", "sodium", "corn yield", "wait time"] },
+      "direction": { "type": "choice", "values": ["greater", "less", "different"] },
+      "mu0": { "type": "random_int", "min": 8, "max": 220 }
+    },
+    "derived": {
+      "claim_verb": "greater->'exceeds', less->'is less than', different->'differs from'",
+      "ha_symbol": "greater->'>', less->'<', different->'\\neq'",
+      "ha_index": "index of the correct Ha option: greater->0, less->1, different->2",
+      "ha_words": "greater->'greater than', less->'less than', different->'different from'",
+      "tail_index": "correct tail option index: left->0, right->1, two-tailed->2 (greater->1, less->0, different->2)",
+      "tail_full": "greater->'one-tailed (right-tailed)', less->'one-tailed (left-tailed)', different->'two-tailed'",
+      "scenario": "worded problem sentence built from the context, claim_verb, mu0 and unit"
+    },
+    "display_problem": "{scenario}"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Identify the parameter of interest",
+      "prompt": "{scenario}\n\nA hypothesis test is a statement about a population parameter. Which parameter is this claim about?",
+      "input_type": "multiple_choice",
+      "options": [
+        "The population mean $\\mu$",
+        "The sample mean $\\bar{x}$",
+        "The population proportion $p$",
+        "The population standard deviation $\\sigma$"
+      ],
+      "correct_answer": "0",
+      "hint": "The claim is about the *average* {noun}. An average of a numeric measurement is a mean — and hypotheses are always written about the unknown POPULATION value, not a sample.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "$\\bar{x}$ is the SAMPLE mean — the number you compute from data. Hypotheses are always stated about the unknown POPULATION parameter we're trying to learn about: the population mean $\\mu$."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "A proportion $p$ describes categorical (yes/no) data. Here the claim is about the average {noun}, a quantitative measurement — so the parameter is the population mean $\\mu$."
+        },
+        {
+          "condition": "answer == 3",
+          "feedback": "$\\sigma$ measures spread (variability). This claim is about the *center* — the average {noun} — so the parameter is the population mean $\\mu$."
+        },
+        {
+          "condition": "default",
+          "feedback": "The claim concerns the average (mean) {noun}, so the parameter of interest is the population mean $\\mu$."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Identify the hypothesized value μ₀",
+      "prompt": "The null hypothesis compares $\\mu$ to a specific number $\\mu_0$ named in the claim. What is $\\mu_0$ (in {unit})?",
+      "input_type": "numeric",
+      "correct_answer": "{mu0}",
+      "hint": "$\\mu_0$ is the single benchmark value the claim measures against — the number that appears right after the comparison in the wording.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "$\\mu_0$ is the specific value the claim compares the mean against: {mu0} {unit}."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "State the null hypothesis H₀",
+      "prompt": "Write the null hypothesis. Remember: $H_0$ is the 'no change' baseline we assume true to start. Which statement is the correct $H_0$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "$H_0: \\mu = {mu0}$",
+        "$H_0: \\mu {ha_symbol} {mu0}$",
+        "$H_0: \\bar{x} = {mu0}$"
+      ],
+      "correct_answer": "0",
+      "hint": "$H_0$ must contain an EQUALITY with the hypothesized value, and it must be about the population parameter $\\mu$ (not the sample mean $\\bar{x}$).",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "That puts the inequality in $H_0$. The inequality is what we're trying to *demonstrate*, so it belongs in $H_a$. The null is always the equality baseline: $H_0: \\mu = {mu0}$."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Hypotheses are about the POPULATION mean $\\mu$, not the sample mean $\\bar{x}$ (which is just the number we compute from data). The correct null is $H_0: \\mu = {mu0}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "$H_0$ always states equality with the hypothesized value: $H_0: \\mu = {mu0}$."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "State the alternative hypothesis Hₐ",
+      "prompt": "The claim says the mean {noun} is {ha_words} {mu0} {unit}. Translate that claim into the alternative hypothesis $H_a$.",
+      "input_type": "multiple_choice",
+      "options": [
+        "$H_a: \\mu > {mu0}$",
+        "$H_a: \\mu < {mu0}$",
+        "$H_a: \\mu \\neq {mu0}$",
+        "$H_a: \\mu = {mu0}$"
+      ],
+      "correct_answer": "{ha_index}",
+      "hint": "Match the wording to a symbol: 'greater' → $>$, 'less' → $<$, 'different' → $\\neq$. The claim here says the mean is {ha_words} {mu0}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 3",
+          "feedback": "Equality never goes in $H_a$ — it's the null's job. $H_a$ carries the direction of the claim. Here the claim says {ha_words} {mu0}, so $H_a: \\mu {ha_symbol} {mu0}$."
+        },
+        {
+          "condition": "answer == 2 and ha_index != 2",
+          "feedback": "$\\mu \\neq {mu0}$ is a two-tailed alternative, but this claim points in ONE direction: {ha_words} {mu0}. The correct alternative is $H_a: \\mu {ha_symbol} {mu0}$."
+        },
+        {
+          "condition": "answer == 0 and ha_index != 0",
+          "feedback": "$\\mu > {mu0}$ says the mean is greater, but the claim says the mean is {ha_words} {mu0}. The correct alternative is $H_a: \\mu {ha_symbol} {mu0}$."
+        },
+        {
+          "condition": "answer == 1 and ha_index != 1",
+          "feedback": "$\\mu < {mu0}$ says the mean is smaller, but the claim says the mean is {ha_words} {mu0}. The correct alternative is $H_a: \\mu {ha_symbol} {mu0}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "The claim says the mean is {ha_words} {mu0}, so $H_a: \\mu {ha_symbol} {mu0}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "One-tailed or two-tailed?",
+      "prompt": "You have $H_a: \\mu {ha_symbol} {mu0}$. Is this a one-tailed or a two-tailed test?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Left-tailed (one-tailed)",
+        "Right-tailed (one-tailed)",
+        "Two-tailed"
+      ],
+      "correct_answer": "{tail_index}",
+      "hint": "If $H_a$ points one way ($<$ is left-tailed, $>$ is right-tailed) the test is one-tailed. If $H_a$ is $\\neq$, evidence in either direction counts and the test is two-tailed.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 2 and tail_index != 2",
+          "feedback": "A two-tailed test pairs with $H_a: \\mu \\neq {mu0}$. Here $H_a: \\mu {ha_symbol} {mu0}$ points in a single direction, so the test is {tail_full}."
+        },
+        {
+          "condition": "answer == 0 and tail_index != 0",
+          "feedback": "Left-tailed pairs with $H_a: \\mu < {mu0}$. Here $H_a: \\mu {ha_symbol} {mu0}$, so the test is {tail_full}."
+        },
+        {
+          "condition": "answer == 1 and tail_index != 1",
+          "feedback": "Right-tailed pairs with $H_a: \\mu > {mu0}$. Here $H_a: \\mu {ha_symbol} {mu0}$, so the test is {tail_full}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Because $H_a: \\mu {ha_symbol} {mu0}$, the test is {tail_full}."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Check your understanding",
+      "prompt": "Why does the null hypothesis $H_0$ always contain an equality (and why do we assume it true to begin with)?",
+      "input_type": "multiple_choice",
+      "options": [
+        "$H_0$ is the status-quo claim we hold until the data give strong evidence against it, and its equality gives one definite value $\\mu_0$ to build a probability model around.",
+        "$H_0$ should contain the inequality, because the inequality is exactly the thing we are trying to prove.",
+        "It is an arbitrary convention; $H_0$ and $H_a$ could be swapped with no effect on the test."
+      ],
+      "correct_answer": "0",
+      "hint": "To compute how surprising the data are, we need a single, exact value of $\\mu$ to compute with. Which of the two hypotheses supplies that?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The inequality is what we hope to *demonstrate*, so it goes in $H_a$, not $H_0$. $H_0$ needs the equality because a single definite value $\\mu = \\mu_0$ is what lets us compute how likely the observed data would be."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "It's not arbitrary. $H_0$ must be the equality: assuming '$\\mu$ is exactly $\\mu_0$' gives a precise model we can compute probabilities under. '$\\mu$ is bigger/smaller/different' isn't a single value, so it can't anchor the test — it lives in $H_a$."
+        },
+        {
+          "condition": "default",
+          "feedback": "$H_0$ is the status-quo equality we assume true to start; its single definite value $\\mu_0$ is what makes the test computable. The inequality we hope to show goes in $H_a$."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You set up the test from the claim that the mean {noun} is {ha_words} {mu0} {unit}: parameter $\\mu$, hypothesized value $\\mu_0 = {mu0}$, then $H_0: \\mu = {mu0}$ versus $H_a: \\mu {ha_symbol} {mu0}$ — a {tail_full} test. Remember: equality always anchors $H_0$ (the value we assume true and test against), and the direction of $H_a$ comes straight from the wording of the claim. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
