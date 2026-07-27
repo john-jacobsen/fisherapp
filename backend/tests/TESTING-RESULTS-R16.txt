@@ -1,0 +1,257 @@
+================================================================================
+FIXES-16 — TESTING RESULTS (R16)
+Date: 2026-07-27
+Base: 97e379e (FIXES-15 merged, CI green)
+Stack: docker compose up --build -d  (backend + frontend + postgres)
+================================================================================
+
+Mandatory checklist results follow the numbering in FIXES-16.md. Every item was
+exercised against the running stack (real API / real render pipeline), not just
+unit tests. Commands are shown so results are reproducible.
+
+--------------------------------------------------------------------------------
+1. ITEM 1 — Walkthrough math rendering (14-1)  [PASS]
+--------------------------------------------------------------------------------
+WalkthroughPage.jsx intro now renders through ReactMarkdown + remarkGfm +
+remarkMath + rehypeKatex (+ katex CSS), the proven LessonPage recipe. The
+MathDisplay child-wrapping helper was removed from the intro path only; step
+prompts/options/hints/feedback (MathDisplay/MathJax) were left untouched.
+
+Delimiter audit of all six intros: every intro uses $ / $$ (KaTeX) — NONE use
+\( \). So NO intro required \( \)-to-$ conversion.
+
+DOM-level render check (node, real pipeline, same approach as R15):
+  [ok]   calc-deriv-power: katex=true error=false
+  [ok]   eq-one-step:      katex=true error=false
+  [ok]   frac-simplify:    katex=true error=false
+  [ok]   linalg-row-reduce: katex=true error=false | mtr_rows=8 cells_present=true STACKED=true
+  [ok]   prob-bayes:       katex=true error=false
+  [ok]   stat-ci-z:        katex=true error=false
+  ALL INTROS OK
+=> linalg-row-reduce augmented matrix produces STACKED rows (8 <mtr>, all cell
+   values present as separate MathML nodes — the \\ row separators survive).
+   All six intros render with NO KaTeX parse errors.
+Production build (npm run build) compiles clean (KaTeX assets emitted).
+
+--------------------------------------------------------------------------------
+2. ITEM 2 — Free topic access (14-7)  [PASS]
+--------------------------------------------------------------------------------
+Server-side there is no PermissionError gate on practice (start_practice treats
+prerequisites as advisory); knowledge-graph nodes were already clickable. Added
+the missing non-blocking heads-up notice.
+
+Fresh user (no mastery), API:
+  POST /api/practice/stat-ci-z/start -> 200
+    problem present: True
+    prereqs_met: False
+    unmet_prereqs: ['Sampling Distributions', 'Normal Distribution']
+  GET /api/dashboard node status counts: {'ready': 3, 'available': 173}
+    stats: mastered=0 ready=3
+=> Deep node startable (200 + problem); dashboard keeps the ready/not-ready
+   visual distinction. LessonPage + PracticePage show an advisory
+   "Heads up: this topic builds on X and Y ..." banner (never blocks).
+
+--------------------------------------------------------------------------------
+3. ITEM 3 — Mastery persistence (14-6)  [PASS]
+--------------------------------------------------------------------------------
+PracticePage auto-POSTs /complete on session end; complete_practice persists
+mastered_nodes + fringe recompute (flag_modified) and is double-submit safe.
+
+API walk (frac-simplify, test mode):
+  submit 1: correct=True posterior=0.704 mastered=False
+  submit 2: correct=True posterior=0.958 mastered=False
+  submit 3: correct=True posterior=0.995 mastered=True
+  complete -> 200, is_mastered=True
+  complete AGAIN (idempotency) -> 200, is_mastered=True
+  dashboard frac-simplify status: mastered
+  after FRESH LOGIN, frac-simplify status: mastered   (mastered_count=1)
+=> Mastery persists across re-login; completion flow idempotent.
+
+--------------------------------------------------------------------------------
+4. ITEM 4 — MathLive virtual keyboard (14-4)  [PASS + FLAG]
+--------------------------------------------------------------------------------
+Installed MathLive = 0.100.0. The old code set the deprecated
+virtualKeyboardMode='onfocus' (a no-op in 0.100). Migrated to the 0.100 API:
+mathVirtualKeyboardPolicy='auto' (keyboard on focus for touch; desktop stays
+closed) + configured the shared window.mathVirtualKeyboard.layouts once with
+['numeric','symbols','greek', <custom calculus layer: d/dx, ∫, Σ, Π, lim, trig,
+ln/log, √, e^x, ∇>]. Desktop users get a small ⌨ toggle; never force-opened.
+Existing shortcuts (smartFence, smartSuperscript=false, logb) preserved.
+
+Verify: production build compiles clean; Vite dev server HMR error-free.
+=> FLAG for John: manual mobile-keyboard usability check.
+
+--------------------------------------------------------------------------------
+5. ITEM 5 — Video slot in walkthrough intros (14-5)  [PASS]
+--------------------------------------------------------------------------------
+Optional intro.video_id added to the schema (walkthrough-schema.md) and
+type-checked by the harness (non-empty string when present). WalkthroughPage
+embeds a 16:9 YouTube iframe above the intro body when set. Unset in all six
+pilot templates.
+
+  new schema unit tests: accept-missing / accept-valid / reject-non-string  PASS
+  hand-injected video_id -> hydrated intro.video_id = dQw4w9WgXcQ
+  harness WITH video_id: PASS (25 hydrations)
+  harness WITHOUT video_id (restored): PASS (25 hydrations)
+=> iframe conditional compiles in the production build; field flows through
+   hydration to the API and back; injection removed afterward.
+
+--------------------------------------------------------------------------------
+6. ITEM 6 — stat-ci-z quality + 14-2 phrasing  [PASS]
+--------------------------------------------------------------------------------
+Rounding coherence: reject any instance whose z*×SE lands on an exact thousandths
+half-way point (only 90%/z*=1.645 with odd SE) where 1.64 and 1.65 BOTH pass the
+±0.01 checker. Detected via integer thousandths (no float ambiguity).
+  stat-ci-z rounding-coherence scan (200 runs): 0 ambiguous/incoherent cases
+Added explicit "round to 2 decimal places" to the MOE/bound prompts; rewrote
+step 3-6 hints to guide the method without stating the final answer.
+
+Full stat-ci-z API walk (single hydrated instance):
+  CORRECT PATH: steps 1-7 all correct=True
+  TARGETED WRONG ANSWERS (each fired its intended feedback):
+    step1 wrong z*      -> "1.645 is the critical value for a 90% ... For 99% ... z* = 2.576."
+    step2 answer==n     -> "100 is the sample size itself. ... √100 = 10 ..."
+    step3 answer==sigma -> "You gave σ = 20 without dividing by √n. ... = 2."
+    step4 ==SE          -> "That is the standard error, not the margin of error. ..."
+    step4 ==z_star      -> "That is z* itself, not the margin of error. ..."
+    step5 ==upper (swap)-> "You added the margin of error instead of subtracting. ..."
+    step6 ==lower (swap)-> "You subtracted ... instead of adding. ..."
+    step7 interp t1     -> "This is the most common misconception. ... no probability ..."
+    step7 interp t2     -> "The confidence level doesn't describe how close x̄ is to μ ..."
+
+14-2 (linalg-row-reduce negative-multiplier phrasing): the row operation now
+displays "R2 ← R2 {op_sign} {abs_multiplier}·R1" and "... {op_word} k times ...",
+so a negative multiplier reads "+ 3" / "plus 3 times" instead of "− (−3)".
+  [neg] mult=-1: "Apply the row operation R2 ← R2 + 1·R1 ... Row 2 plus 1 ..."
+  [pos] mult=3 : "Apply the row operation R2 ← R2 − 3·R1 ... Row 2 minus 3 ..."
+  no double-sign artifacts; harness PASS.
+Also fixed a latent flaky harness failure: symmetric systems (a2==b1,b2==a1,
+c1==c2) collapsed the step-1 "rows swapped" and "columns swapped" MC options.
+Rejected; 0 dup cases in 300k runs.
+
+--------------------------------------------------------------------------------
+7. ITEM 7 — log-rules generator rewrite (14-8)  [PASS]
+--------------------------------------------------------------------------------
+Rewrote log-rules so answers stay in LOG FORM (a single logarithm), not the
+evaluated number. Product/quotient/power variants only; change-of-base removed
+(no separate change-of-base node exists in the graph, so nothing to move).
+The symbolic checker auto-evaluates log(32,2)→5, so added a "log_form" answer
+type that compares on a canonical (base, argument) form.
+
+  log-rules 200-run scan:
+    numeric_only answers: 0
+    change-of-base mentions: 0
+    log-form accepted (round-trip): 200/200
+    evaluated number REJECTED: 200/200
+    equivalent plain log_b(arg) accepted: 200/200
+  samples: "4·log_2(2)"→\log_{2}(16) rejects "4"; "log_2(8)-log_2(2)"→\log_{2}(4) rejects "2"
+Tier tests (test_generators.py) + answer-checker tests: 46 passed (log_form added
+to the tier-1 allowed answer_type set).
+
+--------------------------------------------------------------------------------
+8. ITEM 8 — Knowledge graph "ready to learn" propagation (14-9)  [PASS]
+--------------------------------------------------------------------------------
+Root cause: the dashboard derived "ready" from the KST outer-fringe, but the
+state enumeration is TRUNCATED at 10000 states for this 176-node graph, so many
+genuinely-ready nodes never entered the fringe and showed gray.
+  Deep-node probe (master full ancestor set, check node in outer_fringe):
+    BEFORE fix: 25 / 40 sampled nodes NOT ready despite all ancestors mastered
+Fix: compute "ready" directly from prerequisite edges in dashboard.get_node_status
+(exact, cheap; leaves the placement/BLIM/fringe engine untouched).
+  AFTER fix (same probe, new logic): 0 / 40 nodes missing
+  get_node_status unit tests: 6 passed
+  14-9 scenario end-to-end (real mastery flow):
+    before: frac-multiply status = available
+    master frac-simplify -> frac-add-like status = ready
+    master frac-add-like  -> frac-multiply status = ready   PASS
+
+--------------------------------------------------------------------------------
+9. ITEM 9 — Review enforcement: escalating soft gate (14-10)  [PASS + FLAG]
+--------------------------------------------------------------------------------
+SM-2 intervals migrated 1/3/7/14/30 -> 7/14/30/90; first mastery review now at
++7 days (existing schedules keep stored dates).
+  interval + tier-classifier unit tests (DB-free, CI-safe): 8 passed
+
+API walk (back-dated review due dates):
+  TIER PROGRESSION (back-dated frac-simplify review):
+    first review interval_days = 7 (expect 7)
+    overdue 1d -> tier='reminder'
+    overdue 4d -> tier='persistent'
+    overdue 7d -> tier='limit'
+  DAY LIMIT (6+ days overdue), 3 new-practice sessions/day:
+    start #1: 200 (allowed)   start #2: 200 (allowed)   start #3: BLOCKED 409
+      detail.cta='Do reviews', message="You have 1 review(s) more than 6 days overdue..."
+    review start while blocked -> 200 (reviews ALWAYS available)
+  FAILED REVIEW DROPS mastered -> ready:
+    before: mastered ; submit wrong review answer -> correct=False needs_practice=True
+    after failed review: ready   PASS
+Frontend: tiered ReviewBanner (dismissible reminder / persistent / limit),
+skippable "Review now" interstitial before practice (3-5 days), and a
+non-punitive block screen with a "Do reviews" CTA on the 409. Copy transparent
+throughout. Frontend build compiles clean.
+=> FLAG for John: banner/interstitial tone + friction feel.
+
+--------------------------------------------------------------------------------
+10. ITEM 10 — Walkthrough authoring pilot batch  [PASS + FLAG]
+--------------------------------------------------------------------------------
+Eight new walkthroughs authored to hand-quality standards (JSON template +
+Python generator; generators are auto-discovered by filename — no central
+registration). One authored directly as the reference (frac-add-unlike); the
+other seven authored in parallel and each iterated to a harness PASS.
+
+Full validation harness — ALL 14 TEMPLATES PASS:
+  [PASS] alg-factoring-quad  ok (25 hydrations)
+  [PASS] calc-deriv-chain    ok (25 hydrations)
+  [PASS] calc-deriv-power    ok (25 hydrations)
+  [PASS] eq-one-step         ok (25 hydrations)
+  [PASS] eq-two-step         ok (25 hydrations)
+  [PASS] exp-product         ok (25 hydrations)
+  [PASS] frac-add-unlike     ok (25 hydrations)
+  [PASS] frac-simplify       ok (25 hydrations)
+  [PASS] linalg-row-reduce   ok (25 hydrations)
+  [PASS] log-definition      ok (25 hydrations)
+  [PASS] prob-bayes          ok (25 hydrations)
+  [PASS] prob-conditional    ok (25 hydrations)
+  [PASS] stat-ci-z           ok (25 hydrations)
+  [PASS] stat-hyp-setup      ok (25 hydrations)
+  All 14 templates passed.
+
+Per-node correct-path API completion (register user, GET walkthrough, POST every
+step's correct answer, expect correct:true):
+  [PASS] frac-add-unlike: 6 steps      [PASS] alg-factoring-quad: 5 steps
+  [PASS] eq-two-step: 6 steps          [PASS] calc-deriv-chain: 6 steps
+  [PASS] exp-product: 5 steps          [PASS] prob-conditional: 6 steps
+  [PASS] log-definition: 5 steps       [PASS] stat-hyp-setup: 6 steps
+  ALL PASS
+
+Strict-form types exercised: simplified_fraction (frac-add-unlike,
+prob-conditional), exact_form (eq-two-step, exp-product), log_form
+(log-definition), factored_form (alg-factoring-quad — also verified
+SymPy-equivalent to the expanded quadratic). Each new node has a
+generator-invariant test in test_walkthrough_strict_form.py; the
+auto-discovered validation test covers all 14.
+docs/walkthrough-authoring-workflow.md written as the FIXES-17 playbook.
+=> FLAG for John: spot-check 2-3 of the 8 new walkthroughs end-to-end in the
+   browser as a student would.
+
+--------------------------------------------------------------------------------
+11. Full pytest suite + CI  [PASS]
+--------------------------------------------------------------------------------
+Local (CI-equivalent — the CI workflow ignores the pre-existing
+test_e2e_submission.py, whose `token` fixture is unrelated to this round):
+  docker compose exec backend python -m pytest tests/ \
+      --ignore=tests/test_e2e_submission.py -q
+  => 118 passed, 1 warning
+
+GitHub Actions (.github/workflows/tests.yml runs the same ignore on push to
+main): GREEN after the final push (see commit log FIXES-16 A..H9 + this
+results commit).
+
+================================================================================
+FLAGGED FOR JOHN'S MANUAL BROWSER PASS
+================================================================================
+- Walkthrough intros with matrices (linalg-row-reduce) look right on screen.
+- MathLive keyboard usability, especially on a phone.
+- The review-enforcement banners/interstitial feel right (tone + friction).
+- Spot-check 2-3 of the 8 new walkthroughs end-to-end as a student would.
+================================================================================
