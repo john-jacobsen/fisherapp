@@ -1,0 +1,162 @@
+{
+  "node_id": "frac-add-unlike",
+  "title": "Adding and Subtracting Fractions with Unlike Denominators",
+
+  "intro": {
+    "body": "You can only add or subtract fractions when they describe **pieces of the same size** — that is, when they share the same denominator. $\\frac{1}{2}$ and $\\frac{1}{3}$ are different-size pieces, so you can't just add the numerators.\n\nThe fix is to rewrite both fractions over a **common denominator**. The most convenient choice is the **least common denominator (LCD)** — the least common multiple of the two denominators.\n\n**The method:**\n1. Find the LCD of the two denominators.\n2. Rewrite each fraction with the LCD by multiplying its numerator and denominator by the same factor (this doesn't change the fraction's value).\n3. Add or subtract the new numerators, keeping the common denominator.\n4. Simplify the result.\n\n**Worked example:** $\\frac{1}{2} + \\frac{1}{3}$. The LCD of 2 and 3 is 6. Rewrite: $\\frac{1}{2} = \\frac{3}{6}$ and $\\frac{1}{3} = \\frac{2}{6}$. Then $\\frac{3}{6} + \\frac{2}{6} = \\frac{5}{6}$, which is already in lowest terms.",
+    "key_formula": "\\frac{a}{b} \\pm \\frac{c}{d} = \\frac{a\\,(\\text{LCD}/b) \\pm c\\,(\\text{LCD}/d)}{\\text{LCD}}"
+  },
+
+  "problem_generator": {
+    "description": "Add or subtract two proper fractions with unlike denominators in [2,9], LCD <= 40, positive result that is a genuine simplified fraction (not an integer).",
+    "params": {
+      "b": { "type": "random_int", "min": 2, "max": 9 },
+      "d": { "type": "random_int", "min": 2, "max": 9, "constraint": "d != b" },
+      "a": { "type": "random_int", "min": 1, "max": "b-1" },
+      "c": { "type": "random_int", "min": 1, "max": "d-1" },
+      "op": { "type": "choice", "values": ["+", "-"] }
+    },
+    "derived": {
+      "lcd": "lcm(b, d)",
+      "m1": "lcd // b",
+      "m2": "lcd // d",
+      "n1": "a * m1",
+      "n2": "c * m2",
+      "total": "n1 op n2 (positive)",
+      "simp_num": "total // gcd(total, lcd)",
+      "simp_den": "lcd // gcd(total, lcd)"
+    },
+    "display_problem": "Compute $\\frac{{{a}}}{{{b}}} {op} \\frac{{{c}}}{{{d}}}$, and write the answer in simplest form."
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Find the least common denominator",
+      "prompt": "To combine $\\frac{{{a}}}{{{b}}}$ and $\\frac{{{c}}}{{{d}}}$, first rewrite them over a common denominator. What is the least common denominator (LCD) of {b} and {d}?",
+      "input_type": "numeric",
+      "correct_answer": "{lcd}",
+      "hint": "The LCD is the least common multiple of {b} and {d} — the smallest number that both {b} and {d} divide into evenly.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == prod_bd and prod_bd != lcd",
+          "feedback": "{prod_bd} is the product {b} × {d}, which is a common denominator but not always the LEAST one. The least common denominator of {b} and {d} is {lcd}."
+        },
+        {
+          "condition": "answer == b or answer == d",
+          "feedback": "The LCD must be a multiple of BOTH {b} and {d}. Find the smallest number that {b} and {d} both divide into: that is {lcd}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The least common denominator of {b} and {d} is {lcd} — the smallest number both divide into evenly."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "Rewrite the first fraction",
+      "prompt": "Rewrite $\\frac{{{a}}}{{{b}}}$ with denominator {lcd}. Multiply the numerator and denominator by {m1}. What is the new numerator?",
+      "input_type": "numeric",
+      "correct_answer": "{n1}",
+      "hint": "Multiply the numerator {a} by the same factor you used on the denominator: {a} × {m1}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == a",
+          "feedback": "That is the original numerator. To rewrite $\\frac{{{a}}}{{{b}}}$ over {lcd}, multiply the numerator by {m1}: {a} × {m1} = {n1}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the numerator by {m1}: {a} × {m1} = {n1}, so $\\frac{{{a}}}{{{b}}} = \\frac{{{n1}}}{{{lcd}}}$."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Rewrite the second fraction",
+      "prompt": "Rewrite $\\frac{{{c}}}{{{d}}}$ with denominator {lcd}. Multiply the numerator and denominator by {m2}. What is the new numerator?",
+      "input_type": "numeric",
+      "correct_answer": "{n2}",
+      "hint": "Multiply the numerator {c} by {m2}: {c} × {m2}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c",
+          "feedback": "That is the original numerator. To rewrite $\\frac{{{c}}}{{{d}}}$ over {lcd}, multiply the numerator by {m2}: {c} × {m2} = {n2}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Multiply the numerator by {m2}: {c} × {m2} = {n2}, so $\\frac{{{c}}}{{{d}}} = \\frac{{{n2}}}{{{lcd}}}$."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Combine the numerators",
+      "prompt": "Now both fractions share denominator {lcd}: $\\frac{{{n1}}}{{{lcd}}} {op} \\frac{{{n2}}}{{{lcd}}}$. Combine the numerators — what is {n1} {op} {n2}?",
+      "input_type": "numeric",
+      "correct_answer": "{total}",
+      "hint": "With a common denominator you {op_word} only the numerators: {n1} {op} {n2}. Keep the denominator {lcd}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == lcd",
+          "feedback": "Don't combine the denominators — they stay as the common denominator {lcd}. Combine only the numerators: {n1} {op} {n2} = {total}."
+        },
+        {
+          "condition": "default",
+          "feedback": "Combine the numerators over the common denominator: {n1} {op} {n2} = {total}, giving $\\frac{{{total}}}{{{lcd}}}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Simplify the result",
+      "prompt": "The combined fraction is $\\frac{{{total}}}{{{lcd}}}$. Write it in simplest form.",
+      "input_type": "expression",
+      "correct_answer": "\\frac{{simp_num}}{{simp_den}}",
+      "strict_form": {
+        "type": "simplified_fraction",
+        "rejection_feedback": "That fraction is correct but not fully simplified. Divide the numerator and denominator by their greatest common factor to get $\\frac{{{simp_num}}}{{{simp_den}}}$."
+      },
+      "hint": "Divide the numerator and denominator of $\\frac{{{total}}}{{{lcd}}}$ by their greatest common factor. Write the result as a fraction.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "$\\frac{{{total}}}{{{lcd}}}$ simplifies to $\\frac{{{simp_num}}}{{{simp_den}}}$. Enter it as a fraction."
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "title": "Check your understanding",
+      "prompt": "Why do we rewrite the fractions over a common denominator before adding or subtracting?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Fractions can only be combined when they measure pieces of the same size; a common denominator makes the pieces the same size.",
+        "It makes the numbers larger, which is always more accurate.",
+        "You must always use the product of the two denominators, never a smaller one."
+      ],
+      "correct_answer": "0",
+      "hint": "Think about what a denominator tells you — the size of each piece. What has to be true before you can add pieces together?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "Larger numbers aren't more accurate — the value is unchanged. The real reason is that the pieces must be the same size: a common denominator makes $\\frac{1}{2}$ and $\\frac{1}{3}$ into sixths so they can be added."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "Any common denominator works, but the LEAST common denominator keeps the numbers smallest. The key idea is matching piece sizes: a common denominator makes the fractions describe the same-size pieces."
+        },
+        {
+          "condition": "default",
+          "feedback": "The correct answer is the first option: fractions must describe same-size pieces to be combined, and a common denominator makes the piece sizes match."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You computed $\\frac{{{a}}}{{{b}}} {op} \\frac{{{c}}}{{{d}}}$ by rewriting both over the LCD {lcd} to get $\\frac{{{n1}}}{{{lcd}}} {op} \\frac{{{n2}}}{{{lcd}}} = \\frac{{{total}}}{{{lcd}}}$, then simplifying to $\\frac{{{simp_num}}}{{{simp_den}}}$. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
