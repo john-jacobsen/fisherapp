@@ -66,7 +66,7 @@ def run_tier1(iters=10):
                     failures.append(f"{node}[{i}]: missing key '{key}'")
 
             # answer_type
-            if p.get("answer_type") not in ("numeric", "symbolic", "multiple_choice"):
+            if p.get("answer_type") not in ("numeric", "symbolic", "multiple_choice", "log_form"):
                 failures.append(f"{node}[{i}]: bad answer_type {p.get('answer_type')!r}")
 
             # difficulty

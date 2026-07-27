@@ -17,18 +17,27 @@ def get_node_status(node_id: str, student_state: StudentState | None, graph_cach
     """
     Compute status for a node given student state.
     - mastered: in mastered_nodes
-    - ready: in outer fringe (all prerequisites mastered — recommended next)
-    - available: prerequisites not yet met, but still accessible (advisory only)
-    """
-    if student_state is None:
-        # Before placement: outer-fringe nodes (no prereqs) are ready, others are available
-        relations = graph_cache.get("relations", [])
-        has_prereqs = any(target == node_id for _, target in relations)
-        return "available" if has_prereqs else "ready"
+    - ready: not mastered AND every direct prerequisite is mastered
+    - available: at least one prerequisite unmet (still accessible — advisory only)
 
-    if node_id in student_state.mastered_nodes:
+    "ready" is computed directly from the graph's prerequisite edges rather than
+    from the KST outer-fringe. The KST state enumeration is truncated at 10000
+    states for large graphs (this graph has 176 nodes), so many genuinely-ready
+    nodes never appeared in the enumerated outer_fringe and showed as gray/locked
+    despite all prerequisites being mastered (14-9). A direct prereq check is
+    exact and cheap, and does not touch the placement/BLIM fringe computation.
+    """
+    relations = graph_cache.get("relations", [])
+    prereqs = [src for src, target in relations if target == node_id]
+
+    if student_state is None:
+        # Before placement: nodes with no prerequisites are ready, others available.
+        return "ready" if not prereqs else "available"
+
+    mastered = set(student_state.mastered_nodes or [])
+    if node_id in mastered:
         return "mastered"
-    if node_id in student_state.outer_fringe:
+    if all(p in mastered for p in prereqs):
         return "ready"
     return "available"
 

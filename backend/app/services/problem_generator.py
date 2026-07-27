@@ -1092,63 +1092,62 @@ def _gen_log_definition():
 
 
 def _gen_log_rules():
-    variant = random.choice(["product", "quotient", "power", "change_of_base"])
+    """
+    Practice the log combination rules. The answer stays IN LOG FORM — a single
+    logarithm — NOT the evaluated number (that is what log-definition/evaluation
+    nodes are for). Change-of-base was removed here in FIXES-16 (14-8): it was
+    wrongly added in FIXES-10 and belongs in its own node.
+
+    answer_type is "log_form": the checker accepts any single logarithm with the
+    same base and argument (e.g. \\log_2(32), log_2(4\\cdot8), \\log_{2}(32)) and
+    REJECTS the evaluated number (5) — see answer_checker._check_log_form.
+    """
+    variant = random.choice(["product", "quotient", "power"])
     if variant == "product":
-        combos = [(2, 4, 8, 5), (3, 9, 27, 5), (2, 4, 4, 4), (2, 4, 16, 6), (2, 2, 8, 4)]
-        base, a, b, result = random.choice(combos)
+        # log_b(a) + log_b(c) = log_b(ac)
+        combos = [(2, 4, 8), (3, 9, 27), (2, 4, 16), (2, 2, 8), (5, 5, 25), (2, 8, 16)]
+        base, a, c = random.choice(combos)
+        product = a * c
         return {
-            "problem_text": f"Simplify: \\(\\log_{{{base}}}({a}) + \\log_{{{base}}}({b})\\)",
-            "correct_answer": str(result),
-            "answer_type": "numeric",
+            "problem_text": f"Write as a single logarithm (do not evaluate): \\(\\log_{{{base}}}({a}) + \\log_{{{base}}}({c})\\)",
+            "correct_answer": f"\\log_{{{base}}}({product})",
+            "answer_type": "log_form",
             "difficulty": 0.6,
             "hints": [
                 {"level": 1, "text": "Product rule: \\(\\log_b(a) + \\log_b(c) = \\log_b(ac)\\)."},
-                {"level": 2, "text": f"Combine: \\(\\log_{{{base}}}({a*b})\\). Then evaluate."},
-                {"level": 3, "text": f"\\(\\log_{{{base}}}({a*b}) = {result}\\) since \\({base}^{{{result}}} = {a*b}\\)"},
+                {"level": 2, "text": f"Multiply the arguments: \\(\\log_{{{base}}}({a} \\cdot {c})\\)."},
+                {"level": 3, "text": f"\\({a} \\cdot {c} = {product}\\), so the combined logarithm is \\(\\log_{{{base}}}({product})\\)."},
             ],
         }
     elif variant == "quotient":
-        # log_b(a) - log_b(b) = log_b(a/b) where a/b is a clean power of base
-        pairs = [(2, 16, 4, 2), (2, 32, 8, 2), (3, 27, 9, 1), (2, 8, 2, 2), (10, 1000, 10, 2)]
-        base, a, b, result = random.choice(pairs)
+        # log_b(a) - log_b(c) = log_b(a/c), with a/c an integer
+        pairs = [(2, 16, 4), (2, 32, 8), (3, 27, 9), (2, 8, 2), (10, 1000, 10), (2, 16, 2)]
+        base, a, c = random.choice(pairs)
+        quotient = a // c
         return {
-            "problem_text": f"Simplify: \\(\\log_{{{base}}}({a}) - \\log_{{{base}}}({b})\\)",
-            "correct_answer": str(result),
-            "answer_type": "numeric",
+            "problem_text": f"Write as a single logarithm (do not evaluate): \\(\\log_{{{base}}}({a}) - \\log_{{{base}}}({c})\\)",
+            "correct_answer": f"\\log_{{{base}}}({quotient})",
+            "answer_type": "log_form",
             "difficulty": 0.6,
             "hints": [
                 {"level": 1, "text": "Quotient rule: \\(\\log_b(a) - \\log_b(c) = \\log_b(a/c)\\)."},
-                {"level": 2, "text": f"Combine: \\(\\log_{{{base}}}({a}/{b}) = \\log_{{{base}}}({a//b})\\). Then evaluate."},
-                {"level": 3, "text": f"\\(\\log_{{{base}}}({a//b}) = {result}\\) since \\({base}^{{{result}}} = {a//b}\\)"},
+                {"level": 2, "text": f"Divide the arguments: \\(\\log_{{{base}}}({a}/{c})\\)."},
+                {"level": 3, "text": f"\\({a} / {c} = {quotient}\\), so the combined logarithm is \\(\\log_{{{base}}}({quotient})\\)."},
             ],
         }
-    elif variant == "power":
-        # n * log_b(a) = log_b(a^n)
-        pairs = [(2, 3, 2, 6), (2, 2, 4, 4), (3, 2, 3, 4), (10, 3, 10, 3)]
-        base, exp, a, result = random.choice(pairs)
+    else:  # power: n * log_b(a) = log_b(a^n)
+        pairs = [(2, 3, 2), (2, 2, 4), (3, 2, 3), (10, 3, 10), (5, 2, 3), (2, 4, 2)]
+        base, exp, a = random.choice(pairs)
+        powered = a ** exp
         return {
-            "problem_text": f"Simplify: \\({exp} \\cdot \\log_{{{base}}}({a})\\)",
-            "correct_answer": str(result),
-            "answer_type": "numeric",
+            "problem_text": f"Write as a single logarithm (do not evaluate): \\({exp} \\cdot \\log_{{{base}}}({a})\\)",
+            "correct_answer": f"\\log_{{{base}}}({powered})",
+            "answer_type": "log_form",
             "difficulty": 0.6,
             "hints": [
                 {"level": 1, "text": "Power rule: \\(n \\cdot \\log_b(a) = \\log_b(a^n)\\)."},
-                {"level": 2, "text": f"\\({exp} \\cdot \\log_{{{base}}}({a}) = \\log_{{{base}}}({a}^{{{exp}}}) = \\log_{{{base}}}({a**exp})\\)."},
-                {"level": 3, "text": f"\\(\\log_{{{base}}}({a**exp}) = {result}\\) since \\({base}^{{{result}}} = {a**exp}\\)"},
-            ],
-        }
-    else:  # change_of_base: log_a(b) = log(b)/log(a) — give numeric answer
-        pairs = [(4, 2, 2), (8, 2, 3), (9, 3, 2), (25, 5, 2), (27, 3, 3)]
-        val, base, result = random.choice(pairs)
-        return {
-            "problem_text": f"Evaluate \\(\\log_{{{base}}}({val})\\) using the change-of-base formula.",
-            "correct_answer": str(result),
-            "answer_type": "numeric",
-            "difficulty": 0.7,
-            "hints": [
-                {"level": 1, "text": "Change-of-base: \\(\\log_b(x) = \\frac{\\log(x)}{\\log(b)}\\)."},
-                {"level": 2, "text": f"\\(\\log_{{{base}}}({val}) = \\frac{{\\log({val})}}{{\\log({base})}}\\). What power of {base} gives {val}?"},
-                {"level": 3, "text": f"\\({base}^{{{result}}} = {val}\\), so \\(\\log_{{{base}}}({val}) = {result}\\)"},
+                {"level": 2, "text": f"Move the coefficient to an exponent: \\(\\log_{{{base}}}({a}^{{{exp}}})\\)."},
+                {"level": 3, "text": f"\\({a}^{{{exp}}} = {powered}\\), so the combined logarithm is \\(\\log_{{{base}}}({powered})\\)."},
             ],
         }
 

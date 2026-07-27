@@ -36,7 +36,7 @@ try:
 except ImportError:
     SYMPY_AVAILABLE = False
 
-AnswerType = Literal["symbolic", "numeric", "multiple_choice"]
+AnswerType = Literal["symbolic", "numeric", "multiple_choice", "log_form"]
 
 TRANSFORMATIONS = standard_transformations + (implicit_multiplication_application,)
 
@@ -386,6 +386,48 @@ def _compare_solution_sets(student_values: list, correct_values: list) -> bool:
     return True
 
 
+# ── Log-form answers (log-rules) ─────────────────────────────────────────────
+# The log-rules node asks the student to COMBINE logs into a single logarithm
+# and keep the answer in log form — NOT to evaluate it. The symbolic checker
+# can't enforce this: SymPy auto-evaluates log(32, 2) → 5, so "5" and
+# "\log_2(32)" compare equal. We therefore compare on a canonical
+# (base, argument-value) form: accept any single logarithm whose base and
+# (evaluated) argument match the key, and reject a bare number (the student
+# evaluated instead of combining) or an un-combined sum/coefficient.
+
+def _extract_single_log(raw: str):
+    """
+    Parse a single-logarithm answer into (base_value, arg_value), or None if
+    the input is not a single logarithm (e.g. a bare number, an un-combined
+    sum like log(4)+log(8), or a coefficient·log that wasn't folded in).
+    """
+    if not SYMPY_AVAILABLE:
+        return None
+    s = latex_to_sympy_str(raw)  # e.g. "\log_2(4\cdot8)" → "log(4*8, 2)"
+    m = re.match(r'^\s*log\(\s*(.+?)\s*,\s*(.+?)\s*\)\s*$', s)
+    if not m:
+        return None
+    try:
+        arg = complex(N(sympify(m.group(1))))
+        base = complex(N(sympify(m.group(2))))
+    except Exception:
+        return None
+    return (base, arg)
+
+
+def _check_log_form(student: str, correct: str) -> bool:
+    """True iff the student's answer is a single logarithm equal (in base and
+    argument) to the key, keeping it in log form (a bare number is rejected)."""
+    # Reject an answer with no logarithm at all (student evaluated it).
+    if "log" not in latex_to_sympy_str(student):
+        return False
+    ss = _extract_single_log(student)
+    cs = _extract_single_log(correct)
+    if ss is None or cs is None:
+        return False
+    return abs(ss[0] - cs[0]) < 1e-9 and abs(ss[1] - cs[1]) < 1e-9
+
+
 # ── Main entry point ─────────────────────────────────────────────────────────
 
 def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerType = "symbolic") -> bool:
@@ -413,6 +455,12 @@ def check_answer(student_answer: str, correct_answer: str, answer_type: AnswerTy
     if answer_type == "multiple_choice":
         result = student.lower() == correct.lower()
         logger.info(f"  multiple_choice match: {result}")
+        return result
+
+    # ── Log form (log-rules: keep answer as a single logarithm) ──────────────
+    if answer_type == "log_form":
+        result = _check_log_form(student, correct)
+        logger.info(f"  log_form match: {result}")
         return result
 
     # ── Numeric ─────────────────────────────────────────────────────────────
