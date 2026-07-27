@@ -10,14 +10,22 @@ from app.models.knowledge import KnowledgeNode
 from app.services.answer_checker import check_answer
 from app.config import settings
 
-SM2_INTERVALS = [1, 3, 7, 14, 30]
+# SM-2 review schedule (FIXES-16 / 14-10): 7 → 14 → 30 → 90 days.
+# Existing schedules keep their stored next_review_at / interval_days; only
+# future scheduling (new masteries and advances) uses these constants.
+SM2_INTERVALS = [7, 14, 30, 90]
+
+# Escalating soft-gate enforcement (14-10).
+DAILY_NEW_PRACTICE_LIMIT = 3   # once reviews are 6+ days overdue
+OVERDUE_PERSISTENT_DAYS = 3    # 3-5 days: persistent banner + interstitial
+OVERDUE_LIMIT_DAYS = 6         # 6+ days: cap new practice per day
 
 
 def get_review_intervals(review_number: int) -> int:
     """Return interval in days for the given review number (0-indexed)."""
     if review_number < len(SM2_INTERVALS):
         return SM2_INTERVALS[review_number]
-    return 30  # Every 30 days after max
+    return SM2_INTERVALS[-1]  # cap at the longest interval (90 days)
 
 
 def get_due_reviews(user_id: UUID, db: Session) -> list[dict]:
@@ -232,3 +240,95 @@ def _interval_to_review_number(interval_days: int) -> int:
         if interval_days <= days:
             return i
     return len(SM2_INTERVALS)
+
+
+# ── Escalating soft-gate enforcement (14-10) ──────────────────────────────────
+
+def classify_overdue_tier(max_overdue_days: int, overdue_count: int) -> str:
+    """
+    Pure tier classifier for the escalating soft gate:
+      none       : nothing overdue
+      reminder   : 0-2 days overdue → dismissible banner
+      persistent : 3-5 days overdue → non-dismissible banner + interstitial
+      limit      : 6+ days overdue → new-practice daily cap
+    """
+    if overdue_count <= 0:
+        return "none"
+    if max_overdue_days >= OVERDUE_LIMIT_DAYS:
+        return "limit"
+    if max_overdue_days >= OVERDUE_PERSISTENT_DAYS:
+        return "persistent"
+    return "reminder"
+
+
+def _max_overdue_days(user_id: UUID, db: Session, now: datetime) -> tuple[int, int]:
+    """Return (max_days_overdue, overdue_count) across all currently-due reviews.
+    Overdue is measured from next_review_at (when the review became due)."""
+    due = db.query(ReviewSchedule).filter(
+        ReviewSchedule.user_id == user_id,
+        ReviewSchedule.next_review_at <= now,
+    ).all()
+    max_overdue = 0
+    for s in due:
+        d = (now - s.next_review_at).days
+        if d > max_overdue:
+            max_overdue = d
+    return max_overdue, len(due)
+
+
+def _count_practice_starts_today(user_id: UUID, db: Session, now: datetime) -> int:
+    """Count NEW practice session starts for the user since 00:00 UTC today."""
+    from app.models.progress import Session as PracticeSession
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return db.query(PracticeSession).filter(
+        PracticeSession.user_id == user_id,
+        PracticeSession.session_type == "practice",
+        PracticeSession.started_at >= start_of_day,
+    ).count()
+
+
+def get_review_enforcement(user_id: UUID, db: Session) -> dict:
+    """
+    Compute the current review-enforcement state for a user.
+
+    Tiers (by the most-overdue due review):
+      - none        : no overdue reviews
+      - reminder    : 0-2 days overdue  → dismissible banner
+      - persistent  : 3-5 days overdue  → non-dismissible banner + interstitial
+      - limit       : 6+ days overdue   → cap new practice at 3/day
+    """
+    now = datetime.now(timezone.utc)
+    max_overdue, overdue_count = _max_overdue_days(user_id, db, now)
+    tier = classify_overdue_tier(max_overdue, overdue_count)
+    sessions_today = _count_practice_starts_today(user_id, db, now)
+    limit_reached = (tier == "limit") and (sessions_today >= DAILY_NEW_PRACTICE_LIMIT)
+
+    return {
+        "tier": tier,
+        "overdue_count": overdue_count,
+        "max_overdue_days": max_overdue,
+        "sessions_today": sessions_today,
+        "daily_limit": DAILY_NEW_PRACTICE_LIMIT,
+        "limit_reached": limit_reached,
+    }
+
+
+def check_practice_allowed(user_id: UUID, db: Session) -> tuple[bool, dict]:
+    """
+    Gate a NEW practice session start. Reviews themselves are always allowed;
+    only new practice is capped once reviews are 6+ days overdue AND the daily
+    limit has been reached. Returns (allowed, enforcement_info).
+    """
+    info = get_review_enforcement(user_id, db)
+    if info["limit_reached"]:
+        info = dict(info)
+        info["message"] = (
+            f"You have {info['overdue_count']} review(s) more than "
+            f"{OVERDUE_LIMIT_DAYS} days overdue. To keep what you've learned from "
+            f"slipping, new practice is limited to {DAILY_NEW_PRACTICE_LIMIT} "
+            f"sessions per day until you clear them. Your reviews are always "
+            f"available — finishing them lifts this limit right away."
+        )
+        info["cta"] = "Do reviews"
+        return False, info
+    return True, info

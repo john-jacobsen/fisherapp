@@ -42,7 +42,7 @@ export default function Dashboard() {
     )
   }
 
-  const { knowledge_map, stats, recommended_next, reviews_due, placement_completed } = data
+  const { knowledge_map, stats, recommended_next, review_enforcement, placement_completed } = data
 
   return (
     <>
@@ -68,10 +68,12 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Reviews due banner */}
-          {!bannerDismissed && reviews_due > 0 && (
-            <ReviewBanner count={reviews_due} onDismiss={() => setBannerDismissed(true)} />
-          )}
+          {/* Reviews due banner — tiered escalating soft gate (14-10) */}
+          <ReviewBanner
+            enforcement={review_enforcement}
+            dismissed={bannerDismissed}
+            onDismiss={() => setBannerDismissed(true)}
+          />
 
           {/* Stats row */}
           <div style={styles.statsRow}>

@@ -8,7 +8,7 @@ from app.models.progress import StudentState, ReviewSchedule
 from app.routers.auth import get_current_user
 from app.models.user import User
 from app.kst.kst_engine import get_active_graph, get_or_build_cache
-from app.services.review_service import apply_decay
+from app.services.review_service import apply_decay, get_review_enforcement
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -169,5 +169,6 @@ def get_dashboard(
         },
         "recommended_next": recommended_next,
         "reviews_due": reviews_due,
+        "review_enforcement": get_review_enforcement(current_user.id, db),
         "placement_completed": student_state.placement_completed if student_state else False,
     }

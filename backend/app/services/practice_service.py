@@ -23,6 +23,7 @@ from app.models.knowledge import KnowledgeNode, KnowledgeEdge
 from app.models.progress import Session, StudentState, ReviewSchedule, ResponseLog
 from app.services.answer_checker import check_answer
 from app.services.problem_generator import generate_problem
+from app.services.review_service import SM2_INTERVALS
 from app.kst.kst_engine import (
     get_active_graph,
     get_or_build_cache,
@@ -579,24 +580,25 @@ def complete_practice(
             db.flush()
             student_state = new_state
 
-        # Schedule review
+        # Schedule the first review using the SM-2 first interval (14-10: 7 days).
         now = datetime.now(timezone.utc)
+        first_interval = SM2_INTERVALS[0]
         existing_review = db.query(ReviewSchedule).filter(
             ReviewSchedule.user_id == user_id,
             ReviewSchedule.node_id == node_id,
         ).first()
         if existing_review:
             existing_review.mastered_at = now
-            existing_review.next_review_at = now + timedelta(days=1)
-            existing_review.interval_days = 1
+            existing_review.next_review_at = now + timedelta(days=first_interval)
+            existing_review.interval_days = first_interval
             existing_review.streak = 0
         else:
             db.add(ReviewSchedule(
                 user_id=user_id,
                 node_id=node_id,
                 mastered_at=now,
-                next_review_at=now + timedelta(days=1),
-                interval_days=1,
+                next_review_at=now + timedelta(days=first_interval),
+                interval_days=first_interval,
                 streak=0,
             ))
 

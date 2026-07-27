@@ -39,6 +39,9 @@ export default function PracticePage() {
   const [networkError, setNetworkError] = useState(false);
   const [nextRecommended, setNextRecommended] = useState(null); // { node_id, label } for post-mastery CTA
   const [unmetPrereqs, setUnmetPrereqs] = useState([]); // advisory heads-up; access never blocked
+  const [blocked, setBlocked] = useState(null); // 409 daily-limit info (6+ days overdue)
+  const [reviewPrompt, setReviewPrompt] = useState(null); // interstitial enforcement info (3-5 days)
+  const [promptDismissed, setPromptDismissed] = useState(false);
 
   // Hints
   const [hints, setHints] = useState([]);
@@ -85,6 +88,17 @@ export default function PracticePage() {
       .then(r => setNodeTitle(r.data.node?.label || ''))
       .catch(() => {});
 
+    // Show the "Review now" interstitial when reviews are 3+ days overdue
+    // (persistent / limit tiers). Skippable — it never blocks practice here.
+    api.get('/dashboard')
+      .then(r => {
+        const e = r.data?.review_enforcement;
+        if (e && (e.tier === 'persistent' || e.tier === 'limit') && e.overdue_count > 0) {
+          setReviewPrompt(e);
+        }
+      })
+      .catch(() => {});
+
     api.post(`/practice/${nodeId}/start`).then(r => {
       const d = r.data;
       setSessionId(d.session_id);
@@ -93,8 +107,12 @@ export default function PracticePage() {
       if (d.prereqs_met === false && Array.isArray(d.unmet_prereqs)) {
         setUnmetPrereqs(d.unmet_prereqs);
       }
-    }).catch(() => {
-      setError('Could not start practice session.');
+    }).catch((err) => {
+      if (err.response?.status === 409 && err.response.data?.detail) {
+        setBlocked(err.response.data.detail); // daily new-practice cap reached
+      } else {
+        setError('Could not start practice session.');
+      }
     }).finally(() => setLoading(false));
   }, [nodeId]);
 
@@ -326,6 +344,94 @@ export default function PracticePage() {
       <NavBar />
       <div style={{ maxWidth: 700, margin: '40px auto', padding: '0 24px', fontFamily: theme.fonts.sans }}>
         <p style={{ color: theme.colors.error }}>{error}</p>
+      </div>
+    </>
+  );
+
+  // Daily new-practice cap reached (6+ days of reviews overdue). Non-punitive:
+  // reviews are always available and clear the cap immediately.
+  if (blocked) return (
+    <>
+      <NavBar />
+      <div style={{ maxWidth: 620, margin: '48px auto', padding: '0 24px', fontFamily: theme.fonts.sans }}>
+        <div style={{
+          background: '#FDECEC', border: '1px solid #E57373', borderRadius: theme.radius.lg,
+          padding: '28px 32px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>⏳</div>
+          <h2 style={{ margin: '0 0 12px', fontSize: 20, color: '#B23B3B' }}>
+            Let's clear your reviews first
+          </h2>
+          <p style={{ margin: '0 0 20px', fontSize: 15, lineHeight: 1.6, color: theme.colors.text }}>
+            {blocked.message || `New practice is limited to ${blocked.daily_limit} sessions per day until your overdue reviews are done.`}
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/reviews')}
+              style={{
+                padding: '11px 24px', background: '#E57373', color: '#fff', border: 'none',
+                borderRadius: theme.radius.md, cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                fontFamily: theme.fonts.sans,
+              }}
+            >
+              {blocked.cta || 'Do reviews'} →
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              style={{
+                padding: '11px 24px', background: 'transparent', color: theme.colors.text,
+                border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                cursor: 'pointer', fontSize: 14, fontFamily: theme.fonts.sans,
+              }}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  // Skippable "Review now" interstitial (3-5 days overdue). One click to continue.
+  if (reviewPrompt && !promptDismissed) return (
+    <>
+      <NavBar />
+      <div style={{ maxWidth: 560, margin: '64px auto', padding: '0 24px', fontFamily: theme.fonts.sans }}>
+        <div style={{
+          background: '#FFF3E0', border: '1px solid #E8961A', borderRadius: theme.radius.lg,
+          padding: '28px 32px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 30, marginBottom: 8 }}>🔔</div>
+          <h2 style={{ margin: '0 0 10px', fontSize: 19, color: '#B86A00' }}>
+            A quick review keeps this fresh
+          </h2>
+          <p style={{ margin: '0 0 20px', fontSize: 14, lineHeight: 1.6, color: theme.colors.text }}>
+            You have {reviewPrompt.overdue_count} review{reviewPrompt.overdue_count !== 1 ? 's' : ''} a few days overdue.
+            Reviewing now keeps these skills from slipping — but you can keep practicing if you'd rather.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/reviews')}
+              style={{
+                padding: '11px 24px', background: '#E8961A', color: '#fff', border: 'none',
+                borderRadius: theme.radius.md, cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                fontFamily: theme.fonts.sans,
+              }}
+            >
+              Review now →
+            </button>
+            <button
+              onClick={() => setPromptDismissed(true)}
+              style={{
+                padding: '11px 24px', background: 'transparent', color: theme.colors.textSecondary,
+                border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md,
+                cursor: 'pointer', fontSize: 14, fontFamily: theme.fonts.sans,
+              }}
+            >
+              Continue to practice
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );

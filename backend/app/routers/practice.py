@@ -34,6 +34,12 @@ def start_practice(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Escalating soft gate (14-10): once reviews are 6+ days overdue, cap NEW
+    # practice at 3 sessions/day. Reviews are always available and lift the cap.
+    from app.services.review_service import check_practice_allowed
+    allowed, info = check_practice_allowed(current_user.id, db)
+    if not allowed:
+        raise HTTPException(status_code=409, detail=info)
     try:
         return practice_service.start_practice(node_id, str(current_user.id), db)
     except PermissionError as e:
