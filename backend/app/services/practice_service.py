@@ -101,6 +101,36 @@ def _check_prereqs(node_id: str, user_id: str, db: DBSession) -> bool:
     return all(e.from_node_id in mastered for e in prereqs)
 
 
+def _unmet_prereqs(node_id: str, user_id: str, db: DBSession) -> list[dict]:
+    """
+    Return [{node_id, label}] for prerequisites not yet mastered by the user.
+    Advisory only — start_practice never blocks on this (see comment there).
+    """
+    graph = get_active_graph(db)
+    if not graph:
+        return []
+
+    prereqs = db.query(KnowledgeEdge).filter(
+        KnowledgeEdge.to_node_id == node_id,
+        KnowledgeEdge.graph_id == graph.id,
+    ).all()
+    if not prereqs:
+        return []
+
+    state = db.query(StudentState).filter(
+        StudentState.user_id == user_id,
+        StudentState.graph_id == graph.id,
+    ).first()
+    mastered = set(state.mastered_nodes or []) if state else set()
+
+    unmet = []
+    for e in prereqs:
+        if e.from_node_id not in mastered:
+            pnode = db.query(KnowledgeNode).filter(KnowledgeNode.id == e.from_node_id).first()
+            unmet.append({"node_id": e.from_node_id, "label": pnode.label if pnode else e.from_node_id})
+    return unmet
+
+
 def _get_problem(node_id: str, exclude_ids: list[str], db: DBSession) -> Optional[Problem]:
     """Get a random problem for a node, excluding already-seen ones."""
     exclude_uuids = [uuid.UUID(pid) for pid in exclude_ids if pid]
@@ -187,6 +217,7 @@ def start_practice(node_id: str, user_id: str, db: DBSession) -> dict:
             "soft_cap": 10,
         },
         "prereqs_met": prereqs_met,  # advisory only
+        "unmet_prereqs": _unmet_prereqs(node_id, user_id, db) if not prereqs_met else [],
     }
 
 

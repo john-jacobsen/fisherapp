@@ -61,6 +61,8 @@ export default function LessonPage() {
   const title = node.label || '';
   const topic = node.topic || '';
   const contentMarkdown = lesson?.content_markdown || '';
+  const prereqsMet = lessonData.is_prerequisites_met ?? true;
+  const unmetPrereqs = lessonData.unmet_prereqs || [];
 
   // Tier 1: curated video from lesson_videos.json (via backend endpoint)
   const activeVideo = curatedVideos && curatedVideos.length > 0 ? curatedVideos[activeVideoIndex] : null;
@@ -89,6 +91,28 @@ export default function LessonPage() {
           </div>
           <MasteryMeter mastery={mastery} size={80} />
         </div>
+
+        {/* Non-blocking prerequisite heads-up (advisory only — access is never gated) */}
+        {!prereqsMet && unmetPrereqs.length > 0 && (
+          <div style={{
+            marginBottom: 24, padding: '12px 16px',
+            background: theme.colors.accentLight, border: `1px solid ${theme.colors.accent}`,
+            borderRadius: theme.radius.md, fontSize: 14, color: '#7A5C00',
+            display: 'flex', alignItems: 'flex-start', gap: 8,
+          }}>
+            <span style={{ flexShrink: 0 }}>💡</span>
+            <span style={{ lineHeight: 1.5 }}>
+              Heads up: this topic builds on{' '}
+              {unmetPrereqs.map((p, i) => (
+                <span key={p.node_id}>
+                  <Link to={`/lesson/${p.node_id}`} style={{ color: theme.colors.primary, fontWeight: 600 }}>{p.label}</Link>
+                  {i < unmetPrereqs.length - 2 ? ', ' : i === unmetPrereqs.length - 2 ? ' and ' : ''}
+                </span>
+              ))}
+              , which you haven't mastered yet. You're welcome to continue — this is just a suggestion.
+            </span>
+          </div>
+        )}
 
         {/* Tier 1: curated video player */}
         {activeEmbedUrl && !videoFailed ? (

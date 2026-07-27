@@ -37,26 +37,36 @@ def _load_videos() -> dict:
         return {}
 
 
-def _prereqs_met(node_id: str, db: Session, user_id: str, graph_id) -> bool:
-    """Check if all prerequisites for a node are mastered by the user."""
+def _prereq_status(node_id: str, db: Session, user_id: str, graph_id) -> tuple[bool, list]:
+    """
+    Return (all_met, unmet_prereqs) for a node's prerequisites.
+
+    Prerequisites are advisory only — the caller never blocks access. The
+    unmet list ({node_id, label}) powers the non-blocking "heads up" notice.
+    """
     prereqs = db.query(KnowledgeEdge).filter(
         KnowledgeEdge.to_node_id == node_id,
         KnowledgeEdge.graph_id == graph_id,
     ).all()
 
     if not prereqs:
-        return True  # No prerequisites
+        return True, []
 
     state = db.query(StudentState).filter(
         StudentState.user_id == user_id,
         StudentState.graph_id == graph_id,
     ).first()
+    mastered = set(state.mastered_nodes or []) if state else set()
 
-    if not state:
-        return False
+    unmet_ids = [e.from_node_id for e in prereqs if e.from_node_id not in mastered]
+    if not unmet_ids:
+        return True, []
 
-    mastered = set(state.mastered_nodes or [])
-    return all(e.from_node_id in mastered for e in prereqs)
+    unmet = []
+    for nid in unmet_ids:
+        pnode = db.query(KnowledgeNode).filter(KnowledgeNode.id == nid).first()
+        unmet.append({"node_id": nid, "label": pnode.label if pnode else nid})
+    return False, unmet
 
 
 @router.get("/{node_id}")
@@ -79,7 +89,7 @@ def get_lesson(
         WorkedExample.node_id == node_id
     ).order_by(WorkedExample.display_order).all()
 
-    prereqs_met = _prereqs_met(node_id, db, str(current_user.id), graph.id)
+    prereqs_met, unmet_prereqs = _prereq_status(node_id, db, str(current_user.id), graph.id)
 
     # Compute mastery from StudentState
     state = db.query(StudentState).filter(
@@ -112,6 +122,7 @@ def get_lesson(
             for e in examples
         ],
         "is_prerequisites_met": prereqs_met,
+        "unmet_prereqs": unmet_prereqs,  # advisory only — access is never blocked
         "mastery": mastery,
     }
 

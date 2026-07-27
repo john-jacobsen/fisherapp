@@ -38,6 +38,7 @@ export default function PracticePage() {
   const [masteryAchieved, setMasteryAchieved] = useState(false);
   const [networkError, setNetworkError] = useState(false);
   const [nextRecommended, setNextRecommended] = useState(null); // { node_id, label } for post-mastery CTA
+  const [unmetPrereqs, setUnmetPrereqs] = useState([]); // advisory heads-up; access never blocked
 
   // Hints
   const [hints, setHints] = useState([]);
@@ -89,6 +90,9 @@ export default function PracticePage() {
       setSessionId(d.session_id);
       setProblem(d.problem);
       setMastery(d.mastery?.current_posterior ?? 0);
+      if (d.prereqs_met === false && Array.isArray(d.unmet_prereqs)) {
+        setUnmetPrereqs(d.unmet_prereqs);
+      }
     }).catch(() => {
       setError('Could not start practice session.');
     }).finally(() => setLoading(false));
@@ -339,6 +343,28 @@ export default function PracticePage() {
     <>
       <NavBar />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px', fontFamily: theme.fonts.sans }}>
+
+        {/* Non-blocking prerequisite heads-up (advisory only — practice is never gated) */}
+        {unmetPrereqs.length > 0 && (
+          <div style={{
+            padding: '12px 16px', borderRadius: theme.radius.md, marginBottom: 16,
+            background: '#FFF8EE', border: '1px solid #E8961A',
+            fontSize: 13, color: '#B86A00', lineHeight: 1.5,
+            display: 'flex', alignItems: 'flex-start', gap: 8,
+          }}>
+            <span style={{ flexShrink: 0 }}>💡</span>
+            <span>
+              Heads up: this topic builds on{' '}
+              {unmetPrereqs.map((p, i) => (
+                <span key={p.node_id}>
+                  <strong>{p.label}</strong>
+                  {i < unmetPrereqs.length - 2 ? ', ' : i === unmetPrereqs.length - 2 ? ' and ' : ''}
+                </span>
+              ))}
+              , which you haven't mastered yet. You can keep practicing — this is just a suggestion.
+            </span>
+          </div>
+        )}
 
         {/* Mastery celebration banner */}
         {masteryAchieved && (
