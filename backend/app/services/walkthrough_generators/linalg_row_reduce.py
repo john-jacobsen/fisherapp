@@ -66,6 +66,15 @@ def generate() -> dict:
         if abs(c1) > 30 or abs(c2) > 30:
             continue
 
+        # Step-1 MC distinctness: the "rows swapped" distractor
+        #   Row1:[a2 b2|c2] Row2:[a1 b1|c1]
+        # collides with the "columns swapped" distractor
+        #   Row1:[b1 a1|c1] Row2:[b2 a2|c2]
+        # exactly when a2==b1, b2==a1 and c1==c2 (a symmetric system). Reject
+        # so all four multiple-choice options stay unique.
+        if a2 == b1 and b2 == a1 and c1 == c2:
+            continue
+
         return {
             'a1': a1, 'b1': b1, 'c1': c1,
             'a2': a2, 'b2': b2, 'c2': c2,
@@ -75,6 +84,13 @@ def generate() -> dict:
             'x_sol': x_sol,
             'y_sol': y_sol,
             'abs_multiplier': abs(multiplier),
+            # 14-2 phrasing: the operation R2 ← R2 − multiplier·R1 reads
+            # naturally only for a positive multiplier. For a negative
+            # multiplier it is really "add |multiplier| times Row 1", so the
+            # template displays "... {op_word} {abs_multiplier} times ..." and
+            # "R2 {op_sign} {abs_multiplier}·R1" instead of a raw "− (−3)".
+            'op_word': 'minus' if multiplier > 0 else 'plus',
+            'op_sign': '−' if multiplier > 0 else '+',
         }
 
     # Fallback: 2x + 3y = 8, 4x + y = 6 → multiplier=2, x=1, y=2
@@ -88,4 +104,6 @@ def generate() -> dict:
         'x_sol': 1,
         'y_sol': 2,
         'abs_multiplier': 2,
+        'op_word': 'minus',
+        'op_sign': '−',
     }

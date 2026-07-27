@@ -90,7 +90,7 @@
       "prompt": "The standard error is σ/√n = {sigma}/{sqrt_n}. What is {sigma} ÷ {sqrt_n}?",
       "input_type": "numeric",
       "correct_answer": "{standard_error}",
-      "hint": "Divide: {sigma} ÷ {sqrt_n} = {standard_error}.",
+      "hint": "Divide the population standard deviation by √n: {sigma} ÷ {sqrt_n}.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == sigma",
@@ -105,10 +105,10 @@
     {
       "step_number": 4,
       "title": "Compute the margin of error",
-      "prompt": "The margin of error is z* × (standard error) = {z_star} × {standard_error}. What is the margin of error?",
+      "prompt": "The margin of error is z* × (standard error) = {z_star} × {standard_error}. What is the margin of error? Round to 2 decimal places.",
       "input_type": "numeric",
       "correct_answer": "{margin_of_error}",
-      "hint": "Multiply: {z_star} × {standard_error} = {margin_of_error}.",
+      "hint": "Multiply z* by the standard error: {z_star} × {standard_error}, then round to 2 decimal places.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == standard_error",
@@ -127,10 +127,10 @@
     {
       "step_number": 5,
       "title": "Find the lower bound",
-      "prompt": "The confidence interval is $\\bar{x} \\pm$ margin of error. The **lower** bound is $\\bar{x}$ − margin of error = {xbar} − {margin_of_error}. What is the lower bound?",
+      "prompt": "The confidence interval is $\\bar{x} \\pm$ margin of error. The **lower** bound is $\\bar{x}$ − margin of error = {xbar} − {margin_of_error}. What is the lower bound? Round to 2 decimal places.",
       "input_type": "numeric",
       "correct_answer": "{lower}",
-      "hint": "Subtract: {xbar} − {margin_of_error} = {lower}.",
+      "hint": "Subtract the margin of error from the sample mean: {xbar} − {margin_of_error}.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == upper",
@@ -145,10 +145,10 @@
     {
       "step_number": 6,
       "title": "Find the upper bound",
-      "prompt": "The **upper** bound is $\\bar{x}$ + margin of error = {xbar} + {margin_of_error}. What is the upper bound?",
+      "prompt": "The **upper** bound is $\\bar{x}$ + margin of error = {xbar} + {margin_of_error}. What is the upper bound? Round to 2 decimal places.",
       "input_type": "numeric",
       "correct_answer": "{upper}",
-      "hint": "Add: {xbar} + {margin_of_error} = {upper}.",
+      "hint": "Add the margin of error to the sample mean: {xbar} + {margin_of_error}.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == lower",

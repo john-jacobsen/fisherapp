@@ -91,44 +91,44 @@
     {
       "step_number": 3,
       "title": "Compute the new y-coefficient in Row 2",
-      "prompt": "Apply the row operation R2 ← R2 − {multiplier}·R1. What is the new coefficient of y in Row 2? (The y-entry of Row 2 minus {multiplier} times the y-entry of Row 1.)",
+      "prompt": "Apply the row operation R2 ← R2 {op_sign} {abs_multiplier}·R1. What is the new coefficient of y in Row 2? (The y-entry of Row 2 {op_word} {abs_multiplier} times the y-entry of Row 1.)",
       "input_type": "numeric",
       "correct_answer": "{new_b2}",
-      "hint": "Compute the y-entry of Row 2 minus {multiplier} times the y-entry of Row 1: {b2} − {multiplier} × {b1}.",
+      "hint": "Compute the y-entry of Row 2 {op_word} {abs_multiplier} times the y-entry of Row 1: {b2} {op_sign} {abs_multiplier} × {b1}.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == b2",
-          "feedback": "You kept the original Row 2 y-coefficient. You need to subtract {multiplier} times the Row 1 y-coefficient: {b2} − {multiplier} × {b1} = {new_b2}."
+          "feedback": "You kept the original Row 2 y-coefficient. Apply the operation to Row 2: {b2} {op_sign} {abs_multiplier} × {b1} = {new_b2}."
         },
         {
           "condition": "answer == b1",
-          "feedback": "That is the Row 1 y-coefficient, not the updated Row 2 y-coefficient. Apply the operation to Row 2: {b2} − {multiplier} × {b1} = {new_b2}."
+          "feedback": "That is the Row 1 y-coefficient, not the updated Row 2 y-coefficient. Apply the operation to Row 2: {b2} {op_sign} {abs_multiplier} × {b1} = {new_b2}."
         },
         {
           "condition": "default",
-          "feedback": "After R2 ← R2 − {multiplier}·R1, the y-coefficient in Row 2 becomes {b2} − {multiplier} × {b1} = {new_b2}."
+          "feedback": "After R2 ← R2 {op_sign} {abs_multiplier}·R1, the y-coefficient in Row 2 becomes {b2} {op_sign} {abs_multiplier} × {b1} = {new_b2}."
         }
       ]
     },
     {
       "step_number": 4,
       "title": "Compute the new right-hand side of Row 2",
-      "prompt": "After the same row operation R2 ← R2 − {multiplier}·R1, what is the new right-hand side of Row 2? (The RHS of Row 2 minus {multiplier} times the RHS of Row 1.)",
+      "prompt": "After the same row operation R2 ← R2 {op_sign} {abs_multiplier}·R1, what is the new right-hand side of Row 2? (The RHS of Row 2 {op_word} {abs_multiplier} times the RHS of Row 1.)",
       "input_type": "numeric",
       "correct_answer": "{new_c2}",
-      "hint": "Compute the RHS of Row 2 minus {multiplier} times the RHS of Row 1: {c2} − {multiplier} × {c1}.",
+      "hint": "Compute the RHS of Row 2 {op_word} {abs_multiplier} times the RHS of Row 1: {c2} {op_sign} {abs_multiplier} × {c1}.",
       "wrong_answer_feedback": [
         {
           "condition": "answer == c2",
-          "feedback": "You kept the original Row 2 right-hand side. Subtract {multiplier} times the Row 1 right-hand side: {c2} − {multiplier} × {c1} = {new_c2}."
+          "feedback": "You kept the original Row 2 right-hand side. Apply the operation: {c2} {op_sign} {abs_multiplier} × {c1} = {new_c2}."
         },
         {
           "condition": "answer == c1",
-          "feedback": "That is the Row 1 right-hand side, not the updated Row 2 value. Apply the operation: {c2} − {multiplier} × {c1} = {new_c2}."
+          "feedback": "That is the Row 1 right-hand side, not the updated Row 2 value. Apply the operation: {c2} {op_sign} {abs_multiplier} × {c1} = {new_c2}."
         },
         {
           "condition": "default",
-          "feedback": "After R2 ← R2 − {multiplier}·R1, the right-hand side of Row 2 becomes {c2} − {multiplier} × {c1} = {new_c2}."
+          "feedback": "After R2 ← R2 {op_sign} {abs_multiplier}·R1, the right-hand side of Row 2 becomes {c2} {op_sign} {abs_multiplier} × {c1} = {new_c2}."
         }
       ]
     },
@@ -201,7 +201,7 @@
     }
   ],
 
-  "completion_message": "You solved the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2} by row reduction. The operation R2 ← R2 − {multiplier}·R1 eliminated x from Row 2, leaving {new_b2}y = {new_c2}, so y = {y_sol}. Back-substitution then gave x = {x_sol}. Ready to practice?",
+  "completion_message": "You solved the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2} by row reduction. The operation R2 ← R2 {op_sign} {abs_multiplier}·R1 eliminated x from Row 2, leaving {new_b2}y = {new_c2}, so y = {y_sol}. Back-substitution then gave x = {x_sol}. Ready to practice?",
 
   "transition": {
     "button_text": "Start Practice →",

@@ -28,6 +28,8 @@ import random
 from math import isqrt
 
 _Z_STARS = {90: 1.645, 95: 1.96, 99: 2.576}
+# z* scaled to integer thousandths, for exact half-way rounding detection.
+_Z_STARS_MILLI = {90: 1645, 95: 1960, 99: 2576}
 _Z_STAR_INDICES = {90: 0, 95: 1, 99: 2}
 _N_VALUES = [36, 49, 64, 100, 144, 225, 400]
 _CONF_LEVELS = [90, 95, 99]
@@ -49,6 +51,17 @@ def generate() -> dict:
 
         standard_error = sigma // sqrt_n
         z_star = _Z_STARS[conf_level]
+
+        # Rounding coherence: z* × SE is exact in thousandths. Reject any case
+        # whose thousandths digit is 5 — a genuine half-way point where the
+        # correct 2-dp rounding is ambiguous (e.g. 1.645×1 = 1.645, which
+        # 1.64 and 1.65 BOTH land within the ±0.01 checker tolerance). This
+        # only ever fires for 90% (z*=1.645) with an odd standard error;
+        # every 95%/99% product already lands cleanly.
+        moe_milli = _Z_STARS_MILLI[conf_level] * standard_error
+        if moe_milli % 10 == 5:
+            continue
+
         margin_of_error = round(z_star * standard_error, 2)
         lower = round(xbar - margin_of_error, 2)
         upper = round(xbar + margin_of_error, 2)
