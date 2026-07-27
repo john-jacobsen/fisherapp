@@ -1,0 +1,148 @@
+{
+  "node_id": "alg-factoring-quad",
+  "title": "Factoring a Monic Quadratic",
+
+  "intro": {
+    "body": "A **monic quadratic** is one whose leading coefficient is 1: $x^2 + bx + c$. To factor it means to rewrite it as a product of two binomials $(x + p)(x + q)$.\n\nWhy does this work? Expand the product:\n$$(x + p)(x + q) = x^2 + (p + q)x + pq.$$\nMatching this against $x^2 + bx + c$ tells you exactly what $p$ and $q$ must be:\n- their **product** is the constant term: $p \\cdot q = c$\n- their **sum** is the middle coefficient: $p + q = b$\n\n**The method:** list the pairs of integers whose product is $c$, then pick the pair that also **adds** to $b$. Watch the signs — if $c$ is positive, $p$ and $q$ share a sign; if $c$ is negative, they have opposite signs.\n\n**Worked example:** factor $x^2 - 5x + 6$. Here $c = 6$ and $b = -5$. Pairs multiplying to $6$: $(1,6), (2,3), (-1,-6), (-2,-3)$. The pair that adds to $-5$ is $(-2, -3)$. So $x^2 - 5x + 6 = (x - 2)(x - 3)$.",
+    "key_formula": "x^2 + bx + c = (x + p)(x + q), \\quad p + q = b, \\quad p \\cdot q = c"
+  },
+
+  "problem_generator": {
+    "description": "Factor a monic quadratic x^2 + bx + c = (x+p)(x+q) with p, q small distinct nonzero integers in [-6,6], b = p+q != 0, and clean sign-aware display strings.",
+    "params": {
+      "p": { "type": "random_int", "min": -6, "max": 6, "constraint": "p != 0, p < q" },
+      "q": { "type": "random_int", "min": -6, "max": 6, "constraint": "q != 0, q > p" }
+    },
+    "derived": {
+      "b": "p + q (!= 0)",
+      "c": "p * q",
+      "quadratic": "sign-aware display string, e.g. 'x^2 - 5x + 6'",
+      "factor_p": "sign-aware factor '(x - 2)' / '(x + 2)'",
+      "factor_q": "sign-aware factor for q",
+      "factored": "factor_p + factor_q, the factored answer"
+    },
+    "display_problem": "Factor the quadratic $x^2 + bx + c$ into the form $(x + p)(x + q)$: $${quadratic}.$$"
+  },
+
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "What must p and q multiply to?",
+      "prompt": "To factor $${quadratic}$$ as $(x + p)(x + q)$, you need two numbers $p$ and $q$. Because $(x + p)(x + q) = x^2 + (p+q)x + pq$, the **product** $p \\cdot q$ must equal the constant term. What must $p \\cdot q$ equal?",
+      "input_type": "numeric",
+      "correct_answer": "{c}",
+      "hint": "Compare $(x + p)(x + q) = x^2 + (p+q)x + pq$ with $${quadratic}.$$ The product $pq$ lines up with the constant term.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == b",
+          "feedback": "That is the middle coefficient — the value $p$ and $q$ must **add** to. The **product** $p \\cdot q$ equals the constant term, which is {c}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The product $p \\cdot q$ matches the constant term of $${quadratic},$$ so $p \\cdot q = {c}$."
+        }
+      ]
+    },
+    {
+      "step_number": 2,
+      "title": "What must p and q add to?",
+      "prompt": "From the same expansion $(x + p)(x + q) = x^2 + (p+q)x + pq$, the **sum** $p + q$ must equal the middle coefficient. What must $p + q$ equal?",
+      "input_type": "numeric",
+      "correct_answer": "{b}",
+      "hint": "The coefficient of $x$ in $${quadratic}$$ is what $p$ and $q$ add to. Include the sign.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == c",
+          "feedback": "That is the constant term — the value $p$ and $q$ must **multiply** to. The **sum** $p + q$ equals the middle coefficient, which is {b}."
+        },
+        {
+          "condition": "answer == abs_b",
+          "feedback": "Careful with the sign: the coefficient of $x$ is {b}, so $p + q = {b}$, not {abs_b}."
+        },
+        {
+          "condition": "default",
+          "feedback": "The sum $p + q$ matches the coefficient of $x$ in $${quadratic},$$ so $p + q = {b}$."
+        }
+      ]
+    },
+    {
+      "step_number": 3,
+      "title": "Find p and q",
+      "prompt": "You need $p$ and $q$ with $p \\cdot q = {c}$ **and** $p + q = {b}$. Which pair works?",
+      "input_type": "multiple_choice",
+      "options": [
+        "$p = {p}$ and $q = {q}$",
+        "$p = {d1p}$ and $q = {d1q}$",
+        "$p = {d2p}$ and $q = {d2q}$"
+      ],
+      "correct_answer": "0",
+      "hint": "Test each pair against **both** conditions: the product must be {c} and the sum must be {b}. A pair can satisfy one condition and fail the other.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "That pair multiplies to {c} correctly, but it **adds** to {neg_b}, not {b}. You need the sum to be {b} as well. The pair that satisfies both is $p = {p}$, $q = {q}$."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "That pair **adds** to {b} correctly, but it multiplies to {d2_prod}, not {c}. You need the product to be {c} as well. The pair that satisfies both is $p = {p}$, $q = {q}$."
+        },
+        {
+          "condition": "default",
+          "feedback": "The pair that satisfies both $p \\cdot q = {c}$ and $p + q = {b}$ is $p = {p}$, $q = {q}$."
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "title": "Write the factored form",
+      "prompt": "With $p = {p}$ and $q = {q}$, write $${quadratic}$$ in factored form $(x + p)(x + q)$. Substitute the values and simplify the signs.",
+      "input_type": "expression",
+      "correct_answer": "{factored}",
+      "strict_form": {
+        "type": "factored_form",
+        "rejection_feedback": "That is equal in value, but it is not written as a product of factors. Write it as two binomials multiplied together, like ${factored}$ — don't expand it back out."
+      },
+      "hint": "Substitute $p = {p}$ and $q = {q}$ into $(x + p)(x + q)$. When a value is negative, $(x + (\\text{negative}))$ becomes a subtraction, e.g. $(x + {p})$ reads as {factor_p}.",
+      "wrong_answer_feedback": [
+        {
+          "condition": "default",
+          "feedback": "Substitute the numbers into $(x + p)(x + q)$ and fix the signs: with $p = {p}$ and $q = {q}$ you get ${factored}$."
+        }
+      ]
+    },
+    {
+      "step_number": 5,
+      "title": "Check your understanding",
+      "prompt": "Why does finding two numbers with $p + q = b$ and $p \\cdot q = c$ factor the quadratic $x^2 + bx + c$?",
+      "input_type": "multiple_choice",
+      "options": [
+        "Because expanding $(x + p)(x + q)$ gives $x^2 + (p+q)x + pq$, so matching $p + q = b$ and $pq = c$ makes it identical to $x^2 + bx + c$.",
+        "Because any two numbers that multiply to $c$ will factor the quadratic, regardless of what they add to.",
+        "Because $p$ and $q$ only need to add to $b$; their product doesn't affect the factoring."
+      ],
+      "correct_answer": "0",
+      "hint": "Expand $(x + p)(x + q)$ term by term. Which of $b$ and $c$ does each piece of the expansion have to match?",
+      "wrong_answer_feedback": [
+        {
+          "condition": "answer == 1",
+          "feedback": "The product alone isn't enough. For example, $1 \\cdot {c}$ and $p \\cdot q$ may both equal {c}, but only the pair that also **adds** to {b} reproduces the middle term $(p+q)x$. Both conditions are required."
+        },
+        {
+          "condition": "answer == 2",
+          "feedback": "The sum alone isn't enough either. The constant term of $(x+p)(x+q)$ is $pq$, so the product must equal $c = {c}$ as well. Both the sum and the product have to match."
+        },
+        {
+          "condition": "default",
+          "feedback": "The reason is the expansion itself: $(x + p)(x + q) = x^2 + (p+q)x + pq$. Matching $p + q = b$ and $pq = c$ makes the product identical to $x^2 + bx + c$."
+        }
+      ]
+    }
+  ],
+
+  "completion_message": "You factored $${quadratic}$$ by finding two numbers with product $c = {c}$ and sum $b = {b}$ — namely $p = {p}$ and $q = {q}$ — giving $${factored}.$$ This works because $(x + p)(x + q) = x^2 + (p+q)x + pq$. Ready to practice?",
+
+  "transition": {
+    "button_text": "Start Practice →",
+    "target": "practice"
+  }
+}
